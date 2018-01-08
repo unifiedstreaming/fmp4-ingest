@@ -13,3 +13,4 @@ Initial fMP4 ingest Requirements
 10.	fMP4 ingest specification shall support graceful teardown of ingest of live stream events
 11.	fMP4 ingest shall use HTTP Post for media source ingest
 12.	fMP4 ingest shall support low latency media source ingest
+13. fMP4 ingest shall be supported by an openly available reference implementation ????
