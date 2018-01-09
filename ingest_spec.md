@@ -2,7 +2,7 @@
 Status: Draft
 Source: Unified Streaming
 
-##Overview 
+## Overview 
 This specification describes a protocol and format for live media ingest to media processing and CDN based on fragments of ISO Base media file format [1].  It serves as a starting point for an industry wide specification for live media ingest following current best practices.
 The workflow architecture diagram is shown in Figure 1. A live streaming entity (e.g. a live encoder) pushes media to a media processing entity or a Content Delivery Network (CDN).  The media processing entity delivers functionality for further delivery such as content stitching, encryption, packaging, manifest generation, transcoding, scalable delivery and many other media processing functions.
 The connection between a live streaming entity and a cloud or network based media processing function is still often based on proprietary protocols, as unfortunately MPEG-DASH [2] is a client only protocol. MPEG DASH seems not suitable for pushing content from a live encoder to a media processing function, as it only supports pull based requests based on existing manifest. For live encoder ingest still legacy or proprietary protocols are often used leading to interop issues in implementations as many specification are not specified and based on the latest technologies and standards used in the industry (e.g. timed meta-data based, HEVC etc.). 
@@ -35,7 +35,7 @@ URI_SAFE_IDENTIFIER: identifier/string formatted according to [4]
 Connection: connection setup between a host and a source using the TCP protocol and the HTTP POST method.
 Live stream event: the total media broadcast stream of the encoder ingest or source to be pushed to the destination. 
 
-# Ingest Protocol Requirements
+## Ingest Protocol Requirements
 
 The media and timed meta-data ingest specification uses a standard long-running HTTP POST request to transmit encoded media data packaged in fragmented ISO BMFF [1] format to the media processing entity.  Each HTTP POST sends a complete fragmented MP4 bitstream ("stream"), starting from the beginning with header boxes (ftyp and moov boxes), and contin-uing with a sequence of fragments (moof and mdat boxes). An example of the Fragmented Media Ingest POST URL targeting the media processing entity is:
 http://mypublishingpoint/ingest.isml/streams(720p)
@@ -74,7 +74,7 @@ During operation the communication between the media ingest encoder and the stre
 16.	The fragment decode timestamps tdft of fragments in the fragmentedMP4stream and the indexes base_media_decode_ time SHOULD arrive in increasing order. 
 17.	The fragmented MP4 stream SHOULD use a 90-KHz timescale for video streams and 44.1 KHz or 48.1 KHz for audio streams or any another timescale that enables integer increments of the decode times of fragments signalled in the tfdt box based on this scale. 
 
-# Formatting Requirements for Timed Meta-Data Ingest
+## Formatting Requirements for Timed Meta-Data Ingest
 
 This section discusses the specific formatting requirements for ingest of timed meta-data.
 When delivering a live streaming presentation with a rich client experience, often it is necessary to transmit time-synced events, meta-data or other signals in-band with the main media data. An example of this are opportunities for dynamic live ad insertion signalled by SCTE-35 markers for example. This type of event signalling is different from regular audio/video streaming because of its sparse nature. In other words, the signalling data usually does not happen continuously, and the interval can be hard to predict. 
@@ -119,7 +119,7 @@ Given the sparse nature of the signalling event, the following is recommended:
 1.	The payload of sparse track fragments can be in different formats (such as XML, text, or binary), depending on the scenario
 
 
-# Live Stream Ingest Option constraints
+## Live Stream Ingest Option constraints
 The fragmented MP4 Stream is the basic unit of operation in live ingestion for composing live presentations, handling streaming failover, and redundancy scenarios. It is defined as one unique, fragmented MP4 bitstream that might contain a single track or multiple tracks. A full live presentation might contain one or more streams, depending on the configuration of the live encoders. The following examples illustrate various options of using streams to compose a full live presentation.
 Example:
 A company wants to create a live streaming presentation that includes the following audio/video bitrates:
@@ -128,7 +128,7 @@ Audio – 128 kbps
 Each track in a separate stream
 In this option, the encoder or live ingest source puts one track into each fragment MP4 bitstream, and then posts all of the streams over separate HTTP connections. This can be done with one encoder or with multiple encoders. The live ingestion sees this live presentation as composed of four streams.
 
-#  Service (publishing point) failover
+##  Service (publishing point) failover
 Given the nature of live streaming, good failover support is critical for ensuring the availability of the service. Typically, media services are designed to handle various types of failures, including network errors, server errors, and storage issues. When used in conjunction with proper failover logic from the live encoder side, customers can achieve a highly reliable live streaming service from the cloud.
 In this section, we discuss service failover scenarios. In this case, the failure happens somewhere within the service, and it manifests itself as a network error. Here are some recommendations for the encoder implementation for handling service failover:
 1.	Use a 10-second timeout for establishing the TCP connection. If an attempt to establish the connection takes longer than 10 seconds, abort the operation and try again.
@@ -142,7 +142,7 @@ c. The new HTTP POST MUST include stream headers (ftyp, and moov boxes) that are
 d. The last two fragments sent for each track may be resent. Other ISO BMFF fragment timestamps must increase continuously, even across HTTP POST requests.
 6.	The encoder SHOULD terminate the HTTP POST request if data is not being sent at a rate commensurate with the MP4 fragment duration. An HTTP POST request that does not send data can prevent Media Services from quickly disconnecting from the encoder in the event of a service update. For this reason, the HTTP POST for sparse (ad signal) tracks SHOULD be short-lived, terminating as soon as the sparse fragment is sent.
 
-# Ingest source (Encoder) failover
+## Ingest source (Encoder) failover
 Encoder failover is the second type of failover scenario that needs to be addressed for end-to-end live streaming delivery. In this scenario, the error condition occurs on the encoder side.
 The following expectations apply from the live ingestion endpoint when encoder failover happens:
 1.	A new encoder or media ingest source instance SHOULD be created to continue streaming
@@ -152,14 +152,14 @@ The following expectations apply from the live ingestion endpoint when encoder f
 5.	The new stream MUST be semantically equivalent with the previous stream, and interchangeable at the header and fragment levels.
 6.	The new encoder or media ingest source SHOULD try to minimize data loss. The basemediadecodetime tdft of media fragments SHOULD increase from the point where the encoder last stopped. The basemediadecodetime in the tdft box SHOULD increase in a continuous manner, but it is permissible to introduce a discontinuity, if necessary. Media Services can ignore fragments that it has already received and processed, so it's better to err on the side of resending fragments than to introduce discontinuities in the media timeline.
 
-# Encoder/Ingest Source redundancy
+## Encoder/Ingest Source redundancy
 For certain critical live event streams that demand even higher availability and quality of experience, it is recommended to use active-active redundant encoders to achieve seamless failover with no data loss. When two groups of encoders or media ingest sources push two copies of each stream simultaneously into the live service. This setup is supported because Media Services can filter out duplicate fragments based on stream ID and fragment timestamp. The resulting live stream and archive is a single copy of all the streams that is the best possible aggregation from the two sources. For example, in a hypothetical extreme case, as long as there is one encoder (it doesn’t have to be the same one) running at any given point in time for each stream, the resulting live stream from the service is continuous without data loss. 
 The requirements for this scenario are as the requirements in the "Encoder failover" case in most cases, with the exception that the second set of encoders are running at the same time as the primary encoders.
 
-# Service/destination redundancy
+## Service/destination redundancy
 For highly redundant global distribution, sometimes you must have cross-region backup to handle regional disasters. Expanding on the “Encoder redundancy” topology, customers can choose to have a redundant service deployment in a different region that's connected with the second set of encoders. Customers also can work with a Content Delivery Network provider to deploy a Global Traffic Manager in front of the two service deployments to seamlessly route client traffic. The requirements for the encoders are the same as the “Encoder redundancy” case. The only exception is that the second set of encoders needs to be pointed to a different live ingest endpoint. 
 
-# References
+## References
 * [1]	ISO/IEC JCT1/SC29 MPEG, "ISO/IEC 23009-1:2014: Dynamic adaptive streaming over HTTP (DASH) -- Part 1: Media presentation description and segment formats," 2014.
 * [2]	Society of Cable Television Engineers, "SCTE-35 (ANSI/SCTE 35 2013) Digital Program Insertion Cueing Message for Cable," SCTE-35 (ANSI/SCTE 35 2013),.
 * [3]	ISO/IEC JTC 1/SC 29, "Information technology -- Coding of audio-visual objects -- Part 12: ISO base media file format," ISO/IEC 14496-12:2012 , 2016.
