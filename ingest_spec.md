@@ -3,12 +3,12 @@
 * Source: Unified Streaming
 
 ## Overview 
-This specification describes a protocol and format for live media ingest to media processing and CDN based on fragments of ISO Base media file format [1].  It serves as a starting point for an industry wide specification for live media ingest following current best practices.
+This specification describes a protocol and format for live media ingest to media processing and CDN based on fragments of ISO Base media file format [3].  It serves as a starting point for an industry wide specification for live media ingest following current best practices.
 The workflow architecture diagram is shown in Figure 1. A live streaming entity (e.g. a live encoder) pushes media to a media processing entity or a Content Delivery Network (CDN).  The media processing entity delivers functionality for further delivery such as content stitching, encryption, packaging, manifest generation, transcoding, scalable delivery and many other media processing functions.
-The connection between a live streaming entity and a cloud or network based media processing function is still often based on proprietary protocols, as unfortunately MPEG-DASH [2] is a client only protocol. MPEG DASH seems not suitable for pushing content from a live encoder to a media processing function, as it only supports pull based requests based on existing manifest. For live encoder ingest still legacy or proprietary protocols are often used leading to interop issues in implementations as many specification are not specified and based on the latest technologies and standards used in the industry (e.g. timed meta-data based, HEVC etc.). 
+The connection between a live streaming entity and a cloud or network based media processing function is still often based on proprietary protocols, as unfortunately MPEG-DASH [1] is a client only protocol. MPEG DASH seems not suitable for pushing content from a live encoder to a media processing function, as it only supports pull based requests based on existing manifest. For live encoder ingest still legacy or proprietary protocols are often used leading to interop issues in implementations as many specification are not specified and based on the latest technologies and standards used in the industry (e.g. timed meta-data based, HEVC etc.). 
 Overall, this is hampering deployments with live encoding and advanced media processing functions (e.g. streaming with content insertion and DRM).  In practice, interop problems arise both with the file format (MPEG-2-TS, fMP4), encoder settings, timed meta data insertion (ID3, SCTE 35) and the transmission protocol layer on top of protocols like TCP/USP/HTTP that are used to connect a live encoder to a media processing function. This is also problematic when using multiple live encoders as ingest to a media processing entity. Another issue is passing live meta-data from broadcast workflows into cloud media processing (e.g. ID3 tags, SCTE-35 markers).
-To define standardized formats for future networks and cloud based architectures MPEG network based media processing (NBMP) aims to address this interop issue with a new ingest specification to improve interoperability between live encoders and cloud media processing services. The specification covers both media (encoded audio and video) and timed-meta data such as sparse tracks, ID3, SCTE 35 [2] tracks and so on. The specification deals with both the data format and the connection protocol mechanism in networks. 
-The following diagram shows the high-level architecture and the scope of the live streaming ingest specification to be developed as part of the Network Based Media Processing framework (NBMP) of standards in MPEG. Other possible places to standardize this draft specification text include the streaming video alliance (SVA) and the DASH industry forum (DASH-IF). 
+To define standardized formats for future networks and cloud based architectures MPEG network based media processing (NBMP) aims to address this interop issue with a new ingest specification to improve interoperability between live encoders and cloud media processing services. The specification covers both media (encoded audio and video) and timed-meta data such as sparse tracks,  e.g. SCTE 35 [2] tracks and so on. The specification deals with both the data format and the connection protocol mechanism in networks. 
+The following diagram shows the high-level architecture and the scope of the live streaming ingest specification to be developed as part of the Network Based Media Processing framework (NBMP) [11] of standards in MPEG. Other possible places to standardize this draft specification text include the streaming video alliance (SVA) [12] and the DASH industry forum (DASH-IF) [13]. 
 
 ## Conformance Notation
 
@@ -17,29 +17,29 @@ The key words "MUST," "MUST NOT," "REQUIRED," "SHALL," "SHALL NOT," "SHOULD," "S
 ## Terminology 
 
 This specification uses the following terminology
-ISO BMFF: ISO BMFF in this document refers to part 12 of the ISO/IEC specification which describes the ISO Base media file format and the box structures related in this file format [1].
-* Ftyp: the filetype and compatibility “ftyp” box as described in the ISO BMFF [1] that describes the brand of the media stream file brand. 
-* Moov: the container for all metadata “moov” box as described in the ISO BMFF base media file format [1] that describes the metadata of the media and tracks in the presentation.
-* Moof: the movie fragment “moof” box as described in the ISO BMFF base media file format [1] that describes the meta data of a fragment of media.
-* Mdat: the media data container “mdat” box contained in an ISO BMFF  [1], this box contains the physical media samples based on a codec such as for example the HEVC [2] codec.
-* Kind box: the track kind “kind” box defined in the ISO BMFF [1]  to label a track with its usage (i.e. user defined data) 
-* Mfra: the movie fragment random access “mfra” box defined in the ISO BMFF [1]  to signal random access samples [1].
-* Tfdt: the TrackFragmentDecodeTimeBox box “tfdt” in MPEG-4 ISO base media file format [1] used to signal decode time of the media fragment moof box.
-* nmhd: The null media header Box as defined in [1] to signal a track for which no specific media header is defined 
-* HTTP: Hyper Text Transfer Protocol, version 1.1 as specified by RFC 2626 [2]
-* HTTP POST: Command used in the Hyper Text Transfer Protocol for pushing data from a source to a destination [2]
+ISO BMFF: ISO BMFF in this document refers to part 12 of the ISO/IEC specification which describes the ISO Base media file format and the box structures related in this file format [3].
+* Ftyp: the filetype and compatibility “ftyp” box as described in the ISO BMFF [3] that describes the brand of the media stream file brand. 
+* Moov: the container for all metadata “moov” box as described in the ISO BMFF base media file format [3] that describes the metadata of the media and tracks in the presentation.
+* Moof: the movie fragment “moof” box as described in the ISO BMFF base media file format [3] that describes the meta data of a fragment of media.
+* Mdat: the media data container “mdat” box contained in an ISO BMFF  [3], this box contains the physical media samples based on a codec such as for example the HEVC [4] codec.
+* Kind box: the track kind “kind” box defined in the ISO BMFF [3]  to label a track with its usage (i.e. user defined data) 
+* Mfra: the movie fragment random access “mfra” box defined in the ISO BMFF [3]  to signal random access samples [3].
+* Tfdt: the TrackFragmentDecodeTimeBox box “tfdt” in MPEG-4 ISO base media file format [3] used to signal decode time of the media fragment moof box.
+* nmhd: The null media header Box as defined in [3] to signal a track for which no specific media header is defined 
+* HTTP: Hyper Text Transfer Protocol, version 1.1 as specified by RFC 2626 [5]
+* HTTP POST: Command used in the Hyper Text Transfer Protocol for pushing data from a source to a destination [5]
 * fragmentedMP4stream: stream of ISO BMFF [1] fragments (moof and mdat), the payload of the live media ingest.
 * POST_URL:  Target URL of a post command in the HTTP protocol for pushing data from a source to a destination. 
-* TCP: Transmission Control Protocol (TCP) as defined in RFC 793 [3]
-* URI_SAFE_IDENTIFIER: identifier/string formatted according to [4]
+* TCP: Transmission Control Protocol (TCP) as defined in RFC 793 [6]
+* URI_SAFE_IDENTIFIER: identifier/string formatted according to [7]
 * Connection: connection setup between a host and a source using the TCP protocol and the HTTP POST method.
 * Live stream event: the total media broadcast stream of the encoder ingest or source to be pushed to the destination. 
 
 ## Ingest Protocol Requirements
 
-The media and timed meta-data ingest specification uses a standard long-running HTTP POST request to transmit encoded media data packaged in fragmented ISO BMFF [1] format to the media processing entity.  Each HTTP POST sends a complete fragmented MP4 bitstream ("stream"), starting from the beginning with header boxes (ftyp and moov boxes), and contin-uing with a sequence of fragments (moof and mdat boxes). An example of the Fragmented Media Ingest POST URL targeting the media processing entity is:
+The media and timed meta-data ingest specification uses a standard long-running HTTP POST request to transmit encoded media data packaged in fragmented ISO BMFF [3] format to the media processing entity.  Each HTTP POST sends a complete fragmented MP4 bitstream ("stream"), starting from the beginning with header boxes (ftyp and moov boxes), and contin-uing with a sequence of fragments (moof and mdat boxes). An example of the Fragmented Media Ingest POST URL targeting the media processing entity is:
 http://mypublishingpoint/ingest.isml/streams(720p)
-The POST URL and syntax is defined as follows using the RFC 5234 ANB [9] to specify the structure. 
+The POST URL and syntax is defined as follows using the IETF RFC 5234 ANB [14] to specify the structure. 
 * PostURL = Protocol “://” BroadcastURL Identifier
 * Protocol = "http" / "https" 
 * BroadcastURL = ServerAddress "/" PresentationPath 
@@ -50,7 +50,7 @@ The POST URL and syntax is defined as follows using the RFC 5234 ANB [9] to spec
 * StreamID = "/" Streams(URI_SAFE_IDENTIFIER)" 
 
 In this PostURL the server address is typically the hostname or IP address of the media processing entity and the presentation path is the path to the specific media function instance.  The identifier, Event ID and stream ID are used to signal the stream and can be generated by various means such as by the system administrator, by the live encoder of by the control plane of the cloud setting, or manually by assigning a number to a stream or service. 
-The payload and content of the media ingest stream in the long running post operation is a fragmentedMP4stream defined using the RFC 5234 ANB [9] as follows. 
+The payload and content of the media ingest stream in the long running post operation is a fragmentedMP4stream defined using the IETF RFC 5234 ANB [14] as follows. 
 
 * fragmentedMP4stream = HeaderBoxes Fragments
 * HeaderBoxes = FileType Moov
@@ -58,12 +58,12 @@ The payload and content of the media ingest stream in the long running post oper
 * Fragment = moof mdat 
 
 During operation the communication between the media ingest encoder and the streaming end point follows the following requirements.
-1.	The encoder or ingest source communicates to the end point using the HTTP POST method as defined in HTTP protocol [2]
+1.	The encoder or ingest source communicates to the end point using the HTTP POST method as defined in HTTP protocol [5]
 2.	The encoder or ingest source SHOULD start the broadcast by sending an HTTP POST request with an empty “body” (zero content length) by using the same ingestion POSTURL. This can help the encoder quickly detect whether the live ingestion endpoint is valid, and if there are any authentication or other conditions required. Per HTTP protocol, the server can't send back an HTTP response until the entire request, including the POST body, is received. Given the long-running nature of a live event, without this step, the encoder might not be able to detect any error until it finishes sending all the data.
 3.	The encoder or ingest source MUST handle any errors or authentication challenges because of (1). If (1) succeeds with a 200 response, continue.
 4.	The encoder or ingest source MUST start a new HTTP POST request with the fragmented MP4 stream. The payload MUST start with the header boxes ftyp and moov, followed by fragments signalled by the moof and mdat boxes. Note that the ftyp, and moov boxes (in this order) MUST be sent with each request, even if the encoder must reconnect because the previous request was terminated prior to the end of the stream.
-5.	The encoder or ingest source SHOULD use chunked transfer encoding option of the HTTP POST command [2] for uploading as it is impossible to predict the entire content length of the live stream.
-6.	The encoder or ingest source MAY use individual HTTP POST commands [2] for uploading media fragments when ready if it is possible to predict the entire content length after the fragment became available. The encoder must send the ftyp and moov boxes (in this order) with each individual request, followed by the media fragments moof and mdat.
+5.	The encoder or ingest source SHOULD use chunked transfer encoding option of the HTTP POST command [5] for uploading as it is impossible to predict the entire content length of the live stream.
+6.	The encoder or ingest source MAY use individual HTTP POST commands [5] for uploading media fragments when ready if it is possible to predict the entire content length after the fragment became available. The encoder must send the ftyp and moov boxes (in this order) with each individual request, followed by the media fragments moof and mdat.
 7.	When the live stream event is over, after sending the last fragment, the encoder or ingest source MUST gracefully end the chunked transfer encoding message sequence (most HTTP client stacks handle it automatically) by signalling the stop. The encoder or ingest source MUST wait for the service to return the final response code, and then terminate the connection.
 8.	The stop message can be sent by the encoder or live ingest source to signal an end of stream (end of the live stream event) by sending a movie fragment random access “mfra” box in the stream.
 9.	If the HTTP POST request terminates or times out with a TCP error prior to the end of the stream, the encoder MUST issue a new POST request by using a new connection, and follow the preceding requirements. Additionally, the encoder MAY resend the previous two MP4 fragments for each track in the stream, and resume without introducing a discontinuity in the media timeline. Resending the last two ISO BMFF fragments for each track ensures that there is no data loss. In other words, if a stream contains both an audio and a video track, and the current POST request fails, the encoder or media ingest source must reconnect and resend the last two fragments for the audio track, which were previously successfully sent, and the last two fragments for the video track, which were previously successfully sent, to ensure that there is no data loss. The encoder MAY maintain a “forward” buffer of media fragments, which it resends when it reconnects.
@@ -80,7 +80,7 @@ During operation the communication between the media ingest encoder and the stre
 
 This section discusses the specific formatting requirements for ingest of timed meta-data.
 When delivering a live streaming presentation with a rich client experience, often it is necessary to transmit time-synced events, meta-data or other signals in-band with the main media data. An example of this are opportunities for dynamic live ad insertion signalled by SCTE-35 markers for example. This type of event signalling is different from regular audio/video streaming because of its sparse nature. In other words, the signalling data usually does not happen continuously, and the interval can be hard to predict. 
-Examples of timed meta-data are ID3 tags (http://www.id3.org/), SCTE-35 markers [3] and DASH emsg messages defined in section 5.10.3.3 of [2]. For example, DASH Event messages contain a schemeIdUri that defines the payload of the message. Table 1 provide some example schemes in DASH event messages and Table 2 illustrates an example of a SCTE-35 marker stored in a dash emsg. 
+Examples of timed meta-data are ID3 tags (http://www.id3.org/), SCTE-35 markers [2] and DASH emsg messages defined in section 5.10.3.3 of [2]. For example, DASH Event messages contain a schemeIdUri that defines the payload of the message. Table 1 provide some example schemes in DASH event messages and Table 2 illustrates an example of a SCTE-35 marker stored in a dash emsg. 
 
 Table 1 Example of DASH emsg schemes  URI
 
@@ -97,7 +97,7 @@ Table 2 example of a scte-35 marker embedded in a DASH emsg
 
 
 Tag	                    |          Value
-------------------------|---------------
+------------------------|-----------------------------
 scheme_uri_id           |	"urn:scte:scte35:2013:bin"
 Value                   |	the value of the SCTE 35 PID
 Timescale               |	positive number
@@ -109,13 +109,13 @@ message_data	          |           splice info section including CRC
 The following steps are a recommended for timed metadata ingest:
 1.	Create a fragmentedMP4stream that contains only sparse tracks meta-data track, i.e. timed metadata streams which are streams without audio/video tracks.
 1.	For this meta-data track the media handler type is ("meta") and the tracks handler box is a null media header box ("nmhd").
-1.	The URIMetaSampleEntry entry contains, in a URIbox, the URI following the URI syntax in [8] defining the form of the metadata (see the ISO Base media file format specification [1]). 	For example, the URIBox could contain for ID3 tags the URL  http://www.id3.org
+1.	The URIMetaSampleEntry entry contains, in a URIbox, the URI following the URI syntax in [7] defining the form of the metadata (see the ISO Base media file format specification [3]). 	For example, the URIBox could contain for ID3 tags the URL  http://www.id3.org
 1.	For the case of ID3, a sample contains a single ID3 tag. The ID3 tag may contain one or more ID3 frames.
 1.	For the case of DASH emsg, a sample may contain one or more event message ("emsg") boxes.  Version 0 Event Message should be used. The presentation_time_delta field is relative to the absolute timestamp specified in the TrackFragmentBaseMediaDecode-TimeBox ("tfdt"). The timescale field should match the value specified in the media header box mdhd.
 1.	For the case of a DASH emsg, the kind box (contained in the udta) shall be used to signal the scheme URI of the types of metadata
 1.	A BitRateBox ("btrt") should be present at the end of MetaDataSampleEntry to signal the bit rate information of the stream.
 1.	If the specific format uses internal timing values, then the timescale must match the timescale field set in the media header box mdhd.
-1.	All Timed Metadata samples are sync samples [1], defining the entire set of metadata for the time interval they cover. Hence, the sync sample table box is not present.
+1.	All Timed Metadata samples are sync samples [3], defining the entire set of metadata for the time interval they cover. Hence, the sync sample table box is not present.
 1.	When Timed Metadata is stored in a TrackRunBox ("trun"), a single sample is present with the duration set to the duration for that run.
 Given the sparse nature of the signalling event, the following is recommended:
 1.	At the beginning of the live event, the encoder or media ingest source sends the initial header boxes to the service, which allows the service to register the sparse track in the client manifest.
@@ -177,6 +177,9 @@ For highly redundant global distribution, sometimes you must have cross-region b
 * [7]	R. Fielding, L. Masinter, T. Berners Lee, "Uniform Resource Identifiers (URI): Generic Syntax," IETF, IETF Request for comments (international standards track) RFC 2396, 1998.
 * [8]	"(MPEG-A) -- Part 19: Common media application format (CMAF) for segmented media," MPEG, ISO/IEC Draft International standard ISO/IEC FDIS 23000-19, 2017.
 * [9]	ISO/IEC JTC1 SC29 WG11, "Information technology -- Generic coding of moving pictures and associated audio information: Systems," ISO/IEC 13818-1:2007, 2007.
-* [10]	Microsoft Azure. Media ingest workflow with live encoder in Microsoft Azure. [Online]. https://docs.microsoft.com/en-us/azure/media-services/media-services-manage-live-encoder-enabled-channels
-
+* [10] Microsoft Azure. Media ingest workflow with live encoder in Microsoft Azure. [Online]. https://docs.microsoft.com/en-us/azure/media-services/media-services-manage-live-encoder-enabled-channels
+* [11] Use cases and draft requirement for NBMP (v2), MPEG Network Based Media Processing , w17262 ISO/IEC MPEG
+* [12] Streaming video Alliance (last accessed Jan 2018) https://www.streamingvideoalliance.org/
+* [13] DASH Industry Forum (last accessed Jan 2018) http://dashif.org/
+* [14] D. Crocker Augmented BNF for Syntax Specifications: ABNF https://tools.ietf.org/html/rfc5234
 
