@@ -81,23 +81,28 @@ When delivering a live streaming presentation with a rich client experience, oft
 Examples of timed meta-data are ID3 tags (http://www.id3.org/), SCTE-35 markers [3] and DASH emsg messages defined in section 5.10.3.3 of [2]. For example, DASH Event messages contain a schemeIdUri that defines the payload of the message. Table 1 provide some example schemes in DASH event messages and Table 2 illustrates an example of a SCTE-35 marker stored in a dash emsg. 
 
 Table 1 Example of DASH emsg schemes  URI
-Scheme URI	| Value	| Description	 | Reference
-------------|-------|------------|------------
-urn:mpeg:dash:event:2012| 1	|	Signals DASH specific events for DASH clients |	ISO / IEC 23009-1 (2014), §5.10.4
-urn:dvb:iptv:cpm:2014|	1|	Basic metadata relating to current program	| ETSI TS 103 285, §9.1.2.1 (pdf)
-urn:scte:scte35:2013:bin |1 | Contains a binary SCTE-35 message	| ANSI / SCTE 14-3 (2015), §7.3.2
-www.nielsen.com:id3:v1 | 1 | Contains a Nielsen ID3 tag	| Nielsen ID3 in MPEG-DASH
-<application provider specific>	|         |         |                   |	 	 
+
+
+Scheme URI	                | Value	| Description	                                  | Reference
+----------------------------|-------|-----------------------------------------------|--------------------------------------
+urn:mpeg:dash:event:2012    | 1	    |	Signals DASH specific events for DASH clients |	ISO / IEC 23009-1 (2014), §5.10.4
+urn:dvb:iptv:cpm:2014       |	1     |	Basic metadata relating to current program	  | ETSI TS 103 285, §9.1.2.1 (pdf)
+urn:scte:scte35:2013:bin    |1      | Contains a binary SCTE-35 message	            | ANSI / SCTE 14-3 (2015), §7.3.2
+www.nielsen.com:id3:v1      | 1     | Contains a Nielsen ID3 tag	                  | Nielsen ID3 in MPEG-DASH
+
+
 Table 2 example of a scte-35 marker embedded in a DASH emsg
-Tag	| Value
-----|------
-scheme_uri_id |	"urn:scte:scte35:2013:bin"
-Value  |	the value of the SCTE 35 PID
-Timescale  |	positive number
-presentation_time_delta	| non-negative number expressing splice time relative to track fragment base media decode time (tfdt) expressed in timescale
-event_duration |	duration of event in media presentation time, 0xFFFFFFFF indicates unknown duration
-Id |	unique identifier for message
-message_data	| splice info section including CRC
+
+
+Tag	                    |          Value
+------------------------|---------------
+scheme_uri_id           |	"urn:scte:scte35:2013:bin"
+Value                   |	the value of the SCTE 35 PID
+Timescale               |	positive number
+presentation_time_delta	| non-negative number expressing splice time relative to track fragment base media decode time (tfdt) 
+event_duration          |	     duration of event in media presentation time, 0xFFFFFFFF indicates unknown duration
+Id                      |	unique identifier for message
+message_data	          |           splice info section including CRC
 
 The following steps are a recommended for timed metadata ingest:
 1.	Create a fragmentedMP4stream that contains only sparse tracks meta-data track, i.e. timed metadata streams which are streams without audio/video tracks.
