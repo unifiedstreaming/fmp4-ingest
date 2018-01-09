@@ -27,9 +27,9 @@ Rufael Mekuria (Unified Streaming)
                      we will just follow current industry best practice and draft a specification around that, this should not result in any significant IP being developed. Some consensus as Harmonic, Elemental and  Mediaexcel
                      Media Excel feel this way too. Nikos, Rufael, James and Kevin moore mention that not much IP will be expected as the spec will mainly piggyback on existing technologies,  
              Rufael: perhaps involvement on multiple fronts may help 
-             Kevin Moore(AWS): this is not really efficient, typically you would work in an industry forum that then pushes their outputs to a standards body (agreed)
+             Kevin Johns: this is not really efficient, typically you would work in an industry forum that then pushes their outputs to a standards body (agreed)
              Will Law: voting on this issue of selecting a standards might be needed
-             Rufael: Is chosing a standardsbody/industry forum a showstopper ? Can we not continue the technical discussions ?  consensus: to move on and we can do some work (Elemental, MediaExcel,Harmonic,Unified Streaming,Akamai)
+             Rufael: Is chosing a standards body/industry forum a showstopper ? Can we not continue the technical discussions ?  consensus: to move on and we can do some work (Elemental, MediaExcel,Harmonic,Unified Streaming,Akamai)
              AP 2 (Rufael): prepare a way to vote for the standards body/industry forum, a proposal on how to handle this
              Consensus: standardization has value to this work, not having chosen a path on this does not stop doing this work and improving interop between different products.
 4. discussion of the current draft specification 
