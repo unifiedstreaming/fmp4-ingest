@@ -5,7 +5,7 @@ for more information please contact Rufael Mekuria rufael@unified-streaming.com.
 
 Updates will soon be added.
 
-# fmp4-ingest ingest goals 
+# fmp4-ingest goals 
 
 Todays highly available, highly scalable and high quality video streaming platforms combine high quality live encoders
 that perform high quality encoding with video streaming publishing points that handle massive user scalability, personalization, file format conversions, 
