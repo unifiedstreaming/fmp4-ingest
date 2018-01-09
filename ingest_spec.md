@@ -1,6 +1,6 @@
 # Media and Timed Meta-Data Ingest Draft
-Status: Draft
-Source: Unified Streaming
+* Status: Draft
+* Source: Unified Streaming
 
 ## Overview 
 This specification describes a protocol and format for live media ingest to media processing and CDN based on fragments of ISO Base media file format [1].  It serves as a starting point for an industry wide specification for live media ingest following current best practices.
