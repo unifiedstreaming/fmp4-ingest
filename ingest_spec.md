@@ -167,18 +167,17 @@ The requirements for this scenario are as the requirements in the "Encoder failo
 For highly redundant global distribution, sometimes you must have cross-region backup to handle regional disasters. Expanding on the “Encoder redundancy” topology, customers can choose to have a redundant service deployment in a different region that's connected with the second set of encoders. Customers also can work with a Content Delivery Network provider to deploy a Global Traffic Manager in front of the two service deployments to seamlessly route client traffic. The requirements for the encoders are the same as the “Encoder redundancy” case. The only exception is that the second set of encoders needs to be pointed to a different live ingest endpoint. 
 
 ## References
-* [1]	ISO/IEC JCT1/SC29 MPEG, "ISO/IEC 23009-1:2014: Dynamic adaptive streaming over HTTP (DASH) -- Part 1: Media presentation description and segment formats," 2014.
+* [1]	ISO/IEC JCT1/SC29 WG11 (MPEG), "ISO/IEC 23009-1:2014: Dynamic adaptive streaming over HTTP (DASH) -- Part 1: Media presentation description and segment formats," 2014.
 * [2]	Society of Cable Television Engineers, "SCTE-35 (ANSI/SCTE 35 2013) Digital Program Insertion Cueing Message for Cable," SCTE-35 (ANSI/SCTE 35 2013),.
-* [3]	ISO/IEC JTC 1/SC 29, "Information technology -- Coding of audio-visual objects -- Part 12: ISO base media file format," ISO/IEC 14496-12:2012 , 2016.
-* [4]	IEC/ISO, "Information technology -- High efficiency coding and media delivery in heterogeneous environments -- Part 2: High efficiency video coding," ISO/IEC 23008-2:2015, 2015.
-* [5]	IETF. RFC 2626 Hypertext Transfer Protocol -- HTTP/1.1. [Online]. https://tools.ietf.org/html/rfc2616
-
-* [6]	DARPA, "TRANSMISSION CONTROL PROTOCOL," IETF, request for comments (international standards track) RFC 7**93, 1981.
-* [7]	R. Fielding, L. Masinter, T. Berners Lee, "Uniform Resource Identifiers (URI): Generic Syntax," IETF, IETF Request for comments (international standards track) RFC 2396, 1998.
-* [8]	"(MPEG-A) -- Part 19: Common media application format (CMAF) for segmented media," MPEG, ISO/IEC Draft International standard ISO/IEC FDIS 23000-19, 2017.
-* [9]	ISO/IEC JTC1 SC29 WG11, "Information technology -- Generic coding of moving pictures and associated audio information: Systems," ISO/IEC 13818-1:2007, 2007.
+* [3]	ISO/IEC JTC1/SC29 WG11 (MPEG), "Information technology -- Coding of audio-visual objects -- Part 12: ISO base media file format," ISO/IEC 14496-12:2012 , 2016.
+* [4]	ISO/IEC JTC1/SC29 WG11 (MPEG), "Information technology -- High efficiency coding and media delivery in heterogeneous environments -- Part 2: High efficiency video coding", ISO/IEC 23008-2:2015, 2015.
+* [5]	IETF. Hypertext Transfer Protocol HTTP/1.1 , RFC 2626 [Online]. https://tools.ietf.org/html/rfc2616
+* [6]	IETF DARPA, "TRANSMISSION CONTROL PROTOCOL," IETF, request for comments (international standards track) RFC 7**93, 1981.
+* [7]	IETF R. Fielding, L. Masinter, T. Berners Lee, "Uniform Resource Identifiers (URI): Generic Syntax," IETF, IETF Request for comments (international standards track) RFC 2396, 1998.
+* [8]	ISO/IEC JTC1/SC29 WG11 (MPEG), "(MPEG-A) -- Part 19: Common media application format (CMAF) for segmented media," MPEG, ISO/IEC Draft International standard ISO/IEC FDIS 23000-19, 2017.
+* [9]	ISO/IEC JTC1 SC29 WG11 (MPEG), "Information technology -- Generic coding of moving pictures and associated audio information: Systems," ISO/IEC 13818-1:2007, 2007.
 * [10] Microsoft Azure. Media ingest workflow with live encoder in Microsoft Azure. [Online]. https://docs.microsoft.com/en-us/azure/media-services/media-services-manage-live-encoder-enabled-channels
-* [11] Use cases and draft requirement for NBMP (v2), MPEG Network Based Media Processing , w17262 ISO/IEC MPEG
+* [11] ISO/IEC JTC1 SC29 WG11 (MPEG), Use cases and draft requirement for NBMP (v2), MPEG Network Based Media Processing , w17262 ISO/IEC MPEG Macau China
 * [12] Streaming video Alliance (last accessed Jan 2018) https://www.streamingvideoalliance.org/
 * [13] DASH Industry Forum (last accessed Jan 2018) http://dashif.org/
 * [14] D. Crocker Augmented BNF for Syntax Specifications: ABNF https://tools.ietf.org/html/rfc5234
