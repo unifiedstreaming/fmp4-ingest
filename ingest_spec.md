@@ -18,43 +18,45 @@ The key words "MUST," "MUST NOT," "REQUIRED," "SHALL," "SHALL NOT," "SHOULD," "S
 
 This specification uses the following terminology
 ISO BMFF: ISO BMFF in this document refers to part 12 of the ISO/IEC specification which describes the ISO Base media file format and the box structures related in this file format [1].
-Ftyp: the filetype and compatibility “ftyp” box as described in the ISO BMFF [1] that describes the brand of the media stream file brand. 
-Moov: the container for all metadata “moov” box as described in the ISO BMFF base media file format [1] that describes the metadata of the media and tracks in the presentation.
-Moof: the movie fragment “moof” box as described in the ISO BMFF base media file format [1] that describes the meta data of a fragment of media.
-Mdat: the media data container “mdat” box contained in an ISO BMFF  [1], this box contains the physical media samples based on a codec such as for example the HEVC [2] codec.
-Kind box: the track kind “kind” box defined in the ISO BMFF [1]  to label a track with its usage (i.e. user defined data) 
-Mfra: the movie fragment random access “mfra” box defined in the ISO BMFF [1]  to signal random access samples [1].
-Tfdt: the TrackFragmentDecodeTimeBox box “tfdt” in MPEG-4 ISO base media file format [1] used to signal decode time of the media fragment moof box.
-nmhd: The null media header Box as defined in [1] to signal a track for which no specific media header is defined 
-HTTP: Hyper Text Transfer Protocol, version 1.1 as specified by RFC 2626 [2]
-HTTP POST: Command used in the Hyper Text Transfer Protocol for pushing data from a source to a destination [2]
-fragmentedMP4stream: stream of ISO BMFF [1] fragments (moof and mdat), the payload of the live media ingest.
-POST_URL:  Target URL of a post command in the HTTP protocol for pushing data from a source to a destination. 
-TCP: Transmission Control Protocol (TCP) as defined in RFC 793 [3]
-URI_SAFE_IDENTIFIER: identifier/string formatted according to [4]
-Connection: connection setup between a host and a source using the TCP protocol and the HTTP POST method.
-Live stream event: the total media broadcast stream of the encoder ingest or source to be pushed to the destination. 
+* Ftyp: the filetype and compatibility “ftyp” box as described in the ISO BMFF [1] that describes the brand of the media stream file brand. 
+* Moov: the container for all metadata “moov” box as described in the ISO BMFF base media file format [1] that describes the metadata of the media and tracks in the presentation.
+* Moof: the movie fragment “moof” box as described in the ISO BMFF base media file format [1] that describes the meta data of a fragment of media.
+* Mdat: the media data container “mdat” box contained in an ISO BMFF  [1], this box contains the physical media samples based on a codec such as for example the HEVC [2] codec.
+* Kind box: the track kind “kind” box defined in the ISO BMFF [1]  to label a track with its usage (i.e. user defined data) 
+* Mfra: the movie fragment random access “mfra” box defined in the ISO BMFF [1]  to signal random access samples [1].
+* Tfdt: the TrackFragmentDecodeTimeBox box “tfdt” in MPEG-4 ISO base media file format [1] used to signal decode time of the media fragment moof box.
+* nmhd: The null media header Box as defined in [1] to signal a track for which no specific media header is defined 
+* HTTP: Hyper Text Transfer Protocol, version 1.1 as specified by RFC 2626 [2]
+* HTTP POST: Command used in the Hyper Text Transfer Protocol for pushing data from a source to a destination [2]
+* fragmentedMP4stream: stream of ISO BMFF [1] fragments (moof and mdat), the payload of the live media ingest.
+* POST_URL:  Target URL of a post command in the HTTP protocol for pushing data from a source to a destination. 
+* TCP: Transmission Control Protocol (TCP) as defined in RFC 793 [3]
+* URI_SAFE_IDENTIFIER: identifier/string formatted according to [4]
+* Connection: connection setup between a host and a source using the TCP protocol and the HTTP POST method.
+* Live stream event: the total media broadcast stream of the encoder ingest or source to be pushed to the destination. 
 
 ## Ingest Protocol Requirements
 
 The media and timed meta-data ingest specification uses a standard long-running HTTP POST request to transmit encoded media data packaged in fragmented ISO BMFF [1] format to the media processing entity.  Each HTTP POST sends a complete fragmented MP4 bitstream ("stream"), starting from the beginning with header boxes (ftyp and moov boxes), and contin-uing with a sequence of fragments (moof and mdat boxes). An example of the Fragmented Media Ingest POST URL targeting the media processing entity is:
 http://mypublishingpoint/ingest.isml/streams(720p)
 The POST URL and syntax is defined as follows using the RFC 5234 ANB [9] to specify the structure. 
-PostURL = Protocol “://” BroadcastURL Identifier
-Protocol = "http" / "https" 
-BroadcastURL = ServerAddress "/" PresentationPath 
-ServerAddress = URI_SAFE_IDENTIFIER 
-PresentationPath = URI_SAFE_IDENTIFIER ".isml" 
-Identifier = [EventID] StreamID 
-EventID = "/Events(URI_SAFE_IDENTIFIER)”
-StreamID = "/" Streams(URI_SAFE_IDENTIFIER)" 
+* PostURL = Protocol “://” BroadcastURL Identifier
+* Protocol = "http" / "https" 
+* BroadcastURL = ServerAddress "/" PresentationPath 
+* ServerAddress = URI_SAFE_IDENTIFIER 
+* PresentationPath = URI_SAFE_IDENTIFIER ".isml" 
+* Identifier = [EventID] StreamID 
+* EventID = "/Events(URI_SAFE_IDENTIFIER)”
+* StreamID = "/" Streams(URI_SAFE_IDENTIFIER)" 
 
 In this PostURL the server address is typically the hostname or IP address of the media processing entity and the presentation path is the path to the specific media function instance.  The identifier, Event ID and stream ID are used to signal the stream and can be generated by various means such as by the system administrator, by the live encoder of by the control plane of the cloud setting, or manually by assigning a number to a stream or service. 
 The payload and content of the media ingest stream in the long running post operation is a fragmentedMP4stream defined using the RFC 5234 ANB [9] as follows. 
-fragmentedMP4stream = HeaderBoxes Fragments
-HeaderBoxes = FileType Moov
-Fragments = *1Fragment
-Fragment = moof mdat 
+
+* fragmentedMP4stream = HeaderBoxes Fragments
+* HeaderBoxes = FileType Moov
+* Fragments = x1Fragment
+* Fragment = moof mdat 
+
 During operation the communication between the media ingest encoder and the streaming end point follows the following requirements.
 1.	The encoder or ingest source communicates to the end point using the HTTP POST method as defined in HTTP protocol [2]
 2.	The encoder or ingest source SHOULD start the broadcast by sending an HTTP POST request with an empty “body” (zero content length) by using the same ingestion POSTURL. This can help the encoder quickly detect whether the live ingestion endpoint is valid, and if there are any authentication or other conditions required. Per HTTP protocol, the server can't send back an HTTP response until the entire request, including the POST body, is received. Given the long-running nature of a live event, without this step, the encoder might not be able to detect any error until it finishes sending all the data.
