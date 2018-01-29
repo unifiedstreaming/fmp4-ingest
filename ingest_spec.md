@@ -27,24 +27,44 @@ This specification uses the following terminology
 ISO BMFF: ISO BMFF in this document refers to part 12 of the ISO/IEC specification which describes the ISO Base media file format and the box structures related in this file format [3].
 
 **Ftyp**: the filetype and compatibility “ftyp” box as described in the ISO BMFF [3] that describes the brand of the media stream file brand. 
+
 **Moov**: the container for all metadata “moov” box as described in the ISO BMFF base media file format [3] that describes the metadata of the media and tracks in the presentation.
+
 **Moof**: the movie fragment “moof” box as described in the ISO BMFF base media file format [3] that describes the meta data of a fragment of media.
+
 **Mdat**: the media data container “mdat” box contained in an ISO BMFF  [3], this box contains the physical media samples based on a codec such as for example the HEVC [4] codec.
+
 **Kind**: the track kind “kind” box defined in the ISO BMFF [3]  to label a track with its usage (i.e. user defined data) 
+
 **Mfra**: the movie fragment random access “mfra” box defined in the ISO BMFF [3]  to signal random access samples [3].
-**Tfdt**: the TrackFragmentDecodeTimeBox box “tfdt” in MPEG-4 ISO base media file format [3] used to signal decode time of the media fragment moof box.
+
+**Tfdt**: the TrackFragmentDecodeTimeBox box “tfdt” in MPEG-4 ISO base media file format [3] used to signal decode time of the media 
+fragment moof box.
+
 **nmhd**: The null media header Box as defined in [3] to signal a track for which no specific media header is defined 
+
 **HTTP**: Hyper Text Transfer Protocol, version 1.1 as specified by RFC 2626 [5]
+
 **HTTP POST**: Command used in the Hyper Text Transfer Protocol for pushing data from a source to a destination [5]
+
 **fragmentedMP4stream**: stream of ISO BMFF [1] fragments (moof and mdat), the payload of the live media ingest.
+
 **POST_URL**:  Target URL of a post command in the HTTP protocol for pushing data from a source to a destination. 
+
 **TCP**: Transmission Control Protocol (TCP) as defined in RFC 793 [6]
+
 **URI_SAFE_IDENTIFIER**: identifier/string formatted according to [7]
+
 **Connection**: connection setup between a host and a source using the TCP protocol and the HTTP POST method.
+
 **Live stream event**: the total media broadcast stream of the encoder ingest or source to be pushed to the destination. 
+
 **(Live) encoder**: entity performaning live encoder producing a high quality live encoded broadcast stream
+
 **(Media) Ingest source**: a media source ingesting media content to a processing function, typically a live encoder but not restricted to this
+
 **Publishing point**: entity used to publish the media content, consumes the incoming media ingest stream
+
 **Media processing function/entity**: entity used to process media content, can be a producer or consumer of a media ingest stream (or both), typically it is a consumer of stream of a live source.
 
 ## Ingest Protocol Behavior Specification
