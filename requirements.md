@@ -13,7 +13,8 @@ I restructure the requirements based on media format for source media content
 - fMP4 ingest specification shall support ingest of media in a media format following the fragmented MPEG-4 format containing moof and mdat boxes
 
 **Requirements on ingest for timed meta data and auxiliary information (M)**
-  -fMP4 ingest shall support timed meta data such as based on ID3 and SCTE-35
+
+-fMP4 ingest shall support timed meta data such as based on ID3 and SCTE-35
 Requirements on ingest media deployments and workflows (W)
 
 **Requirements on ingest media transport protocol (P)**
