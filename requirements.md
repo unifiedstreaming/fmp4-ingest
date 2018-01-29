@@ -14,7 +14,7 @@ I restructure the requirements based on media format for source media content
 
 **Requirements on ingest for timed meta data and auxiliary information (M)**
 
--fMP4 ingest shall support timed meta data such as based on ID3 and SCTE-35
+- fMP4 ingest shall support timed meta data such as based on ID3 and SCTE-35
 Requirements on ingest media deployments and workflows (W)
 
 **Requirements on ingest media transport protocol (P)**
