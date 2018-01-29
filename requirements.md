@@ -20,8 +20,10 @@ Requirements on ingest media deployments and workflows (W)
 **Requirements on ingest media transport protocol (P)**
   - fMP4 ingest shall support push based transmission of live stream events
   - fMP4 ingest shall use HTTP POST for media source ingest
+  - fMP4 ingest shall support reconnection procedure in case of a disconnect
   
 **Requirements on media ingest deployments and workflows (W)**
   - fMP4 ingest spec shall specify failover and restart procedures to gracefully restart in case of failovers
   - fMP4 ingest spec document shall specify best practices for media source redundancy and service redundancy (i.e. continuation of the live event after failure of media source or service node)
-  -fMP4 ingest specification shall support graceful teardown of ingest of live stream events
+  - fMP4 ingest specification shall support graceful teardown of ingest of live stream events
+  
