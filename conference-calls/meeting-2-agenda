@@ -1,0 +1,12 @@
+Agenda:
+- review of action points established in the last call
+- review of restructuring of the requirements, additional requirements
+- updated draft specification review
+- discussion on the standardization proces
+- requirements on reference software (if agreed upon)
+
+*) restructuring requirements 
+- requirements on ingest media format for source media content (S)
+- requirements on ingest media format for meta data and auxiliary information (M)
+- requirements on ingest media deployments and workflows (W)
+- requirements on ingest media protocol (P)
