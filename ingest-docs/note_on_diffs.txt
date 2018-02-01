@@ -1,0 +1,13 @@
+Summary of differences compared to azure media ingest specification:
+
+- removed all azure/smooth specific references
+- removed live server manifeset box everywhere it is used it is not needed
+- removed reference to Events()
+- removed reference to LiveSmil and StreamElement
+- reference to fragmented MPEG-4 
+- Stream definition from 3 options to 1 option: each stream in a separate connection
+- added specific examples and implementations of the id3/scte 35 markers
+- relaxed some contraints from shall/Must to should, the reference implementation will implement the should
+
+- implementations of azure media ingest should be compatible except from some specific features related to the timed meta data (SCTE-35, ID3)
+- check with Microsoft team
