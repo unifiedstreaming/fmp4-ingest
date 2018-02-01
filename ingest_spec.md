@@ -1,6 +1,6 @@
 # Media and Timed Meta-Data Ingest Draft
 * Status: Draft
-* Source: Unified Streaming
+* Status: For Discussion
 
 ## Overview 
 This specification describes a protocol and format for live media ingest from a live encoder or media source towards media processing and CDN's such as publishing points or origins. It serves as a starting point for an industry wide specification for live media ingest following current best practices and formats.
