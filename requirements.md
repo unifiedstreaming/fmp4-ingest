@@ -12,15 +12,20 @@ I restructure the requirements based on media format for source media content
 **Requirements for source media content (S)**
 - fMP4 ingest specification shall support ingest of MPEG-H and MPEG-4 media including HEVC, AVC, AAC, MPEG-H
 - fMP4 ingest specification shall support ingest of media in a media format following the fragmented MPEG-4 format containing moof and mdat boxes
+- fMP4 ingest should support encrypted media content based on commonly deployed schemes such as specified in MPEG common encryption
+- fMP4 shall support ingest of multiple tracks to accomodate for different languages, audio etc.
 
 **Requirements on ingest for timed meta data and auxiliary information (M)**
 
 - fMP4 ingest shall support timed meta data such as based on ID3 and SCTE-35, DASH e messages
+- fMP4 ingest shall support ingest of captioning information 
 
 **Requirements on ingest media transport protocol (P)**
   - fMP4 ingest shall support push based transmission of live stream events
-  - fMP4 ingest shall use HTTP POST for media source ingest
   - fMP4 ingest shall support reconnection procedure in case of a disconnect
+  - fMP4 ingest shall support secure connections
+  - fMP4 ingest shall support a method for authentication of the contributor 
+  
   
 **Requirements on media ingest deployments and workflows (W)**
   - fMP4 ingest spec shall specify failover and restart procedures to gracefully restart in case of failovers
