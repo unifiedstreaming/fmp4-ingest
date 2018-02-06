@@ -6,7 +6,7 @@ Attendants:
 James Wardle (Harmonic UK)
 Alan Robinson (BBC)
 Nikos (MediaExcel)
-Kevin Johns (Level 3)
+Kevin Johns (century link)
 Kevin Moore (Elemental)
 Rufael Mekuria (Unified Streaming)
 Valentijn Sibrands (Unified Streaming)
@@ -15,22 +15,40 @@ David Franklin (Comcast)
 Matt Poole (ITV)
 
 agenda approval
-OK
+OK, agenda approved
 
 Agenda:
 - review of action points established in the last call
-  AP1 -> Nikos will have a look , Kevin Johns will have a look aswell / feedback
-  AP2 -> postpone 
-  AP3 -> completed -> Kevin Johns additional topics section
-  AP4 -> completed 
+  AP1 -> Nikos will have a look , Kevin Johns will have a look aswell / feedback on text in readme.md, remains open
+  AP2 -> Discussion on standards body postponed to later in the call 
+  AP3 -> completed -> Kevin Johns proposes additional topics per section -> discussed later in the call
+  AP4 -> completed (closed) 
   
 - review of restructuring of the requirements, additional requirements
+  discussion took place on the restructuring of the requirements after the explanation in categories by unified streaming
+  discussion led to the following updated requirements
+  - requirements updated to support encrypted content ingestion
+  - requirements updated to support secure connections in the ingest protocol, contribution source needs to be secure (requirement from BBC)
+  - requirements updated to support ingest of captions 
+  - discussion on the detailed technologies used in the requirements, removed specific technology choices like HTTP POST etc these should be left open 
+  - discussion on the detailed technology supported, these can be made specific e.g. support HEVC, WebVTT etc.
+  AP1: work on the requirements to make it consistent in this regard (leaving out technology choices, making clear what media ingest
+  needs to carry) (Rufael)
   
 - review of IPR process and standardization body 
    - discussion on the standardization proces
-   - standardization body for work -> SVA, DASH-IF, MPEG, IETF
-   - IPR policy  1. innovation 
-                 2. software
+       draft IETF for progress discussed, not a lot of support so far, different options like SVA, DASH-IF, MPEG will be considered later when work advances
+   - standardization body for work -> SVA, DASH-IF, MPEG, IETF , postponed topic closed for now
+   - IPR policy  1. innovation  -> century link needs clear situation on IPR, others are ok with IPR situation as this is not a 
+                  "crown jewel technology" (this is mostly an interop for industry following best practices), work will move forward
+                   on discussing issues encountered with this technology and defining specification for interop purpose
+                 2. software   -> no time to discuss this postponed to a later call
    
 - updated draft specification review and approval
-- requirements on reference software (if agreed upon)
+      -> DASH ingest discussed as alternative, adding manifest will help in several cases, github issue made by Will, support for this 
+            by elemental, harmonic, mediaexcel.  Unified Streaming sees some issues with this that need to be clarified.
+            AP3: Kevin Johns to propose additional sections in draft spec
+            AP4: Unified to articulate the issues identified with DASH ingest in practice
+- requirements on reference software (if agreed upon) -> discussion postponed to next call
+- next call 
+   next call will be scheduled in two weeks from now, possible at the same date, the doodle poll will be sent out (AP5)
