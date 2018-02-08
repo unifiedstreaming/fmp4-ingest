@@ -8,6 +8,11 @@ I restructure the requirements based on media format for source media content
 - fMP4 ingest shall support low latency media source ingest
 - fMP4 shall support redundant robust workflows with multiple sources and multiple processing entities/publishing points
 - fMP4 ingest shall be supported by an openly available reference implementation ????
+// added by me to make it more clear that live ingest needs to support active media processing and not only pass through
+- fMP4 ingest shall support further media processing in the cloud or network for value added presentations 
+- fMP4 ingest shall support re-encryption, content stitching, live to VoD conversion, graphics overlay processing based on accurate timing information downstream
+- fMP4 ingest shall support re-generation of the manifest at the publishing point or source node to support different streaming protocols and personalized presentations.
+- fMP4 ingest shall decouple the delivery between the live encoder and the processing node from the processing node and the client
 
 **Requirements for source media content (S)**
 - fMP4 ingest specification shall support ingest of MPEG-H and MPEG-4 media including HEVC, AVC, AAC, MPEG-H
@@ -19,6 +24,7 @@ I restructure the requirements based on media format for source media content
 
 - fMP4 ingest shall support timed meta data such as based on ID3 and SCTE-35, DASH e messages
 - fMP4 ingest shall support ingest of captioning information 
+- fMP4 ingest shall support ingest information suitable to different streaming protocols such as MPEG DASH, Apple HLS and Microsoft Smooth
 
 **Requirements on ingest media transport protocol (P)**
   - fMP4 ingest shall support push based transmission of live stream events
