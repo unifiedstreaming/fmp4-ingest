@@ -8,6 +8,8 @@ I restructure the requirements based on media format for source media content
 - fMP4 ingest shall support low latency media source ingest
 - fMP4 shall support redundant robust workflows with multiple sources and multiple processing entities/publishing points
 - fMP4 ingest shall be supported by an openly available reference implementation ????
+
+
 // added by me to make it more clear that live ingest needs to support active media processing and not only pass through
 - fMP4 ingest shall support further media processing in the cloud or network for value added presentations 
 - fMP4 ingest shall support re-encryption, content stitching, live to VoD conversion, graphics overlay processing based on accurate timing information downstream
