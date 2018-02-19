@@ -1,0 +1,5 @@
+Draft agenda Call 19th of February 
+
+- review action points of previous meeting 
+- discussion on standardization approach
+- discussion on DASH ingest issues and new draft specification
