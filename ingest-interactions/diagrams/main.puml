@@ -1,0 +1,42 @@
+@startuml
+
+skinparam monochrome true
+skinparam shadowing false
+
+participant "Live Media Source" as Encoder
+participant "Media Processing Entity" as Packager
+
+== Initial Manifest Sending ==
+
+Encoder -> Packager: POST /prefix/media.mpd
+note right
+    The initial manifest <b>MUST</b> be POST,
+    updates to existing manifests <b>SHOULD</b> be PUT
+end note
+
+alt success
+    Packager --> Encoder: 200 OK
+else permission denied
+    Packager --> Encoder: 403 Forbidden
+else invalid mpd
+    Packager --> Encoder: 400 Bad Request
+else not mpd sent
+    Packager --> Encoder: 415 Unsupported Media Type
+end
+
+== Segment Sending ==
+
+Encoder -> Packager: POST /prefix/chunk.cmaf
+
+alt success
+    Packager --> Encoder: 202 Accepted
+    note right
+        May the MPE also respond with 200?
+    end note
+else permission denied
+    Packager --> Encoder: 403 Forbidden
+else invalid CMAF
+        Packager --> Encoder: 415 Unsupported Media Type
+end
+
+@enduml
