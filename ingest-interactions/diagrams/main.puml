@@ -26,17 +26,21 @@ end
 
 == Segment Sending ==
 
-Encoder -> Packager: POST /prefix/chunk.cmaf
+loop
 
-alt success
-    Packager --> Encoder: 202 Accepted
-    note right
-        May the MPE also respond with 200?
-    end note
-else permission denied
-    Packager --> Encoder: 403 Forbidden
-else invalid CMAF
-        Packager --> Encoder: 415 Unsupported Media Type
+    Encoder -> Packager: POST /prefix/chunk.cmaf
+
+    alt success
+        Packager --> Encoder: 202 Accepted
+        note right
+            May the MPE also respond with 200?
+        end note
+    else permission denied
+        Packager --> Encoder: 403 Forbidden
+    else invalid CMAF
+            Packager --> Encoder: 415 Unsupported Media Type
+    end
+
 end
 
 @enduml
