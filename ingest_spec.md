@@ -3,15 +3,15 @@
 * Status: For Discussion
 
 ## Overview 
-This specification describes a protocol and format for media ingest from a live encoder or other media source towards media processing entities such as publishing points, origins and/or content delivery networks. It serves as a draft industry wide specification for live media ingest following current best practices and formats for ingest to passive or active media processing entities.
+This specification describes a protocol and format for media ingest from a live encoder or other media source towards media processing entities such as publishing points, origins and/or content delivery networks.
 
 **Diagram 1**
 
 Live Media Source (e.g. live encoder) -> publishing point (media processing entity) -> Content Delivery Network -> End User/client
 
-The workflow architecture diagram is shown in Diagram 1. A live encoder or media source pushes media to a media processing entity that can be either passive (pass through) or active (e.g. altering or processing the media).  The media processing entity provides functionalities for further delivery such as content stitching, encryption, packaging, manifest generation, transcoding, scalable delivery etc. The connection between a live media source and such a media processing entity or publishing point is still often based on proprietary protocols. This is often leading to interop issues in implementations as many specifications are incomplete or not based on the latest technologies and standards used in the industry (e.g. timed meta-data, emerging encoding standards like HEVC). 
+The workflow architecture diagram is shown in Diagram 1. A live encoder or media source pushes media to a media processing entity that can be either passive (e.g. pass through) or active (e.g. altering or processing the media).  The media processing entity provides functionalities for further delivery such as content stitching, encryption, packaging, manifest generation, transcoding, scalable delivery etc. The connection between a live media source and such a media processing entity or publishing point is still often based on proprietary protocols. This is often leading to interop issues in implementations as many specifications are incomplete or not based on the latest technologies and standards used in the industry (e.g. timed meta-data, emerging encoding standards like HEVC). 
 
-In practice, interop problems often arise related to the file format configuration, or related to encoder settings and the transmission protocol layer. Protocols on top of TCP/UDP/HTTP are often used to connect the live encoder/live media source to the media processing entity/publishing point  to handle things such as synchronization or connection failures. When using multiple live encoders/live media sources as ingest it is important that different encoders adhere to the same protocol. Other interop issues  occur when passing live meta-data from broadcast workflows into cloud media processing such as based on ID3 tags, SCTE-35 markers. This type of meta-data ingest will also be addressed in this specification.
+In practice, interop problems often arise related to the file format configuration, or related to encoder settings and the transmission protocol layer. Protocols on top of TCP/UDP/HTTP are often used to connect the live encoder/live media source to the media processing entity/publishing point and handle synchronization or connection failures. When multiple live encoders/live media sources serve as ingest it is important that different encoders adhere to the same protocol. Other interop issues  occur when passing live meta-data from broadcast workflows into cloud media processing such as based on ID3 tags, SCTE-35 markers. This type of meta-data ingest will also be addressed in this specification.
 
 This text aims at specification of interop between live encoders/media sources and streaming origins.
 
@@ -25,9 +25,9 @@ This specification uses the following terminology.
 
 ISO BMFF: ISO BMFF refers to the file/data formatting described in [3].
 
-**Ftyp**: the filetype and compatibility “ftyp” box as described in the ISO BMFF [3] that describes the brand of the media stream file brand. 
+**Ftyp**: the filetype and compatibility “ftyp” box as described in the ISO BMFF [3] that describes the brand of the media file format brand. 
 
-**Moov**: the container for all metadata “moov” box as described in the ISO BMFF base media file format [3] that describes the metadata of the media and tracks in the presentation.
+**Moov**: the container for all metadata formated “moov” box as described in the ISO BMFF base media file format [3]
 
 **Moof**: the movie fragment “moof” box as described in the ISO BMFF base media file format [3] that describes the meta data of a fragment of media.
 
@@ -68,14 +68,14 @@ fragment moof box.
 
 **(Live) encoder**: entity performing live encoding producing a high quality live encoded broadcast stream
 
-**(Media) Ingest source**: a media source ingesting media content to a processing function, typically a live encoder but not restricted to this, the media ingest source could by any type of media ingest source
+**(Media) Ingest source**: a media source ingesting media content to a processing function, typically a live encoder but not restricted to this, the media ingest source could by any type of media ingest source such as a stored file that is send in partial chunks towards the media processing entity
 
-**Publishing point**: entity used to publish the media content, consumes the incoming media ingest stream
+**Publishing point**: entity used to publish the media content, consumes/receives the incoming media ingest stream
 
-**Media processing function/entity**: entity used to process media content, can be a producer or consumer of a media ingest stream (or both), typically it is a consumer of stream of a live source, while it outputs content ready for client consumption.
+**Media processing function/entity**: entity used to process media content, receives/consumes a media ingest stream, which is activily processed before further delivery.
 
-## Ingest Protocol Behavior Specification
-The media and timed meta-data ingest specification uses multiple HTTP POST and/or PUT requests to transmit DASH manifest followed by encoded media data packaged in fragmented ISO BMFF [3]. The subsequent posted segments correspond to those decribed in the manifest.  Each HTTP POST sends a complete manifest or media segment towards the processing entity. The sequence of POST commands starts with the the manifest and init segments that includes header boxes (ftyp and moov boxes), and continues with a sequence of segments (combinations of moof and mdat boxes). 
+## Overall Media Ingest Protocol Behavior Specification
+The media and timed meta-data ingest specification uses multiple HTTP POST and/or PUT requests to transmit DASH manifest followed by encoded media data packaged in fragmented ISO BMFF [3]. The subsequent posted segments correspond to those decribed in the manifest.  Each HTTP POST sends a complete manifest or media segment towards the processing entity. The sequence of POST commands starts with the the manifest and init segments that includes header boxes (ftyp and moov boxes), and continues with a sequence of segments (combinations of moof and mdat boxes) as defined in the initial manifest. 
 
 An example of the Fragmented Media Ingest POST URL targeting the publishing point is: http://mypublishingpoint/presentationPath/manifestpath/rsegmentpath/streams-1-2.cmfv
 
@@ -89,17 +89,17 @@ The PostURL the syntax is defined as follows using the IETF RFC 5234 ANB [14] to
 * rsegmentpath = URI_SAFE_IDENTIFIER 
 * Identifier = segment_file_name
 
-In this PostURL the server address is typically the hostname or IP address of the media processing entity or publishing point and the presentation path is the path to the specific presentation at the publishing point. The manifest path can be used to signal the specific manifest of the presentation.  The rsegmentpath can be a different extended paths based on the relative paths in the manifest file. The identifier desribes the filename of the segment. The live source sender first sends the manifest to the path http://mypublishingpoint/presentation allowing the receiving entity to setup reception paths for the following fragmented MPEG-4 segments. The payload and content of the media ingest stream are manifests described in MPEG-DASH and segments of fragmented MPEG-4 that can be defined using the IETF RFC 5234 ANB [14] as follows. 
+In this PostURL the server address is typically the hostname or IP address of the media processing entity or publishing point. The presentation path is the path to the specific presentation at the publishing point. The manifest path can be used to signal the specific manifest of the presentation.  The rsegmentpath can be a different extended paths based on the relative paths in the manifest file. The identifier desribes the filename of the segment. The live source sender first sends the manifest to the path http://mypublishingpoint/presentation allowing the receiving entity to setup reception paths for the following fragmented MPEG-4 segments. The payload and content of the media ingest stream are manifests described as MPEG-DASH and segments based on fragmented MPEG-4 [3] that can be defined using the IETF RFC 5234 ANB [14] as follows. 
 
 * fragmentedMP4stream = HeaderBoxes Fragments
 * HeaderBoxes = FileType Moov
 * Fragments = X Fragment
 * Fragment = moof mdat 
 
-During operation the communication between the live encoder/media ingest source and the receiving procesing entitiy/publishing point follows the following requirements.
+The communication between the live encoder/media ingest source and the receiving procesing entitiy/publishing point follows the following requirements.
 
-1.	The live encoder or ingest source communicates to the publishing point/processing entity using the HTTP POST method as defined in the HTTP protocol [5]
-2.	The live encoder or ingest source SHOULD start the broadcast by sending an HTTP POST request with an empty “body” (zero content length) by using the same POSTURL. This can help the live encoder or media ingest source to quickly detect whether the live ingest publishing point is valid, and if there are any authentication or other conditions required. Per HTTP protocol, the server can't send back an HTTP response until the entire request, including the POST body, is received. Given the long-running nature of a live event, without this step, the encoder might not be able to detect any error until it finishes sending all the data.
+1.	The live encoder or ingest source communicates to the publishing point/processing entity using the HTTP POST method as defined in the HTTP protocol [5], or in the case for manifest updates the HTTP PUT Method
+2.	The live encoder or ingest source SHOULD start the broadcast by sending an HTTP POST request with an empty “body” (zero content length) by using the same POSTURL. This can help the live encoder or media ingest source to quickly detect whether the live ingest publishing point is valid, and if there are any authentication or other conditions required. Per HTTP protocol, the server can't send back an HTTP response until the entire request, including the POST body, is received. 
 3. Before sending the segments based on fragmented MPEG-4 the live encoder/source MUST send a manifest formatted according MPEG DASH specification following the limitations/constraints 
    - 1. Only relative URL paths to be used for each segment 
    - 2. Only unique paths are used for each new presentation 
@@ -117,9 +117,10 @@ During operation the communication between the live encoder/media ingest source 
      in case of a disconnect during the segment POST operation, the segment MUST be retransmitted.  
      
 5. The live encoder MAY send an updated version of the manifest, this manifest cannot override current settings and relative paths    or break currently running and incoming POST requests. The updated manifest can only be slightly different from the one that was send    previously. The updated manifest SHOULD be send using a PUT request instead of a POST request. 
-6.	The encoder or ingest source MUST handle any error or failed authentication responses received from the media processing entity such as 403 (forbidden), 400 bad request, 415 unsupported media type, 412 not fullfilling conditions, in case of 412 the live source/encoder MUST resend the manifest and init segment.
-7.	The encoder or ingest source MUST start a new HTTP POST segment request with the media segment corresponding to the segmentlist manifest. The payload MAY start with the header boxes ftyp and moov, followed segments wich consist of combination of moof and mdat boxes. Note that the ftyp, and moov boxes (in this order) MAY be sent with each request, especially if the encoder must reconnect because the previous POST request was terminated prior to the end of the stream with a 412 message. This allows the receiving entitity to recover the init segment containing the moov and ftyp boxes.
-8.	The encoder or ingest source MAY use chunked transfer encoding option of the HTTP POST command [5] for uploading as it is might be difficult to predict the entire content length of the segment.
+6.	The encoder or ingest source MUST handle any error or failed authentication responses received from the media processing entity such as 403 (forbidden), 400 bad request, 415 unsupported media type
+7. In case of a 412 not fullfilling conditions, the live source/encoder MUST resend the manifest and init segment.
+8.	The encoder or ingest source MUST start a new HTTP POST segment request with the media segment corresponding to the segments listed in the manifest. The payload MAY start with the header boxes ftyp and moov, followed segments wich consist of combination of moof and mdat boxes. Note that the ftyp, and moov boxes (in this order) MAY be sent with each request, especially if the encoder must reconnect because the previous POST request was terminated prior to the end of the stream with a 412 message. Resending the moov and ftyp boxes allows the receiving entitity to recover the init segment.
+9.	The encoder or ingest source MAY use chunked transfer encoding option of the HTTP POST command [5] for uploading as it is might be difficult to predict the entire content length of the segment.
 9.	The encoder or ingest source SHOULD use individual HTTP POST commands [5] for uploading media fragments when ready if it is possible to predict the entire content length after the fragment became available. The encoder or ingest source MAY send the ftyp and moov boxes (in this order) with each individual request, followed by the media segments consisting of moof and mdat boxes.
 10.	When the live stream event is over, after sending the last segment, the encoder or ingest source MUST gracefully end the chunked the connection by signalling the stop. The encoder or ingest source MUST wait for the service to return the final response code, and then terminate the connection.
 11.	The stop message MUST be transmitted by the encoder or live ingest source to signal an end of stream (end of the live stream event) by sending a movie fragment random access “mfra” box in the stream to the PostURL without a relative path.
@@ -129,19 +130,22 @@ During operation the communication between the live encoder/media ingest source 
 15.	Version 2 of the tfdt box SHOULD be used to generate media segments that have identical URLs in multiple datacenters. The fragment index field is REQUIRED for cross-datacenter failover of index-based streaming formats such as Apple HLS and index-based MPEG-DASH. To enable cross-data center failover, the time stamps MUST be synced across multiple live encoders/media ingest sources and be increased by 1 or a multiple of 1 for each successive media fragment, even across encoder restarts or failures. Encoders should use the timing information (Universal Time Stamps) from the original SDI input signal (if available) in order to allow exact synchronization of the Universal Time Stamps in the streams. Reconnecting encoders or media sources SHOULD transmit in sync with other encoders or media sources.
 16.	The ISOBMFF media fragment duration SHOULD be constant, to reduce the size of the client manifests. A constant MP4 fragment duration also improves client download heuristics through the use of repeat tags. The duration MAY fluctuate to compensate for non-integer frame rates.  By choosing an appropriate timescale (a multiple of the frame rate is recommended) this issue should be avoided.
 17.	The ISO BMFF fragment duration SHOULD be between approximately 2 and 6 seconds.
-18.	The fragment decode timestamps tdft of fragments in the fragmentedMP4stream and the indexes base_media_decode_ time SHOULD arrive in increasing order for each specific bit-rate stream. 
+18.	The fragment decode timestamps tdft of fragments in the fragmentedMP4stream and the indexes base_media_decode_ time SHOULD arrive in increasing order for each specific bit-rate stream in the adaptationsets. 
 19.	The fragmented MP4 stream SHOULD use a 90-KHz timescale for video streams and 44.1 KHz or 48.1 KHz for audio streams or any another timescale that enables integer increments of the decode times of fragments signalled in the tfdt box based on this scale. 
 20. The manifest MUST be used to signal the language, which SHOULD also be signalled in the mdhd box in the segments 
 21. The manifest MUST be used to signal encryption specific information, which SHOULD also be signalled in the pssh, schm and sinf boxes in the segments of the init and media segments
 22. The manifest MUST be used to signal information about the different tracks such as the durations, media encoding types, content types, which SHOULD also be signalled in the moov box in the init segment or the moof box in the media segments
 
+## Formatting Requirements for Captions and Sub-titles
+To be contributed 
+
 ## Formatting Requirements for Timed Meta-Data Ingest
 
 This section discusses the specific formatting requirements for ingest of timed meta-data.
 When delivering a live streaming presentation with a rich client experience, often it is necessary to transmit time-synced events, meta-data or other signals in-band with the main media data. An example of this are opportunities for dynamic live ad insertion signalled by SCTE-35 markers. This type of event signalling is different from regular audio/video streaming because of its sparse nature. In other words, the signalling data usually does not happen continuously, and the interval can be hard to predict. 
-Examples of timed meta-data are ID3 tags (http://www.id3.org/), SCTE-35 markers [2] and DASH emsg messages defined in section 5.10.3.3 of [1]. For example, DASH Event messages contain a schemeIdUri that defines the payload of the message. Table 1 provide some example schemes in DASH event messages and Table 2 illustrates an example of a SCTE-35 marker stored in a dash emsg. 
+Examples of timed meta-data are ID3 tags (http://www.id3.org/), SCTE-35 markers [2] and DASH emsg messages defined in section 5.10.3.3 of [1]. For example, DASH Event messages contain a schemeIdUri that defines the payload of the message. Table 1 provide some example schemes in DASH event messages and Table 2 illustrates an example of a SCTE-35 marker stored in a dash emsg. The presented approach allows ingest of timed meta-data form different sources possibly on different locations.
 
-Table 1 Example of DASH emsg schemes  URI
+Table 2 Example of DASH emsg schemes  URI
 
 
 Scheme URI	                | Value	| Description	                                  | Reference
@@ -154,7 +158,6 @@ www.nielsen.com:id3:v1      | 1     | Contains a Nielsen ID3 tag	               
 
 Table 2 example of a scte-35 marker embedded in a DASH emsg
 
-
 Tag	                    |          Value
 ------------------------|-----------------------------
 scheme_uri_id           |	"urn:scte:scte35:2013:bin"
@@ -166,8 +169,8 @@ Id                      |	unique identifier for message
 message_data	          |           splice info section including CRC
 
 The following steps are a recommended for timed metadata ingest:
-1.	Create a fragmentedMP4stream that contains only sparse tracks meta-data track, i.e. timed metadata streams which are streams without audio/video tracks.
-1.  Meta-data tracks MAY be stored in the DASH Manifest such as using an adaptationset
+1. Create a fragmentedMP4stream that contains only sparse tracks meta-data track, i.e. timed metadata streams which are streams without audio/video tracks.
+1. Meta-data tracks MAY be stored in the DASH Manifest using DASH as an adaptationset with a spase track
 1.	For this meta-data track the media handler type is ("meta") and the tracks handler box is a null media header box ("nmhd").
 1.	The URIMetaSampleEntry entry contains, in a URIbox, the URI following the URI syntax in [7] defining the form of the metadata (see the ISO Base media file format specification [3]). 	For example, the URIBox could contain for ID3 tags the URL  http://www.id3.org
 1.	For the case of ID3, a sample contains a single ID3 tag. The ID3 tag may contain one or more ID3 frames.
@@ -179,29 +182,29 @@ The following steps are a recommended for timed metadata ingest:
 1.	When Timed Metadata is stored in a TrackRunBox ("trun"), a single sample is present with the duration set to the duration for that run.
 Given the sparse nature of the signalling event, the following is recommended:
 1.	At the beginning of the live event, the encoder or media ingest source sends the initial header boxes to the processing entity/publishing point, which allows the service to register the sparse track in the client manifest.
-1.	The encoder SHOULD terminate the HTTP POST request when data is not being sent. A long-running HTTP POST that does not send data can prevent Media Services from quickly disconnecting from the encoder in the event of a service update or server reboot. In these cases, the media server is temporarily blocked in a receive operation on the socket.
+1.	The live encoder or ingest source SHOULD terminate the HTTP POST request when data is not being sent. A long-running HTTP POST that does not send data can prevent Media Services from quickly disconnecting from the encoder in the event of a service update or server reboot. In these cases, the media server is temporarily blocked in a receive operation on the socket.
 1.	During the time when signalling data is not available, the encoder SHOULD close the HTTP POST request. While the POST request is active, the encoder SHOULD send data.
 1.	When sending sparse fragments with a new connection, the encoder SHOULD start sending from the header boxes, followed by the new fragments. This is for cases in which failover happens in-between, and the new sparse connection is being established to a new server that has not seen the sparse track before.
 1.	The sparse track fragment becomes available to the publishing point/processing entity when the corresponding parent track fragment that has an equal or larger timestamp value is made available. For example, if the sparse fragment has a timestamp of t=1000, it is expected that after the publishing point/processing entity sees "video" (assuming the parent track name is "video") fragment timestamp 1000 or beyond, it can download the sparse fragment t=1000. Note that the actual signal could be used for a different position in the presentation timeline for its designated purpose. In this example, it’s possible that the sparse fragment of t=1000 has an XML payload, which is for inserting an ad in a position that’s a few seconds later.
 1.	The payload of sparse track fragments can be in different formats (such as XML, text, or binary), depending on the scenario
+1. Alternatively, Meta-data MAY be stored in the DASH Manifest using DASH as as event messages
+1. in case meta-data is only signalled in DASH event messages in the manifest, the manifest MUST be updated regularly to avoid missing events, an update frequency of 2 seconds is recommended.
 
 ## Live Stream Ingest Option constraints
-The fragmented MP4 Stream is the basic unit of operation for composing live presentations, handling streaming failover, and redundancy scenarios. It is defined as one unique, fragmented MP4 bitstream that might contain a single track or multiple tracks. A full live presentation might contain one or more streams, depending on the configuration of the live encoders. 
-
-For this specification, only one option is recommended: Each track in a separate stream.  This to some extend is corresponding to recent CMAF specification [8], but full conformance is not necessary for conforming to this specification. The main idea is to have each track in a sperate stream. In this option, the encoder or live ingest source puts one track into each fragment MP4 bitstream, and then posts all of the streams over separate HTTP connections. This can be done with one encoder or with multiple encoders. The live ingestion publishing point or processing entity sees this live presentation as composed of four streams.
+The segments and manifest are the basic unit of operation for composing live presentations. Handling streaming failover and redundancy scenarios is increasingly important for media streaming workflows. A full live presentation might contain one or more streams, depending on the configuration of the live encoders. For this specification it is recommended that each bit-rate stream is send over a seperate connection TCP, but this is not strictly necessary. 
 
 ##  Service (publishing point,media processing entity) failover
 Given the nature of live streaming, good failover support is critical for ensuring the availability of the service. Typically, media services are designed to handle various types of failures, including network errors, server errors, and storage issues. When used in conjunction with proper failover logic from the live encoder side, customers can achieve a highly reliable live streaming service from the cloud.
 In this section, we discuss service failover scenarios. In this case, the failure happens somewhere within the service, and it manifests itself as a network error. Here are some recommendations for the encoder implementation for handling service failover:
 1.	Use a 10-second timeout for establishing the TCP connection. If an attempt to establish the connection takes longer than 10 seconds, abort the operation and try again.
 2.	Use a short timeout for sending the HTTP request message chunks. If the target fragment duration is N seconds, use a send timeout between N and 2 N seconds; for example, if the fragment duration is 6 seconds, use a timeout of 6 to 12 seconds. If a timeout occurs, reset the connection, open a new connection, and resume stream ingest on the new connection.
-3.	Maintain a rolling buffer that has the last two fragments for each trackor segment that were successfully and completely sent to the service. If the HTTP POST request for a stream is terminated or times out prior to the end of the stream, open a new connection and begin another HTTP POST request, resend the stream headers, resend the last two fragments for each track, and resume the stream without introducing a discontinuity in the media timeline. This reduces the chance of data loss.
+3.	Maintain a rolling buffer that has the last two fragments for each segment that were successfully and completely sent to the service. If the HTTP POST request for a stream is terminated or times out prior to the end of the stream, open a new connection and begin another HTTP POST request, resend the stream headers, resend the last two fragments of the segment, and resume the stream without introducing a discontinuity in the media timeline. This reduces the chance of data loss.
 4.	We recommend that the encoder or ingest source does NOT limit the number of retries to establish a connection or resume streaming after a TCP error occurs.
 5.	After a TCP error:
 a. The current connection MUST be closed, and a new connection MUST be created for a new HTTP POST request.
-b. The new HTTP POST URL MUST be the same as the initial POST URL for fragmented media ingest.
+b. The new HTTP POST URL MUST be the same as the initial POST URL for the segment to be ingested.
 c. The new HTTP POST MUST include stream headers (ftyp, and moov boxes) that are identical to the stream headers in the initial POST request for fragmented media ingest.
-d. The last two fragments sent for each track may be resent. Other ISO BMFF fragment timestamps must increase continuously, even across HTTP POST requests.
+d. The last two fragments sent for each segment may be resent. Other ISO BMFF fragment timestamps must increase continuously, even across HTTP POST requests.
 6.	The encoder or ingest source SHOULD terminate the HTTP POST request if data is not being sent at a rate commensurate with the MP4 fragment duration. An HTTP POST request that does not send data can prevent publishing points or media processing entities from quickly disconnecting from the live encoder or media ingest source in the event of a service update. For this reason, the HTTP POST for sparse (ad signal) tracks SHOULD be short-lived, terminating as soon as the sparse fragment is sent.
 
 ## Ingest source (Encoder) failover
@@ -211,7 +214,7 @@ Encoder or media ingest source failover is the second type of failover scenario 
 3.	The new encoder’s or media ingest source POST request MUST include the same fragmented MP4 header boxes as the failed instance.
 4.	The new encoder or media ingest source MUST be properly synced with all other running encoders for the same live presentation to generate synced audio/video samples with aligned fragment boundaries. This implies that UTC timestamps for fragments in the tdft match between decoders, and encoders start running at an appropriate segment boundary.
 5.	The new stream MUST be semantically equivalent with the previous stream, and interchangeable at the header and fragment levels.
-6.	The new encoder or media ingest source SHOULD try to minimize data loss. The basemediadecodetime tdft of media fragments SHOULD increase from the point where the encoder last stopped. The basemediadecodetime in the tdft box SHOULD increase in a continuous manner, but it is permissible to introduce a discontinuity, if necessary. Media processing entities or publishing points can ignore fragments that it has already received and processed, so it's better to err on the side of resending fragments than to introduce discontinuities in the media timeline.
+6.	The new encoder or media ingest source SHOULD try to minimize data loss. The basemediadecodetime tdft of media fragments SHOULD increase from the point where the encoder last stopped. The basemediadecodetime in the tdft box SHOULD increase in a continuous manner, but it is permissible to introduce a discontinuity, if necessary. Media processing entities or publishing points can ignore fragments that it has already received and processed, so it's better to error on the side of resending fragments than to introduce discontinuities in the media timeline.
 
 ## Encoder/Ingest Source redundancy
 For certain critical live event streams that demand even higher availability and quality of experience, it is recommended to use active redundant encoders to achieve seamless failover with no data loss. When two groups of encoders or media ingest sources push two copies of each stream simultaneously into the live service. This setup is supported because publishing points can filter out duplicate fragments based on stream ID and fragment timestamp. The resulting live stream and archive is a single copy of all the streams that is the best possible aggregation from the two sources. For example, in a hypothetical extreme case, as long as there is one encoder (it doesn’t have to be the same one) running at any given point in time for each stream, the resulting live stream from the service is continuous without data loss. The requirements for this scenario are as the requirements in the "Encoder failover" case in most cases, with the exception that the second set of encoders are running at the same time as the primary encoders.
