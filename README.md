@@ -3,7 +3,7 @@ Repository containing documents of fragmented MPEG-4 ingest specification (in pr
 
 for more information please contact Rufael Mekuria rufael@unified-streaming.com. 
 
-Updates will soon be added.
+Last update: March 19th 2018
 
 # fmp4-ingest goals 
 
