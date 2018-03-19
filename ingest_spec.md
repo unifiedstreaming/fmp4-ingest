@@ -121,23 +121,39 @@ The communication between the live encoder/media ingest source and the receiving
 7. In case of a 412 not fullfilling conditions or 415 unsupported media type, the live source/encoder MUST resend the manifest and init segment.
 8.	The encoder or ingest source MUST start a new HTTP POST segment request with the media segment corresponding to the segments listed in the manifest. The payload MAY start with the header boxes ftyp and moov, followed segments wich consist of combination of moof and mdat boxes. Note that the ftyp, and moov boxes (in this order) MAY be sent with each request, especially if the encoder must reconnect because the previous POST request was terminated prior to the end of the stream with a 412 or 415 message. Resending the moov and ftyp boxes allows the receiving entitity to recover the init segment.
 9.	The encoder or ingest source MAY use chunked transfer encoding option of the HTTP POST command [5] for uploading as it is might be difficult to predict the entire content length of the segment.
-9.	The encoder or ingest source SHOULD use individual HTTP POST commands [5] for uploading media fragments when ready if it is possible to predict the entire content length after the fragment became available. The encoder or ingest source MAY send the ftyp and moov boxes (in this order) with each individual request, followed by the media segments consisting of moof and mdat boxes.
-10.	When the live stream event is over, after sending the last segment, the encoder or ingest source MUST gracefully end the chunked the connection by signalling the stop. The encoder or ingest source MUST wait for the service to return the final response code, and then terminate the connection.
-11.	The stop message MUST be transmitted by the encoder or live ingest source to signal an end of stream (end of the live stream event) by sending a movie fragment random access “mfra” box in the stream to the PostURL without a relative path.
-12.	If the HTTP POST request terminates or times out with a TCP error prior to the end of the stream, the encoder MUST issue a new POST request by using a new connection, and follow the preceding requirements. Additionally, the encoder MAY resend the previous two segments again.  
-13.	In case fixed length POST Commands are used, the live source entity MAY resend the segment to be posted decribed in the manifest entirely in case of responses HTTP 400, 412 or 415. 
-14.	The trackFragmentDecodeTime box Tfdt box MUST be present for each segment posted.
-15.	Version 2 of the tfdt box SHOULD be used to generate media segments that have identical URLs in multiple datacenters. The fragment index field is REQUIRED for cross-datacenter failover of index-based streaming formats such as Apple HLS and index-based MPEG-DASH. To enable cross-data center failover, the time stamps MUST be synced across multiple live encoders/media ingest sources and be increased by 1 or a multiple of 1 for each successive media fragment, even across encoder restarts or failures. Encoders should use the timing information (Universal Time Stamps) from the original SDI input signal (if available) in order to allow exact synchronization of the Universal Time Stamps in the streams. Reconnecting encoders or media sources SHOULD transmit in sync with other encoders or media sources.
-16.	The ISOBMFF media fragment duration SHOULD be constant, to reduce the size of the client manifests. A constant MP4 fragment duration also improves client download heuristics through the use of repeat tags. The duration MAY fluctuate to compensate for non-integer frame rates.  By choosing an appropriate timescale (a multiple of the frame rate is recommended) this issue should be avoided.
-17.	The ISO BMFF fragment duration SHOULD be between approximately 2 and 6 seconds.
-18.	The fragment decode timestamps tdft of fragments in the fragmentedMP4stream and the indexes base_media_decode_ time SHOULD arrive in increasing order for each specific bit-rate stream in the adaptationsets. 
-19.	The fragmented MP4 stream SHOULD use a 90-KHz timescale for video streams and 44.1 KHz or 48.1 KHz for audio streams or any another timescale that enables integer increments of the decode times of fragments signalled in the tfdt box based on this scale. 
-20. The manifest MUST be used to signal the language, which SHOULD also be signalled in the mdhd box in the segments 
-21. The manifest MUST be used to signal encryption specific information, which SHOULD also be signalled in the pssh, schm and sinf boxes in the segments of the init and media segments
-22. The manifest MUST be used to signal information about the different tracks such as the durations, media encoding types, content types, which SHOULD also be signalled in the moov box in the init segment or the moof box in the media segments
+10.	The encoder or ingest source SHOULD use individual HTTP POST commands [5] for uploading media fragments when ready if it is possible to predict the entire content length after the fragment became available. The encoder or ingest source MAY send the ftyp and moov boxes (in this order) with each individual request, followed by the media segments consisting of moof and mdat boxes.
+11.	When the live stream event is over, after sending the last segment, the encoder or ingest source MUST gracefully end the chunked the connection by signalling the stop. The encoder or ingest source MUST wait for the service to return the final response code, and then terminate the connection.
+12.	The stop message MUST be transmitted by the encoder or live ingest source to signal an end of stream (end of the live stream event) by sending a movie fragment random access “mfra” box in the stream to the PostURL without a relative path.
+13.	If the HTTP POST request terminates or times out with a TCP error prior to the end of the stream, the encoder MUST issue a new POST request by using a new connection, and follow the preceding requirements. Additionally, the encoder MAY resend the previous two segments again.  
+14.	In case fixed length POST Commands are used, the live source entity MAY resend the segment to be posted decribed in the manifest entirely in case of responses HTTP 400, 412 or 415. 
+15.	The trackFragmentDecodeTime box Tfdt box MUST be present for each segment posted.
+16.	Version 2 of the tfdt box SHOULD be used to generate media segments that have identical URLs in multiple datacenters. The fragment index field is REQUIRED for cross-datacenter failover of index-based streaming formats such as Apple HLS and index-based MPEG-DASH. To enable cross-data center failover, the time stamps MUST be synced across multiple live encoders/media ingest sources and be increased by 1 or a multiple of 1 for each successive media fragment, even across encoder restarts or failures. Encoders should use the timing information (Universal Time Stamps) from the original SDI input signal (if available) in order to allow exact synchronization of the Universal Time Stamps in the streams. Reconnecting encoders or media sources SHOULD transmit in sync with other encoders or media sources.
+17.	The ISOBMFF media fragment duration SHOULD be constant, to reduce the size of the client manifests. A constant MP4 fragment duration also improves client download heuristics through the use of repeat tags. The duration MAY fluctuate to compensate for non-integer frame rates.  By choosing an appropriate timescale (a multiple of the frame rate is recommended) this issue should be avoided.
+18.	The ISO BMFF fragment duration SHOULD be between approximately 2 and 6 seconds.
+19.	The fragment decode timestamps tdft of fragments in the fragmentedMP4stream and the indexes base_media_decode_ time SHOULD arrive in increasing order for each specific bit-rate stream in the adaptationsets. 
+20.	The fragmented MP4 stream SHOULD use a 90-KHz timescale for video streams and 44.1 KHz or 48.1 KHz for audio streams or any another timescale that enables integer increments of the decode times of fragments signalled in the tfdt box based on this scale. 
+21. The manifest MUST be used to signal the language, which SHOULD also be signalled in the mdhd box in the segments 
+22. The manifest MUST be used to signal encryption specific information, which SHOULD also be signalled in the pssh, schm and sinf boxes in the segments of the init and media segments
+23. The manifest MUST be used to signal information about the different tracks such as the durations, media encoding types, content types, which SHOULD also be signalled in the moov box in the init segment or the moof box in the media segments
 
-## Formatting Requirements for Captions and Sub-titles
-To be contributed 
+## Formatting Requirements for Timed Text, Images, Captions and Sub-titles
+
+The specification supports ingest of timed text, images, captions and subtitles in sparse tracks. 
+
+1. The tracks containing timed text, images, captions or subtitles MUST be signalled in the manifest by an adaptationset with the different segments containing the data of the track.  
+2. The segment data shall be posted to the URL corresponding to the path in the manifest for the segment  
+3. The track will be a sparse track signalled by a null media header (nmhd) containing the timed text, images, captions corresponding to the recommendation of such tracks in [8]
+4. Based on this recommendation the trackhandler hdlr shall be set to "text" for WebVTT and "subt" for TTML 
+5. In case TTML is used the track must use the XMLSampleEntry to signal sample description of the subtitle stream 
+6. In case WebVVT is used the track must use the WVVTSampleEntry to signal sample description of the text stream
+7. These boxes SHOULD signal the mime type and specifics as described in [8] sections 11.3 ,11.4 and 11.5
+8. The boxes described in 3-7 must be present in the init segment (ftyp + moov) for the given track and in subsequent 
+9. subtitles in CTA-608 and CTA-708 can be transmitted following the recommendation section 11.5 in [8] via SEI messages in the video track
+10. The ftyp init segment for the track containing timed text, images, captions and sub-titles can use signalling using CMAF profiles based on [8]
+   1.WebVTT 	Specified in ‎11.2 ISO/IEC 14496-30 [16]	'cwvt'
+   1.TTML IMSC1 Text	Specified in ‎11.3.3 [16] IMSC1 Text Profile	'im1t'
+   1.TTML IMSC1 Image	Specified in ‎11.3.4 [16] IMSC1 Image Profile	'im1i'
+   1.CEA	CTA-608 and CTA-708 Specified in ‎11.4 [8] Caption data is embedded in SEI messages in video track; 'ccea'
 
 ## Formatting Requirements for Timed Meta-Data Ingest
 
@@ -238,4 +254,5 @@ For highly redundant global distribution, sometimes you must have cross-region b
 * [13] DASH Industry Forum (last accessed Jan 2018) http://dashif.org/
 * [14] D. Crocker Augmented BNF for Syntax Specifications: ABNF https://tools.ietf.org/html/rfc5234
 * [15] ISO/IEC 23001-7:2016 Information technology -- MPEG systems technologies -- Part 7: Common encryption in ISO base media file format files https://www.iso.org/standard/68042.html
+* [16] ISO/IEC 14496-30:2014 Information technology -- Coding of audio-visual objects -- Part 30: Timed text and other visual overlays in ISO base media file format
 
