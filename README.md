@@ -8,7 +8,7 @@ Last update: March 19th 2018
 # fmp4-ingest goals 
 
 Todays highly available, highly scalable and high quality video streaming platforms combine high quality live encoders
-that perform high quality encoding with video streaming publishing points. Thse points can handle the massive user scalability, personalization, file format conversions, personalization and encryption to target all of the different types of end user devices in use. Such setups have shown the best results in practical deployments in the most demanding large scale video platforms. 
+that perform high quality encoding with video streaming publishing points. These points can handle the massive user scalability, personalization, file format conversions, personalization and encryption to target all of the different types of end user devices in use. Such setups have shown the best results in practical deployments in the most demanding large scale video platforms. 
 
 In such a setup various aspects need to be considered. Best of breed components should be used for live encoder and publishing point 
 entities targetting all devices at the best quality and bitrate. Further, to support failover and scalability redundant multiple live encoders and publishing point instances are used. These instances should be synchronized, and support graceful start and tear down of instances and streams. In addition, many use cases require timed meta data and low latency support.
@@ -23,7 +23,7 @@ As content owners continue to adopt HTTP Adaptive Streaming (HAS) technologies f
 
 This effort is expected to product the following documents:
 
-  *   Requires for Contribution of Live Media Content
+  *   Requirements for Contribution of Live Media Content
   *   A Live Media Contribution Interface specification
 
 The live media ingest specification will define a protocol and data format for the contribution, by an encoder, of Live Media Content towards a publishing or media processing entity. Existing industry best practices and supported formats will be used while new or complex protocols and implementations are to be avoided. At a minimum the live media ingest specification is expected to address the following topics:
@@ -31,7 +31,7 @@ The live media ingest specification will define a protocol and data format for t
   *   Ingest Media format (Audio/Video) and transport protocol
   *   Timed meta-data such as Captions and Ad Markers
   *   Authentication
-  *   Source Failover and synchronization
+  *   Source failover and synchronization
 
 The intent of this specification is to enable lower deployment times through reduced interop work and eliminate vendor lock in to proprietary or pre-integrated contribution interfaces.
 
