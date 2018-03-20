@@ -125,30 +125,30 @@ in case of a disconnect during the segment POST operation, the segment MUST be r
 5. The live encoder MAY send an updated version of the manifest, this manifest cannot override current settings and relative paths    or break currently running and incoming POST requests. The updated manifest can only be slightly different from the one that was send    previously, e.g. introduce new segments available or event messages. The updated manifest SHOULD be send using a PUT request instead of a POST request. 
 6.	The encoder or ingest source MUST handle any error or failed authentication responses received from the media processing entity such as 403 (forbidden), 400 bad request, 415 unsupported media type
 7. In case of a 412 not fullfilling conditions or 415 unsupported media type, the live source/encoder MUST resend the manifest and init segment.
-8.	The encoder or ingest source MUST start a new HTTP POST segment request with the media segment corresponding to the segments listed in the manifest. The payload MAY start with the header boxes ftyp and moov, followed by segments wich consist of combination of moof and mdat boxes. Note that the ftyp, and moov boxes (in this order) MAY be sent with each request, especially if the encoder must reconnect because the previous POST request was terminated prior to the end of the stream with a 412 or 415 message. Resending the moov and ftyp boxes allows the receiving entitity to recover the init segment.
+8.	The encoder or ingest source MUST start a new HTTP POST segment request with the media segment these SHOULD be corresponding to the segments listed in the manifest. The payload MAY start with the header boxes ftyp and moov, followed by segments wich consist of combination of moof and mdat boxes. Note that the ftyp, and moov boxes (in this order) MAY be sent with each request, especially if the encoder must reconnect because the previous POST request was terminated prior to the end of the stream with a 412 or 415 message. Resending the moov and ftyp boxes allows the receiving entitity to recover the init segment.
 9.	The encoder or ingest source MAY use chunked transfer encoding option of the HTTP POST command [5] for uploading as it is might be difficult to predict the entire content length of the segment.
 10.	The encoder or ingest source SHOULD use individual HTTP POST commands [5] for uploading media fragments when ready if it is possible to predict the entire content length after the fragment became available. The encoder or ingest source MAY send the ftyp and moov boxes (in this order) with each individual request, followed by the media segments consisting of moof and mdat boxes.
-11.	When the live stream event is over, after sending the last segment, the encoder or ingest source MUST gracefully end the chunked the connection by signalling the stop. The encoder or ingest source MUST wait for the service to return the final response code, and then terminate the connection.
+11.	When the live stream event is over, after sending the last segment, the encoder or ingest source MUST gracefully end the connection by signalling the stop. The encoder or ingest source MUST wait for the service to return the final response code, and then terminate the connection.
 12.	The stop message MUST be transmitted by the encoder or live ingest source to signal an end of stream (end of the live stream event) by sending a movie fragment random access “mfra” box in the stream to the PostURL without a relative path.
-13.	If the HTTP POST request terminates or times out with a TCP error prior to the end of the stream, the encoder MUST issue a new POST request by using a new connection, and follow the preceding requirements. Additionally, the encoder MAY resend the previous two segments taht were already sent again.  
-14.	In case fixed length POST Commands are used, the live source entity MAY resend the segment to be posted decribed in the manifest entirely in case of responses HTTP 400, 412 or 415. 
+13.	If the HTTP POST request terminates or times out with a TCP error prior to the end of the stream, the encoder MUST issue a new POST request by using a new connection, and follow the preceding requirements. Additionally, the encoder MAY resend the previous two segments that were already sent again.  
+14.	In case fixed length POST Commands are used, the live source entity MUST resend the segment to be posted decribed in the manifest entirely in case of responses HTTP 400, 412 or 415 together with the init segment consisting of moov and ftyp boxes. 
 15.	The trackFragmentDecodeTime box Tfdt box MUST be present for each segment posted.
 16.	Version 2 of the tfdt box SHOULD be used to generate media segments that have identical URLs in multiple datacenters. The fragment index field is REQUIRED for cross-datacenter failover of index-based streaming formats such as Apple HLS and index-based MPEG-DASH. To enable cross-data center failover, the time stamps MUST be synced across multiple live encoders/media ingest sources and be increased by 1 or a multiple of 1 for each successive media fragment, even across encoder restarts or failures. Encoders should use the timing information (Universal Time Stamps) from the original SDI input signal (if available) in order to allow exact synchronization of the Universal Time Stamps in the streams. Reconnecting encoders or media sources SHOULD transmit in sync with other encoders or media sources.
 17.	The ISOBMFF media fragment duration SHOULD be constant, to reduce the size of the client manifests. A constant MP4 fragment duration also improves client download heuristics through the use of repeat tags. The duration MAY fluctuate to compensate for non-integer frame rates.  By choosing an appropriate timescale (a multiple of the frame rate is recommended) this issue should be avoided.
 18.	The ISO BMFF fragment duration SHOULD be between approximately 2 and 6 seconds.
 19.	The fragment decode timestamps tdft of fragments in the fragmentedMP4stream and the indexes base_media_decode_ time SHOULD arrive in increasing order for each specific bit-rate stream in the adaptationsets. 
 20.	The segments formated as fragmented MP4 stream SHOULD use a 90-KHz timescale for video streams and 44.1 KHz or 48.1 KHz for audio streams or any another timescale that enables integer increments of the decode times of fragments signalled in the tfdt box based on this scale. 
-21. The manifest MUST be used to signal the language, which SHOULD also be signalled in the mdhd box or elng boxes in the init segment and/or moof headers 
-22. The manifest MUST be used to signal encryption specific information, which SHOULD also be signalled in the pssh, schm and sinf boxes in the segments of the init and media segments
-23. The manifest MUST be used to signal information about the different tracks such as the durations, media encoding types, content types, which SHOULD also be signalled in the moov box in the init segment or the moof box in the media segments
-23. The manifest MUST be used to signal information about the teimd text, images and subtitles in adaptation sets as defined in DASH, these information SHOULD also be signalled in the moov boxes, see next section.
+21. The manifest SHOULD be used to signal the language, which SHOULD also be signalled in the mdhd box or elng boxes in the init segment and/or moof headers 
+22. The manifest SHOULD be used to signal encryption specific information, which SHOULD also be signalled in the pssh, schm and sinf boxes in the segments of the init and media segments
+23. The manifest SHOULD be used to signal information about the different tracks such as the durations, media encoding types, content types, which SHOULD also be signalled in the moov box in the init segment or the moof box in the media segments
+23. The manifest SHOULD be used to signal information about the teimd text, images and subtitles in adaptation sets as defined in DASH, these information SHOULD also be signalled in the moov boxes, see next section.
 
 ## Formatting Requirements for Timed Text, Images, Captions and Sub-titles
 
 The specification supports ingest of timed text, images, captions and subtitles in sparse tracks. 
 
-1. The tracks containing timed text, images, captions or subtitles MUST be signalled in the manifest by an adaptationset with the different segments containing the data of the track.  
-2. The segment data shall be posted to the URL corresponding to the path in the manifest for the segment  
+1. The tracks containing timed text, images, captions or subtitles SHOULD be signalled in the manifest by an adaptationset with the different segments containing the data of the track.  
+2. The segment data SHOULD be posted to the URL corresponding to the path in the manifest for the segment  
 3. The track will be a sparse track signalled by a null media header (nmhd) containing the timed text, images, captions corresponding to the recommendation of such tracks in [8]
 4. Based on this recommendation the trackhandler hdlr shall be set to "text" for WebVTT and "subt" for TTML 
 5. In case TTML is used the track must use the XMLSampleEntry to signal sample description of the subtitle stream 
@@ -164,7 +164,7 @@ The specification supports ingest of timed text, images, captions and subtitles 
 11. The segments of the tracks containing Timed Text, Images, Captions and Sub-titles MAY use the bit-rate box to signal bit-rate of the track. 
 ## Formatting Requirements for Timed Meta-Data Ingest relating to ad markers, program events and program information
 
-This section discusses the specific formatting requirements for ingest of timed meta-data related to events and markers for add insertion. When delivering a live streaming presentation with a rich client experience, often it is necessary to transmit time-synced events, meta-data or other signals in-band with the main media data. An example of this are opportunities for dynamic live ad insertion signalled by SCTE-35 markers. This type of event signalling is different from regular audio/video streaming because of its sparse nature. In other words, the signalling data usually does not happen continuously, and the interval can be hard to predict. 
+This section discusses the specific formatting requirements for ingest of timed meta-data related to events and markers for ad- insertion. When delivering a live streaming presentation with a rich client experience, often it is necessary to transmit time-synced events, meta-data or other signals in-band with the main media data. An example of these are opportunities for dynamic live ad insertion signalled by SCTE-35 markers. This type of event signalling is different from regular audio/video streaming because of its sparse nature. In other words, the signalling data usually does not happen continuously, and the interval can be hard to predict. 
 Examples of timed meta-data are ID3 tags (http://www.id3.org/), SCTE-35 markers [2] and DASH emsg messages defined in section 5.10.3.3 of [1]. For example, DASH Event messages contain a schemeIdUri that defines the payload of the message. Table 1 provide some example schemes in DASH event messages and Table 2 illustrates an example of a SCTE-35 marker stored in a dash emsg. The presented approach allows ingest of timed meta-data form different sources possibly on different locations.
 
 Table 1 Example of DASH emsg schemes  URI
@@ -178,7 +178,7 @@ urn:scte:scte35:2013:bin    | 1     |  Contains a binary SCTE-35 message	       
 www.nielsen.com:id3:v1      | 1     |  Contains a Nielsen ID3 tag	                  | Nielsen ID3 in MPEG-DASH
 
 
-Table 2 example of a scte-35 marker embedded in a DASH emsg
+Table 2 example of a SCTE-35 marker embedded in a DASH emsg
 
 Tag	                    |          Value
 ------------------------|-----------------------------
@@ -191,7 +191,7 @@ Id                      |	unique identifier for message
 message_data	          |           splice info section including CRC
 
 The following steps are a recommended for timed metadata ingest related to events, tags, ad markers and program information:
-1. Create a fragmentedMP4stream that contains only sparse tracks meta-data track, i.e. timed metadata streams which are streams without audio/video tracks.
+1. Create a fragmentedMP4stream that contains only sparse tracks meta-data track, i.e. timed meta-data streams which are streams without audio/video tracks.
 1. Meta-data tracks MAY be stored in the DASH Manifest using DASH as an adaptationset with a sparse track
 1.	For this meta-data track the media handler type is ("meta") and the tracks handler box is a null media header box ("nmhd").
 1.	The URIMetaSampleEntry entry contains, in a URIbox, the URI following the URI syntax in [7] defining the form of the metadata (see the ISO Base media file format specification [3]). 	For example, the URIBox could contain for ID3 tags the URL  http://www.id3.org
@@ -224,7 +224,7 @@ Given the nature of live streaming, good failover support is critical for ensuri
 a. The current connection MUST be closed, and a new connection MUST be created for a new HTTP POST request.
 b. The new HTTP POST URL MUST be the same as the initial POST URL for the segment to be ingested.
 c. The new HTTP POST MUST include stream headers (ftyp, and moov boxes) that are identical to the stream headers in the initial POST request for fragmented media ingest.
-d. The last two fragments sent for each segment may be resent. Other ISO BMFF fragment timestamps must increase continuously, even across HTTP POST requests.
+d. The last two fragments sent for each segment MAY be resent. Other ISO BMFF fragment timestamps MUST increase continuously, even across HTTP POST requests.
 6.	The encoder or ingest source SHOULD terminate the HTTP POST request if data is not being sent at a rate commensurate with the MP4 fragment duration. An HTTP POST request that does not send data can prevent publishing points or media processing entities from quickly disconnecting from the live encoder or media ingest source in the event of a service update. For this reason, the HTTP POST for sparse (ad signal) tracks SHOULD be short-lived, terminating as soon as the sparse fragment is sent. An example of the error handling is shown in the following figure:
 
 ![](/ingest-interactions/output/main.png)
