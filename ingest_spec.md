@@ -107,19 +107,9 @@ The communication between the live encoder/media ingest source and the receiving
    - 2. Only unique paths are used for each new presentation 
 
 4. In case the manifest contains these relative paths, these paths SHOULD be used in combination with the  POST_URL + relative URLs to POST each of the different segments from the live encoder to the processing entity. In case the manifest contains no relative paths the segments SHOULD be posted to the original POST_URL specified by the service.
-
-  For example: 
-
-- Encoder POSTs a manifest at some processing entity http://someprocessingservice.com/live/customerA/manifest.mpd
-
-- The processing entitity receives this and checks to see if this is an update on an existing manifest. 
-  If not, then it cues up a new session using "http://someprocessingservice.com/live/customerA/" as the POST_URL.
-
-- The encoder then starts POSTING segments in short running POST operations, for example:
-
-```text
-  http://someoriginservice.com/live/customerA/adaptionset1/representation1/segment1.cmfv
-```
+Encoder POSTs a manifest at some processing entity: http://someprocessingservice.com/live/customerA/manifest.mpd
+The processing entitity receives this and checks to see if this is an update on an existing manifest. If not, then it cues up a new session using "http://someprocessingservice.com/live/customerA/" as the POST_URL.
+The encoder then starts POSTING segments in short running POST operations: http://someoriginservice.com/live/customerA/adaptionset1/representation1/segment1.cmfv
 in case of a disconnect during the segment POST operation, the segment MUST be retransmitted.  
      
 5. The live encoder MAY send an updated version of the manifest, this manifest cannot override current settings and relative paths    or break currently running and incoming POST requests. The updated manifest can only be slightly different from the one that was send    previously, e.g. introduce new segments available or event messages. The updated manifest SHOULD be send using a PUT request instead of a POST request. 
