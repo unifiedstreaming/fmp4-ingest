@@ -13,9 +13,9 @@ Live Media Source (e.g. live encoder) -> Publishing Point (media processing enti
 
 The workflow architecture diagram is shown in Diagram 1. A live encoder or media source pushes media towards a media processing entity that can be either passive (e.g. pass through) or active (e.g. altering or processing the media).  The media processing entity provides functionalities for further delivery such as content stitching, encryption, packaging, manifest generation, transcoding, scalable delivery etc. Ingest of live media is still often based on proprietary protocols. This often leads to interop issues as implementations and specifications are often incomplete or not based on the latest technologies and standards used in the industry (e.g. timed meta-data, emerging encoding standards like HEVC). 
 
-In practice, interop problems relate to the file format or encoder settings or the transmission protocol. Protocols on top of TCP, UDP or HTTP are often used to connect the live encoder/media source to the processing entity. When multiple live encoders/media sources serve as ingest it is important that different encoders adhere to the same protocol. Other interop issues  occur when passing live meta-data from broadcast workflows into cloud media processing such as based on ID3 tags, SCTE-35 markers. This type of meta-data ingest will also be addressed in this specification. Further meta-data like timed text, captions, subtitles and images are important.In addition meta-data for supporting media processing operations such as transcoding, content stitching etc. can be useful e.g. camera information, motion vector data for guided transcoding etc and shall not be precluded by this specification. 
+In practice, interop problems relate to the file format or encoder settings or the transmission protocol. Protocols on top of TCP, UDP or HTTP are often used to connect the live encoder/media source to the processing entity. When multiple live encoders/media sources serve as ingest it is important that different encoders adhere to the same protocol. Other interop issues  occur when passing live meta-data from broadcast workflows into cloud media processing such as based on ID3 tags, SCTE-35 markers. This type of meta-data ingest will also be addressed in this specification. Further meta-data like timed text, captions, subtitles and images are important.In addition meta-data for supporting media processing operations such as transcoding, content stitching etc. can be useful e.g. camera information, motion vector data for guided transcoding etc and shall not be exclused in extensions of this specification. 
 
-This text aims at specification for the interop of live media ingest that includes both advanced media like HEVC and advanced meta-data such as ad-markers, timed/text captions and so on.
+This text aims at specification for the interop of live media ingest that includes both advanced media like HEVC and advanced meta-data such as ad-markers, timed/text, closed captions and so on.
 
 ## Conformance Notation
 
@@ -79,13 +79,13 @@ fragment moof box.
 ## Overall Media Ingest Protocol Behavior Specification
 The media and timed meta-data ingest specification uses multiple HTTP POST and/or PUT requests to transmit the manifest followed by encoded media data packaged in fragmented ISO BMFF [3]. The subsequent posted segments correspond to those decribed in the manifest.  Each HTTP POST sends a complete manifest or media segment towards the processing entity. The sequence of POST commands starts with the the manifest and init segments that includes header boxes (ftyp and moov boxes), and continues with a sequence of segments (combinations of moof and mdat boxes) as defined in the initial manifest. 
 
-An example of the Fragmented Media Ingest POST URL targeting the publishing point is: http://ServerAdress/presentationPath/manifestpath/rsegmentpath/Identifier
+An example of the Fragmented Media Ingest POST URL targeting the publishing point is: http://HostName/presentationPath/manifestpath/rsegmentpath/Identifier
 
 The PostURL the syntax is defined as follows using the IETF RFC 5234 ANB [14] to specify the structure. 
 * PostURL = Protocol “://” BroadcastURL Identifier
 * Protocol = "http" / "https" 
-* BroadcastURL = ServerAddress "/" PresentationPath 
-* ServerAddress = URI_SAFE_IDENTIFIER 
+* BroadcastURL = HostName "/" PresentationPath 
+* HostName = URI_SAFE_IDENTIFIER 
 * PresentationPath = URI_SAFE_IDENTIFIER 
 * ManifestPath = URI_SAFE_IDENTIFIER 
 * Rsegmentpath = URI_SAFE_IDENTIFIER 
