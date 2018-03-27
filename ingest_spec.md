@@ -2,7 +2,11 @@
 * Status: Draft
 
 ## Overview 
-This specification describes a protocol for media ingest from a live source (e.g. live encoder or other media source) into media processing entities. Examples of media processing entities targeted include publishing points, streaming origins, content delivery networks and other active media processing entities. 
+This specification describes a protocol for media ingest from a live source (e.g. live encoder or other media source) into media processing entities. Examples of media processing entities targeted include publishing points, streaming origins, content delivery networks and other active media processing entities. In addition the specification also allows ingest to passive entities (e.g. DASH ingest) that only provide delivery/storage functionalities.
+
+Active media processing entities are entities like Unified origin, that include dynamic packaging, encryption, manifest generation, content stitching and other media processing operation as needed to finalize the media streaming presentation. For these entities it is important that the input media segments are well defined as the processing needs this to generate the final presentations. 
+
+Passive media processing entities include simple origin servers that provide a pass through functionality. Such elements typically make the ingested data available directly by GET requests in line with common streaming protocols. Passive media entities need a complete media presentation including the media segment data and a correct streaming manifest. The passive media entity can for example provide CDN functionalities like caching and duplication, however, typically the media content itself is not modified by a passive entity.
 
 **Diagram 1**
 
