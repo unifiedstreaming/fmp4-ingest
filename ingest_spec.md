@@ -142,6 +142,8 @@ in case of a disconnect during the segment POST operation, the segment MUST be r
 22. The manifest SHOULD be used to signal information about the different tracks such as the durations, media encoding types, content types, which SHOULD also be signalled in the moov box in the init segment or the moof box in the media segments
 23. The manifest SHOULD be used to signal information about the timed text, images and sub-titles in adaptation sets and this information SHOULD also be signalled in the moov boxes, see next section.
 24. Segments posted towards the media procesing entity MUST contain the bitrate (btrt) box specifying the target bitrate of the segments and the tfdt box specifying the fragments decode time and the tfhd box specifying the track id.  
+25. The live encoder/media source SHOULD repeatedly resolve the Hostname to adapt to changes in the IP to Hostname mapping such as for example by using the dynamic naming system (DNS) or any other system that is in place.
+26. To support the ingest of live events with low latency, shorter segment and fragment durations MAY be used such as seconds with a duration of 1 second. 
 
 ## Formatting Requirements for Timed Text, Images, Captions and Sub-titles
 
