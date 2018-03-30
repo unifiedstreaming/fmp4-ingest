@@ -143,7 +143,8 @@ in case of a disconnect during the segment POST operation, the segment MUST be r
 23. The manifest SHOULD be used to signal information about the timed text, images and sub-titles in adaptation sets and this information SHOULD also be signalled in the "moov" box in the init segment, for more information see the next section.
 24. Segments posted towards the media procesing entity MUST contain the bitrate "btrt" box specifying the target bitrate of the segments and the "tfdt" box specifying the fragments decode time and the "tfhd" box specifying the track id.  
 25. The live encoder/media source SHOULD repeatedly resolve the Hostname to adapt to changes in the IP to Hostname mapping such as for example by using the dynamic naming system (DNS) or any other system that is in place.
-26. To support the ingest of live events with low latency, shorter segment and fragment durations MAY be used such as seconds with a duration of 1 second. 
+26. The Live encoder media source MUST update the IP to hostname resolution respecting the TTL (time to live) from DNS query responses, this will enable better resillience to changes of the IP address in large scale deployments where the IP adress of the publishing point media processing nodes may change frequenty
+27. To support the ingest of live events with low latency, shorter segment and fragment durations MAY be used such as seconds with a duration of 1 second. 
 
 ## Formatting Requirements for Timed Text, Images, Captions and Sub-titles
 
