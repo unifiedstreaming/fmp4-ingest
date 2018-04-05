@@ -1,7 +1,5 @@
 # fmp4-ingest
 
-I restructure the requirements based on media format for source media content 
-
 **General Requirements (G)**
 - fMP4 ingest shall use clock synchronization between streams, preferably based on UTC timestamps form the original (e.g. SDI) signal
 - fMP4 ingest shall be based on MPEG technologies and container formats 
