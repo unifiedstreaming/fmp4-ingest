@@ -156,7 +156,7 @@ The specification supports ingest of timed text, images, captions and subtitles.
 3. The track will be a sparse track signalled by a null media header "nmhd" containing the timed text, images, captions corresponding to the recommendation of storing such tracks in fragmted MPEG-4 [8]
 4. Based on this recommendation the trackhandler "hdlr" shall be set to "text" for WebVTT and "subt" for TTML 
 5. In case TTML is used the track must use the XMLSampleEntry to signal sample description of the sub-title stream 
-6. In case WebVVT is used the track must use the WVVTSampleEntry to signal sample description of the text stream
+6. In case WebVTT is used the track must use the WVTTSampleEntry to signal sample description of the text stream
 7. These boxes SHOULD signal the mime type and specifics as described in [8] sections 11.3 ,11.4 and 11.5
 8. The boxes described in 3-7 must be present in the init segment ("ftyp" + "moov") for the given track
 9. subtitles in CTA-608 and CTA-708 can be transmitted following the recommendation section 11.5 in [8] via SEI messages in the video track
