@@ -1,8 +1,6 @@
 # fmp4-ingest
 Repository containing documents of fragmented MPEG-4 ingest specification (in progress)
 
-Last update: March 19th 2018
-
 # fmp4-ingest goals 
 
 Todays highly available, highly scalable and high quality video streaming platforms combine high quality live encoders
