@@ -1,5 +1,9 @@
 # fmp4-ingest
-Repository containing documents of fragmented MPEG-4 ingest specification (in progress)
+Repository containing documents of fragmented MPEG-4 ingest specification.
+
+The draft version of the spec is hosted as ietf draft, please find it here:
+
+https://tools.ietf.org/html/draft-mekuria-mmediaingest-00
 
 # fmp4-ingest goals 
 
