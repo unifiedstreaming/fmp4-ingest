@@ -70,7 +70,7 @@ feedback from Sam, author of smooth ingest protocol:
 				  - Industry survey -> which groups worked on the problem might be relevant for the document
           		  
 		  JAmes (BBC R&D) provides some feedback regarding these questions. 
-		            - I could not here in detail will add the list after feedback from James  
+		            - I could not hear in detail will add the list after feedback from James  
 https://www.digitalproductionpartnership.co.uk/what-were-working-on/uk-specification-live-ip-contribution/
 https://www.digitalproductionpartnership.co.uk/what-were-working-on/uk-specification-for-ip-feeds/
                      SMPTE 2110
