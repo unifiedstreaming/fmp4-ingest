@@ -1,12 +1,13 @@
 
   
                                             R. Mekuria
-Internet Engineering Task Force             D. Griffioen
-Internet-Draft                              Unified Streaming B.V.
-Expires: November 7th, 2018                 
+											Unified Streaming
+Internet Engineering Task Force             Sam Zheqiang 
+Internet-Draft                              Microsoft 
+Expires: xxx, 2018                 
 
 
-Intended status: Best Current Practice      May 7, 2018
+Intended status: Best Current Practice      xxx, 2018
 
 
           Live Media and Metadata Ingest Protocol
@@ -14,35 +15,54 @@ Intended status: Best Current Practice      May 7, 2018
 
 Abstract
 
-   This Internet draft presents a protocol specification for 
-   ingesting live media and metadata content from a 
-   live media source such as a live encoder towards a media 
-   processing entity or content delivery network. 
-   It defines the media format usage, the preferred transmission 
-   methods and the handling of failovers and redundancy. 
-   The live media considered includes high quality encoded 
-   audio visual content. The timed metadata supported 
-   includes timed graphics, captions, subtitles and 
-   metadata markers and information. This protocol can 
-   for example be used advanced live streaming workflows 
-   that combine high quality live encoders and advanced 
-   media processing entities. The specification follows
-   best current industry practice.
+   This Internet draft presents best industry practice for 
+   ingesting live media and meta-data content from a 
+   live media source. Example receivers of such 
+   live media ingest include media processing entities, 
+   media clouds and content delivery networks. 
+   This document defines the binary media format, 
+   the preferred transmission methods and protocols 
+   and the handling of failovers and redundancy. 
+   The ingested content considered includes 
+   high quality audio-visual media content, 
+   timed meta-data markers and captions and subtitles
+   information and overlay graphics. To support advanced 
+   live streaming workflows that combine high quality 
+   live encoders and advanced media processing entities 
+   two profiles of the ingest are distinguished.
+   In the first profile a live media encoder/source 
+   ingests media for further downstream media processing. 
+   Some examples of such media processing are transcoding, 
+   re-packaging, re-encryption and manifest generation. 
+   In the second profile the media source also signals 
+   information like grouping of the tracks and a streaming 
+   manifest and encryption specific information. 
+   The second profile is useful for ingesting 
+   to entities that do not perform further 
+   active media processing that changes the binary 
+   media formats. Eamples of such entities are content
+   delivery networks or storage nodes that provide 
+   delivery and storage functionalities respectively. 
+   By separating the two profiles unnnecesary overhead 
+   is avoided while supporting key use cases. 
+   
 
 Status of This Memo
 
-   This Internet-Draft is submitted in full conformance with the
-   provisions of BCP 78 and BCP 79.
+   This Internet-Draft is submitted in full conformance 
+   with the provisions of BCP 78 and BCP 79.
 
-   Internet-Drafts are working documents of the Internet Engineering
-   Task Force (IETF).  Note that other groups may also distribute
-   working documents as Internet-Drafts.  The list of current Internet-
+   Internet-Drafts are working documents of the Internet 
+   Engineering Task Force (IETF).  Note that other groups 
+   may also distribute working documents as Internet-Drafts.  
+   The list of current Internet-
    Drafts is at http://datatracker.ietf.org/drafts/current/.
 
-   Internet-Drafts are draft documents valid for a maximum of six 
-   months and may be updated, replaced, or obsoleted by other documents
-   at any time.  It is inappropriate to use Internet-Drafts as 
-   reference material or to cite them other than as "work in progress."
+   Internet-Drafts are draft documents valid for a maximum
+   of six months and may be updated, replaced, or obsoleted 
+   by other documents at any time.  It is inappropriate to
+   use Internet-Drafts as reference material or to cite 
+   them other than as "work in progress."
 
 
    
@@ -53,7 +73,7 @@ Status of This Memo
    
    
    
-   <Mekuria>          Expires November 7 2018                [Page1]
+   <Mekuria>          Expires xxx 20xx                [Page1]
    
 
 
@@ -93,51 +113,95 @@ Table of Contents
  
 1.  Introduction
 
-   This specification describes a protocol for media ingest from 
-   a live source (e.g. live encoder) towards media processing 
+   This document describes best practice for media ingest 
+   from a live source (e.g. live encoder) towards media processing 
    entities. Examples of media processing entities
-   include media packagers, publishing points, streaming origins, 
-   content delivery networks and others. In particular, we 
-   distinguish active media processing entities and passive media 
+   include media packagers, publishing points, streaming origins and 
+   content delivery networks. In particular, this document  
+   distinguishes active media processing entities and passive media 
    processing entities. Active media processing entities perform 
    media processing such as encryption, packaging, changing (parts of)
-   the media content and deriving additional information. Passive 
-   media processing entities provide pass through functionality 
+   altering the media content and deriving additional information. 
+   Passive media processing entities provide pass through functionality 
    and/or delivery and caching functions that do not alter the media 
    content itself. An example of a passive media processing entity
    could be a content delivery network (CDN) that provides
    functionalities for the delivery of the content. 
    An example of an active media processing entity could 
-   be a just-in-time packager or a just in time transcoder.
+   be a just-in-time packager or a just-in-time transcoder.
 
   
-     <Mekuria>          Expires November 7 2018                [Page2]
+     <Mekuria>          Expires xxx                [Page2]
 
      
+   To address both of these use cases, two profiles are described 
+   in this text. In the first case, the 
+   encoder need not have the global overview of what the client
+   may receive, while in the second case this is usually
+   the case. Both situations can occur in practical streaming 
+   workflows. Our practical experience and a deeper look 
+   in the protocol exchanges reveals that overhead 
+   can be avoided by separating these two use cases 
+   in different profiles. 
    
    Diagram 1: Example workflow with media ingest
    Live Media Source -> Media processing entity -> CDN -> End User
    
    Diagram 1 shows the workflow with a live media ingest from a 
-   live media source towards a media processing entity. The media 
-   processing entity provides additional processing such as 
-   content stitching, encryption, packaging, manifest generation, 
-   transcoding etc. Such setups are beneficial for advanced 
-   media delivery. The ingest described in this draft includes 
-   the latest technologies and standards used in the industry 
-   such as timed metadata, captions, timed text and encoding 
-   standards such as HEVC [HEVC]. The media ingest protocol 
-   specification and associated requirements were discussed 
-   with stakeholders, including broadcasters, live encoder vendors,
-   content delivery networks, telecommunications companies 
-   and cloud service providers. While this draft specification 
-   has also been extensively discussed and reviewed by these 
-   stakeholders representing current best practices.
-   Nevertheless,   this current draft solely reflects the 
-   point of view of the authors of this draft taking received 
-   feedback from these stakeholders into account. Some 
-   insights on the discussions leading to this draft 
-   can be found on [fmp4git].
+   live media source towards an active media processing entity 
+   (the first case). The media processing entity provides additional 
+   processing such as content stitching, encryption, packaging, 
+   manifest generation, transcoding etc. In the second
+   ingest format the source ingests directly into the Content 
+   delivery network or storage nodes. The ingest described in 
+   this text defines two profiles and includes the 
+   latest technologies and standards used in the industry. 
+   Content considered includes timed metadata, captions, 
+   timed text and encoding standards such as HEVC [HEVC]. 
+   The protocol and best practices and associated requirements 
+   were discussed with stakeholders, including broadcasters, 
+   live encoder vendors, content delivery networks, 
+   telecommunications companies and cloud service providers.
+   
+   An example of a widely adopted media ingest protocol 
+   is the ingest part of microsoft smooth streaming protocol 
+   [MS-SSTR]. This protocol connects live encoders to 
+   the microsoft smooth streaming server and to 
+   the Microsoft Azure cloud. This protocol has shown 
+   to be robust, flexible and easy to implement in live 
+   encoders. In addition it provided features for 
+   high availability and server side redundancy. 
+
+   This document advances over the smooth ingest procotol 
+   including lessons learned over the last
+   ten years after the initial deployment of smooth streaming 
+   in 2009 and several advances on signalling of information.
+   In addition, it incorporates the latest media formats 
+   and protocols, making it ready for current and 
+   next generation media codecs such as [HEVC] 
+   and protocols like MPEG DASH [DASH].   
+   
+   In particular, the best practice presented uses 
+   HTTP [HTTP] and specifically the HTTP POST method. 
+   We still consider the usage of HTTP for media 
+   ingest preferable. Smooth streaming [MS-SSTR] 
+   and HLS [RFC8216] have shown that HTTP usage 
+   can survive the ecosystem. In addition, HTTP based 
+   ingest fits well with current  HTTP based streaming 
+   protocols and there is good support for HTTP 
+   middleboxes, routing etc. However, a key 
+   aspect of the ingest spec is the binary 
+   media format based on fragmented MPEG-4 
+   [ISOBMFF] [CMAF] which allows easy identification 
+   of stream boundaries enabling switching, redundancy, 
+   re-transmission enabling a good fit with the current 
+   Internet infrastructures. Many problems in practical 
+   deployment often deal with issues related to the binary
+   format. In future versions, alternative transmission 
+   layers could be considered advancing over HTTP, yet it 
+   is expected that the binary layer presented here
+   will still provide the same mentioned benefits.   
+   
    
 2.  Conventions and Terminology
 
@@ -169,7 +233,7 @@ Table of Contents
          to signal the decode time of the media 
          fragment signalled in the moof box.    
          
-<Mekuria>          Expires November 7 2018                [Page3]
+<Mekuria>          Expires xxx                [Page3]
 
     
  
@@ -225,9 +289,11 @@ Table of Contents
    The sequence of POST commands starts with the manifest and init 
    segments that includes header boxes (ftyp and moov boxes). 
    It continues with the sequence of segments 
-   (combinations of moof and mdat boxes).
+   (combinations of moof and mdat boxes). The two profiles 
+   are defined as p1 for ingest to active media processing entities
+   and p2 for ingest to passive entities.  
   
-<Mekuria>          Expires November 7 2018                [Page4]
+<Mekuria>          Expires xxx                [Page4]
 
    
 
@@ -259,9 +325,11 @@ Table of Contents
    in the manifest. The live source sender first sends the manifest 
    to the path http://hostname/presentationpath/ allowing 
    the receiving entity to setup reception paths for the following 
-   segments and manifests. In case no manifest is used any POST_URL
+   segments and manifests for profile p2. 
+   In case no manifest is used any POST_URL
    setup for media ingest such as http://hostname/presentationpath/
-   can be used. The fragmentedMP4stream can be defined
+   can be used as recommended for profile p1. 
+   The fragmentedMP4stream can be defined
    using the IETF RFC 5234 ANB [RFC5234] as follows.
    
    fragmentedMP4stream = headerboxes fragments
@@ -271,7 +339,9 @@ Table of Contents
     
    The communication between the live encoder/media ingest source 
    and the receiving media procesing entity follows the following 
-   requirements. 
+   requirements for the two profiles. The requirements apply to 
+   both profiles p1 and p2 unless it is specifically indicated
+   to which profile the statement applies.   
    
    1. The live encoder or ingest source communicates to 
       the publishing point/processing entity using the HTTP 
@@ -279,13 +349,13 @@ Table of Contents
       or in the case for manifest updates the HTTP PUT Method. 
    2. The live encoder or ingest source SHOULD start
       by sending an HTTP POST request with an empty "body"
-      (zero content length) by using the same POSTURL. 
+      (zero content length) by using the POSTURL in profile p1. 
       This can help the live encoder or media 
       ingest source to quickly detect whether the 
       live ingest publishing point is valid, 
-      and if there are any authentication or other conditions required. 
+      and if there are any authentication or other conditions required.	  
       
-<Mekuria>          Expires November 7 2018                [Page5]
+<Mekuria>          Expires xxx                [Page5]
 
      
 
@@ -306,12 +376,12 @@ Table of Contents
       in many available implementations [MozillaTLS]. 
    6. Before sending the segments 
       based on fragmentedMP4Stream the live encoder/source
-      MAY send a manifest 
+      MUST send a manifest when using profile p2 
       with the following the limitations/constraints.
    6a. Only relative URL paths to be used for each segment
    6b. Only unique paths are used for each new presentation
    6c. In case the manifest contains these relative paths, 
-      these paths MAY be used in combination with the 
+      these paths SHOULD be used in combination with the 
       POST_URL + relative URLs 
       to POST each of the different segments from 
       the live encoder or ingest source 
@@ -320,18 +390,19 @@ Table of Contents
       or no manifest is used the 
       segments SHOULD be posted to the original 
       POST_URL specified by the service. 
-   6e. In this case the tdft and trackids MAY 
+   6e. In this case the tdft and trackids SHOULD 
        be used by the processing entity 
        to distinguish incoming segments 
        instead of the target POST_URL.
 
-  7. The live encoder MAY send an updated version of the manifest, 
-     this manifest cannot override current settings and relative 
-     paths or break currently running and incoming POST requests. 
-     The updated manifest can only be slightly different from 
-     the one that was send previously, e.g. introduce new segments 
-     available or event messages. The updated manifest SHOULD be 
-     send using a PUT request instead of a POST request.
+  7. The live encoder MAY send an updated version of the manifest,
+     when using profile p2, this manifest cannot override current 
+	 settings and relative paths or break currently running and 
+	 incoming POST requests. The updated manifest can only be 
+	 slightly different from the one that was send previously, 
+	 e.g. introduce new segments available or event messages. 
+	 The updated manifest SHOULD be send using a PUT request 
+	 instead of a POST request.
          
      Note: this manifest will be useful for passive media processing 
            entities mostly, for ingest towards active media processing 
@@ -343,19 +414,20 @@ Table of Contents
      entity such as 403 (forbidden), 400 bad request, 415 
      unsupported media type, 412 not fulfilling conditions
          
-<Mekuria>          Expires November 7 2018                [Page6]
+<Mekuria>          Expires xxx                [Page6]
 
  
 
   9. In case of a 412 not fullfilling conditions or 415 
-      unsupported media type, 
-      the live source/encoder MUST resend the init segment 
+      unsupported media type, the live source/encoder 
+	  MUST resend the init segment 
       consisting of a "moov" and "ftyp" box.
   10. The live encoder or ingest source SHOULD start 
       a new HTTP POST segment request sequence with the 
       init segment including header boxes "ftyp" and "moov"
   11. Following media segment requests SHOULD be corresponding 
-      to the segments listed in the manifest if a manifest was sent. 
+      to the segments listed in the manifest if a manifest was sent
+	  when using profile p2. 
   12. The payload of each request MAY start with the header boxes 
       "ftyp" and "moov", followed by segments which consist of 
       a combination of "moof" and "mdat" boxes. 
@@ -366,28 +438,29 @@ Table of Contents
       prior to the end of the stream with a 412 or 
       415 message. Resending the "moov" and "ftyp" boxes 
       allows the receiving entitity to recover the init segment 
-      and the track information needed for interpreting the content.
-  13. The encoder or ingest source MAY use chunked transfer 
+      and the track information needed for interpretting the content.
+  13. The encoder or ingest source SHOULD use chunked transfer 
       encoding option of the HTTP POST command [RFC2626] for uploading 
       as it might be difficult to predict the entire content length 
-      of the segment. This can be used for example to support use 
+      of the segment. This can also be used for example to support use 
       cases that require low latency.
   14. The encoder or ingest source SHOULD use individual HTTP POST 
-      commands [RFC2626] for uploading media segments when ready. 
+      commands [RFC2626] for uploading media segments when ready
+	  when using profile p2. 
   15. If the HTTP POST request terminates or times out with a TCP 
       error prior to the end of the stream, the encoder MUST issue 
       a new POST request by using a new connection, and follow the 
       preceding requirements. Additionally, the encoder MAY resend 
       the previous two segments that were already sent again.
   16. In case fixed length POST Commands are used, the live source 
-      entity MUST resend the segment 
-      to be posted decribed in the manifest entirely 
-      in case of responses HTTP 400, 412 or 415 together 
-      with the init segment consisting of "moov" and "ftyp" boxes.
+      entity MUST resend the segment to be posted decribed 
+	  in the manifest entirely in case of responses HTTP 400,
+	  412 or 415 together with the init segment consisting 
+	  of "moov" and "ftyp" boxes.
   17. In case the live stream event is over the live media 
       source/encoder should signal 
       the stop by transmitting an empty "mfra" box 
-      towards the publishing point/processing entity
+      towards the publishing point/processing entity.
   18. The trackFragmentDecodeTime box "tfdt" box
       MUST be present for each segment posted.
   19. The ISOBMFF media fragment duration SHOULD be constant, 
@@ -399,45 +472,49 @@ Table of Contents
       timescale (a multiple of the frame rate is recommended) 
       this issue can be avoided.
       
-<Mekuria>          Expires November 7 2018                [Page6]
+<Mekuria>          Expires xxx                [Page6]
 
  
 
 
-  20. The MPEG-4 fragment duration SHOULD be between 
+  20. The MPEG-4 fragment durations SHOULD be between 
       approximately 2 and 6 seconds.
   21. The fragment decode timestamps "tfdt" of fragments in the 
       fragmentedMP4stream and the indexes base_media_decode_ time 
       SHOULD arrive in increasing order for each of the different 
-      tracks/streams that are ingested.
+      tracks/streams that are ingested for profile p1.
   22. The segments formatted as fragmented MP4 stream SHOULD use 
       a timescale for video streams based on the framerate 
       and 44.1 KHz or 48 KHz for audio streams 
       or any another timescale that enables integer 
       increments of the decode times of 
       fragments signalled in the "tfdt" box based on this scale.
-  23. The manifest MAY be used to signal the language of the stream, 
-      which SHOULD also be signalled in the "mdhd" box or "elng" boxes
-      in the init segment and/or moof headers ("mdhd")
+  23. The manifest SHOULD be used to signal the language of the stream
+      for profile p2, which SHOULD also be signalled in the 
+	  "mdhd" box or "elng" boxes in the init segment and/or moof headers 
+	  ("mdhd") for profile p1.
   24. The manifest SHOULD be used to signal encryption specific 
-      information, which SHOULD also be signalled in the "pssh", 
-      "schm" and "sinf" boxes in the segments of 
-      the init segment and media segments
+      information for profile p2, which SHOULD be signalled 
+	  in the "pssh","schm" and "sinf" boxes 
+	  in the segments of 
+      the init segment and media segments, 
+	  when using profile p1
   25. The manifest SHOULD be used to signal information 
       about the different 
-      tracks such as the durations, media encoding types, 
-      content types, which SHOULD also be signalled in the 
-      "moov" box in the init segment or the "moof" box 
-      in the media segments
+      tracks such as the durations,  media encoding types, 
+      content types for profile p2, which SHOULD instead be 
+	  signalled in the "moov" box in the init segment 
+	  or the "moof" box in the media segments for profile p1
   26. The manifest SHOULD be used to signal information 
       about the timed text, images and sub-titles in adaptation 
-      sets and this information SHOULD also be signalled 
-      in the "moov" box in the init segment, 
-      for more information see the next section.
+      sets for profile p2 and this information 
+	  SHOULD be signalled in the "moov" box in the init segment
+	  for profile p1,for more information see the next section.
   27. Segments posted towards the media procesing entity MUST contain 
       the bitrate "btrt" box specifying the target bitrate of 
       the segments and the "tfdt" box specifying the fragments 
-      decode time and the "tfhd" box specifying the track id.
+      decode time and the "tfhd" box specifying the track id
+	  when using profile p1.
   28. The live encoder/media source SHOULD repeatedly resolve 
       the Hostname to adapt to changes in the IP to Hostname mapping
       such as for example by using the dynamic naming system 
@@ -450,14 +527,15 @@ Table of Contents
       processing nodes may change frequenty.
   30. To support the ingest of live events with low latency, 
       shorter segment and fragment durations MAY be used 
-      such as segments with a duration of 1 second.
+      such as segments with a duration of 1 or 2 seconds 
+	  and chunked transfer coding.
   31. The live encoder/media source SHOULD use a separate TCP
       connection for ingest of each different bit-rate 
       tracks ingested 
 
       
       
-<Mekuria>          Expires November 7 2018            [Page8]
+<Mekuria>          Expires xxx            [Page8]
 
   
 
@@ -469,17 +547,18 @@ images, captions and subtitles. we follow the normative
 reference [MPEG-4-30] in this section. 
 
   1. The tracks containing timed text, images, captions 
-  or subtitles MAY be signalled in the manifest by 
+  or subtitles SHOULD be signalled in the manifest by 
   an adaptationset with the different segments 
-  containing the data of the track.  
-  2. The segment data MAY be posted to the URL 
-  corresponding to the path in the manifest for the segment, 
-  else they MUST be posted towards the original POST_URL  
+  containing the data of the track when using profile p2.  
+  2. The segment data SHOULD be posted to the URL 
+  corresponding to the path in the manifest for the segment 
+  for profile p2, else they MUST be posted 
+  towards the original POST_URL  
   3. The track will be a sparse track signalled by a null media header 
   "nmhd" containing the timed text, images, captions corresponding 
   to the recommendation of storing tracks in fragmented MPEG-4 [CMAF]
   4. Based on this recommendation the trackhandler "hdlr" shall 
-  be set to "text" for WebVTT and "subt" for TTML 
+  be set to "text" for WebVTT and "subt" for TTML following [MPEG-4-30] 
   5. In case TTML is used the track must use the XMLSampleEntry 
   to signal sample description of the sub-title stream 
   6. In case WebVTT is used the track must use the WVTTSampleEntry 
@@ -504,9 +583,10 @@ reference [MPEG-4-30] in this section.
    10d. CEA  CTA-608 and CTA-708 Specified in 11.4 [MPEG-4-30] 
        Caption data is embedded in SEI messages in video track; 
       'ccea'
-   11. The segments of the tracks containing Timed Text, Images,
-       Captions and Sub-titles SHOULD use the bit-rate box "btrt" to 
-       signal bit-rate of the track in each segment. 
+  11. The segments of the tracks containing Timed Text, Images,
+      Captions and Sub-titles SHOULD use the bit-rate box "btrt" to 
+      signal bit-rate of the track in each segment when using 
+	  profile p1. 
  
 
 
@@ -515,7 +595,7 @@ reference [MPEG-4-30] in this section.
 
 
  
- <Mekuria>          Expires November 7 2018                [Page9]
+ <Mekuria>          Expires xxx                [Page9]
 
   
 
@@ -573,7 +653,7 @@ message_data            | splice info section including CRC
 
 
 
-<Mekuria>          Expires November 7 2018                [Page10]
+<Mekuria>          Expires xxx                [Page10]
 
   
 
@@ -583,9 +663,8 @@ message_data            | splice info section including CRC
   program information:
   1. Create a fragmentedMP4stream that contains only a sparse 
    metadata track which are tracks without audio/video.
-  2. Metadata tracks MAY be signalled in a manifest using an 
-   adaptationset with a sparse track, the actual data 
-   is in the sparse media track in the segments.
+  2. Metadata tracks SHOULD be signalled in a manifest using an 
+   adaptationset with a sparse track when using profile p2 
   3. For a metadata track the media handler type is "meta" 
    and the tracks handler box is a null media header box "nmhd".
   4. The URIMetaSampleEntry entry contains, in a URIbox, 
@@ -606,10 +685,10 @@ message_data            | splice info section including CRC
      in the media header box "mdhd".
   7. For the case of a DASH e-msg, the kind box 
      (contained in the udta) MUST be used to signal 
-     the scheme URI of the type of metadata
+     the scheme URI of the type of metadata when using profile p1
   8. A BitRateBox ("btrt") SHOULD be present at the end of 
      MetaDataSampleEntry to signal the bit rate information 
-     of the stream.
+     of the stream when using profile p1.
   9. If the specific format uses internal timing values, 
      then the timescale must match the timescale field set 
      in the media header box "mdhd".
@@ -622,16 +701,16 @@ message_data            | splice info section including CRC
   
   Given the sparse nature of the signalling event, the following 
   is recommended:
-  12. At the beginning of the live event, the encoder or 
-      media ingest  source sends the initial header boxes to 
-      the processing entity/publishing point, 
+  12. At the beginning of the live event, for profile p1,
+      the encoder or media ingest  source sends the initial 
+	  header boxes to the processing entity/publishing point, 
       which allows the service to register the sparse track.
   13. When sending segments, the encoder SHOULD start sending 
       from the header boxes, followed by the new fragments. 
 
       
         
- <Mekuria>          Expires November 7 2018                 [Page11]
+ <Mekuria>          Expires xxx                 [Page11]
 
   
 
@@ -689,7 +768,7 @@ message_data            | splice info section including CRC
     connection or resume streaming after a TCP error occurs.
     
 
-<Mekuria>          Expires November 7 2018                 [Page12]
+<Mekuria>          Expires xxx                 [Page12]
 
 
 
@@ -739,15 +818,16 @@ message_data            | splice info section including CRC
        unfulfilled condition
        is returned
    12. In case a media source receives an HTTP 412 response, 
-       it SHOULD resend the manifest and "ftyp" and "moov" 
-       boxes for the track.    
+       it SHOULD resend the manifest for profile p2 
+	   and "ftyp" and "moov" boxes for the track when using
+	   profile p1.    
 
 
 
 
 
        
-<Mekuria>          Expires November 7 2018                 [Page13]
+<Mekuria>          Expires xxx                 [Page13]
 
 
 
@@ -805,24 +885,27 @@ responses is shown in the following figure:
 
 
 
-<Mekuria>          Expires November 7 2018                 [Page13]
+<Mekuria>          Expires xxx                 [Page13]
 
 
 
 
 7. Guidelines for Handling of Live Media Source Failover
+ 
   Encoder or media ingest source failover is the second type
   of failover scenario that needs to be addressed for end-to-end 
   live streaming delivery. In this scenario, the error condition 
-  occurs on the encoder side. The following expectations apply fro
-  m the live ingestion endpoint when encoder failover happens:
+  occurs on the encoder side. The following expectations apply 
+  to the live ingestion endpoint when encoder failover happens:
+  
   1.    A new encoder or media ingest source instance 
         SHOULD be created to continue streaming
   2.    The new encoder or media ingest source MUST use 
         the same URL for HTTP POST requests as the failed instance.
   3.    The new encoder or media ingest source POST request 
         MUST include the same header boxes moov 
-        and ftyp as the failed instance.
+        and ftyp as the failed instance and optionally 
+		the same manifest for profile p2.
   4.    The new encoder or media ingest source 
         MUST be properly synced with all other running encoders 
         for the same live presentation to generate synced audio/video 
@@ -858,12 +941,20 @@ responses is shown in the following figure:
 
 10.  Contributors
 
-Arjen Wagenaar, Dirk Griffioen, Unified Streaming B.V.
-We thank all of the individual contributors to the discussions 
-in [fmp4git] representing major content delivery networks, 
-broadcasters, commercial encoders and cloud service providers.
+
+Will Law Akamai 
+James Gruessing BBC R&D
+Kevin Moore Amazon AWS Elemental
+Kevin Johns CenturyLink 
+John Deutscher Microsoft 
+Patrick Gendron Harmonic Inc. 
+Nikos Kyriopoulos MediaExcel
+Rufael Mekuria Unified Streaming
+Sam Zheqiang Microsoft
+Arjen Wagenaar Unified Streaming 
+Dirk Griffioen Unified Streaming 
                   
-<Mekuria>          Expires November 7 2018                 [Page14]
+<Mekuria>          Expires xxx                 [Page14]
 
 
 
@@ -918,10 +1009,11 @@ broadcasters, commercial encoders and cloud service providers.
              MPEG systems technologies -- Part 7: Common encryption 
              in ISO base media file format files"
              ISO/IEC 23001-7:2016
+    
+	[RFC8216] R. Pantos, W. May "HTTP Live Streaming", August 2018 (last acessed)
 
 
-
- <Mekuria>          Expires November 7 2018                [Page15]
+ <Mekuria>          Expires xxx                [Page15]
 
 
     
@@ -966,7 +1058,10 @@ broadcasters, commercial encoders and cloud service providers.
     [ID3v2]      M. Nilsson  "ID3 Tag version 2.4.0 Main structure" 
                 http://id3.org/id3v2.4.0-structure
                 November 2000 (last acessed 2nd of May 2018)
-                         
+				
+	[MS-SSTR]   Smooth streaming protocol
+              	https://msdn.microsoft.com/en-us/library/ff469518.aspx
+                last updated March 16 2018 (last acessed June 11 2018)
 Author's Address
 
    Rufael Mekuria (editor)
@@ -975,10 +1070,13 @@ Author's Address
 
    Phone: +31 (0)202338801
    E-Mail: rufael@unified-streaming.com
-
+   
+   Sam Geqiang Zhang 
+   Microsoft
+   E-mail: Geqiang.Zhang@microsoft.com
 
    
      
-<Mekuria>          Expires November 7 2018                 [Page16]
+<Mekuria>          Expires xxx                 [Page16]
 
    
