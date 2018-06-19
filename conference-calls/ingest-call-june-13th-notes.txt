@@ -1,0 +1,23 @@
+Arjen
+James
+Rufael
+Patrick 
+Will 
+Keven J
+
+-> limited time to work on the spec due to out of office
+-> review updated text, go over specific decisions on wether features are with p1 or p2
+
+p2 -> short running posts
+
+item 9 -> is profile specific 
+item 10 [9-10-11-12-13] retry logic 
+profile 2 -> response header redirect
+15 profile 2
+16 profile 1 only
+17 profile 1 
+18 common 
+19 common -> MAY fluctuate for p2 ingest, constant for p1 (smooth) 
+20 allow 1 second sements
+
+p2 should allow simultaneous ingest of DASH and HLS content from CMAF segments
