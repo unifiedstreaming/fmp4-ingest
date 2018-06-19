@@ -1,7 +1,7 @@
 
   
                                             R. Mekuria
-											Unified Streaming
+                                            Unified Streaming
 Internet Engineering Task Force             Sam Zheqiang 
 Internet-Draft                              Microsoft 
 Expires: xxx, 2018                 
@@ -17,34 +17,36 @@ Abstract
 
    This Internet draft presents best industry practice for 
    ingesting live media and meta-data content from a 
-   live media source. Example receivers of such 
-   live media ingest include media processing entities, 
-   media clouds and content delivery networks. 
+   live media source. Example receivers include 
+   media processing entities, media clouds 
+   and content delivery networks. 
    This document defines the binary media format, 
    the preferred transmission methods and protocols 
    and the handling of failovers and redundancy. 
    The ingested content considered includes 
    high quality audio-visual media content, 
-   timed meta-data markers and captions and subtitles
+   timed meta-data markers, captions, subtitles
    information and overlay graphics. To support advanced 
    live streaming workflows that combine high quality 
    live encoders and advanced media processing entities 
-   two profiles of the ingest are distinguished.
-   In the first profile a live media encoder/source 
+   two profiles of the ingest are presented.
+   In the first profile p1 a live media encoder/source 
    ingests media for further downstream media processing. 
    Some examples of such media processing are transcoding, 
    re-packaging, re-encryption and manifest generation. 
-   In the second profile the media source also signals 
+   In the second profile p2 the media source also signals 
    information like grouping of the tracks and a streaming 
    manifest and encryption specific information. 
-   The second profile is useful for ingesting 
+   The second profile is useful for ingesting
+   media streaming presentations    
    to entities that do not perform further 
    active media processing that changes the binary 
    media formats. Eamples of such entities are content
    delivery networks or storage nodes that provide 
    delivery and storage functionalities respectively. 
-   By separating the two profiles unnnecesary overhead 
-   is avoided while supporting key use cases. 
+   By separating the two profiles unnecesary overhead 
+   is avoided while supporting key use cases of 
+   live media ingest.  
    
 
 Status of This Memo
@@ -99,7 +101,7 @@ Table of Contents
    2.  Conventions and Terminology
    3.  Media Ingest Protocol Behavior
    4.  Formatting Requirements for Timed Text, Captions and Subtitles
-   5.  Formatting Requirements for Timed Metadata Markers
+   5.  Formatting Requirements for Timed Metadata Markers (profile p1)
    6.  Guidelines for Handling of Media Processing Entity Failover
    7.  Guidelines for Handling of Live Media Source Failover
    8.  Security Considerations
@@ -125,48 +127,51 @@ Table of Contents
    Passive media processing entities provide pass through functionality 
    and/or delivery and caching functions that do not alter the media 
    content itself. An example of a passive media processing entity
-   could be a content delivery network (CDN) that provides
-   functionalities for the delivery of the content. 
+   is a content delivery network (CDN) that provides
+   functionalities for efficient delivery of the content. 
    An example of an active media processing entity could 
-   be a just-in-time packager or a just-in-time transcoder.
+   be a just-in-time packager or a just-in-time transcoder
+   that alter the different media.
 
   
      <Mekuria>          Expires xxx                [Page2]
 
      
    To address both of these use cases, two profiles are described 
-   in this text. In the first case, the 
-   encoder need not have the global overview of what the client
-   may receive, while in the second case this is usually
+   in this text. In the first profile p1, the 
+   encoder need not have a global overview of what the client
+   may receive, while in the second profile p2 this is usually
    the case. Both situations can occur in practical streaming 
-   workflows. Our practical experience and a deeper look 
+   workflows. Practical experience and a deeper look 
    in the protocol exchanges reveals that overhead 
    can be avoided by separating these two use cases 
-   in different profiles. 
+   in different profiles p1 and p2. 
    
    Diagram 1: Example workflow with media ingest
    Live Media Source -> Media processing entity -> CDN -> End User
    
    Diagram 1 shows the workflow with a live media ingest from a 
    live media source towards an active media processing entity 
-   (the first case). The media processing entity provides additional 
+   (corresponding to the first profile p1). 
+   The media processing entity provides additional 
    processing such as content stitching, encryption, packaging, 
    manifest generation, transcoding etc. In the second
    ingest format the source ingests directly into the Content 
    delivery network or storage nodes. The ingest described in 
-   this text defines two profiles and includes the 
-   latest technologies and standards used in the industry. 
+   this text defines two profiles p1 and p2 and includes 
+   the latest technologies and standards used in the industry. 
    Content considered includes timed metadata, captions, 
    timed text and encoding standards such as HEVC [HEVC]. 
    The protocol and best practices and associated requirements 
    were discussed with stakeholders, including broadcasters, 
    live encoder vendors, content delivery networks, 
    telecommunications companies and cloud service providers.
+   We refer to the contributors section 10 for details.
    
    An example of a widely adopted media ingest protocol 
-   is the ingest part of microsoft smooth streaming protocol 
+   is the ingest part of Microsoft Smooth Streaming protocol 
    [MS-SSTR]. This protocol connects live encoders to 
-   the microsoft smooth streaming server and to 
+   the Microsoft Smooth Streaming server and to 
    the Microsoft Azure cloud. This protocol has shown 
    to be robust, flexible and easy to implement in live 
    encoders. In addition it provided features for 
@@ -175,32 +180,38 @@ Table of Contents
    This document advances over the smooth ingest procotol 
    including lessons learned over the last
    ten years after the initial deployment of smooth streaming 
-   in 2009 and several advances on signalling of information.
+   in 2009 and several advances on signalling of information
+   such as timed metadata markers for content insertion.
    In addition, it incorporates the latest media formats 
    and protocols, making it ready for current and 
    next generation media codecs such as [HEVC] 
-   and protocols like MPEG DASH [DASH].   
+   and protocols like MPEG DASH [DASH]. In addition  
+   a profile p2 was added for ingest of media 
+   streaming presentations.   
    
    In particular, the best practice presented uses 
    HTTP [HTTP] and specifically the HTTP POST method. 
    We still consider the usage of HTTP for media 
    ingest preferable. Smooth streaming [MS-SSTR] 
    and HLS [RFC8216] have shown that HTTP usage 
-   can survive the ecosystem. In addition, HTTP based 
-   ingest fits well with current  HTTP based streaming 
-   protocols and there is good support for HTTP 
-   middleboxes, routing etc. However, a key 
-   aspect of the ingest spec is the binary 
-   media format based on fragmented MPEG-4 
+   can survive the Internet ecosystem. 
+   In addition, HTTP based ingest fits well with 
+   current  HTTP based streaming protocols 
+   and there is good support for HTTP 
+   middleboxes, routing etc in the Internet
+   Ecosystem. Beyond the usage 
+   of HTTP POST method, a key aspect of the 
+   ingest spec is the binary media format 
+   based on fragmented MPEG-4 
    [ISOBMFF] [CMAF] which allows easy identification 
-   of stream boundaries enabling switching, redundancy, 
-   re-transmission enabling a good fit with the current 
+   of stream boundaries, enabling switching, redundancy, 
+   re-transmission making a good fit with the current 
    Internet infrastructures. Many problems in practical 
    deployment often deal with issues related to the binary
    format. In future versions, alternative transmission 
    layers could be considered advancing over HTTP, yet it 
    is expected that the binary layer presented here
-   will still provide the same mentioned benefits.   
+   will still provide the same benefits.   
    
    
 2.  Conventions and Terminology
@@ -259,9 +270,9 @@ Table of Contents
    HTTP POST: Command used in the Hyper Text Transfer Protocol for 
               sending data from a source to a destination [RFC2626]
    fragmentedMP4stream: stream of [ISOBMFF] fragments 
-           (moof and mdat) see page 5 for definition
+           (moof and mdat), a more precise definition will follow
    POST_URL: Target URL of a POST command in the HTTP protocol 
-             for pushing data from a source to a destination.
+             for posting data from a source to a destination.
    TCP: Transmission Control Protocol (TCP) as defined in [RFC793]
    URI_SAFE_IDENTIFIER: identifier/string 
           formatted according to [RFC3986]
@@ -291,7 +302,12 @@ Table of Contents
    It continues with the sequence of segments 
    (combinations of moof and mdat boxes). The two profiles 
    are defined as p1 for ingest to active media processing entities
-   and p2 for ingest to passive entities.  
+   and p2 for ingest to passive entities. 
+   A benefit of profile p1 is that is will allow downstream
+   processing of the media enabling advanced streaming platforms.
+   A benefit of profile p2 is that is will enable simultaneous
+   ingest of MPEG DASH and HLS presentations using common media 
+   segments such as based on fragmented MPEG-4 format [CMAF]   
   
 <Mekuria>          Expires xxx                [Page4]
 
@@ -328,7 +344,7 @@ Table of Contents
    segments and manifests for profile p2. 
    In case no manifest is used any POST_URL
    setup for media ingest such as http://hostname/presentationpath/
-   can be used as recommended for profile p1. 
+   can be used as recommended for profile  . 
    The fragmentedMP4stream can be defined
    using the IETF RFC 5234 ANB [RFC5234] as follows.
    
@@ -341,7 +357,11 @@ Table of Contents
    and the receiving media procesing entity follows the following 
    requirements for the two profiles. The requirements apply to 
    both profiles p1 and p2 unless it is specifically indicated
-   to which profile the statement applies.   
+   to which profile the statement applies. In future 
+   versions of the draft we will present the profiles in a 
+   more distinct way such as in seperate sections.
+   yet as there is significant overlap this interleaved
+   way of presenting the profiles was chosen for now.
    
    1. The live encoder or ingest source communicates to 
       the publishing point/processing entity using the HTTP 
@@ -349,11 +369,13 @@ Table of Contents
       or in the case for manifest updates the HTTP PUT Method. 
    2. The live encoder or ingest source SHOULD start
       by sending an HTTP POST request with an empty "body"
-      (zero content length) by using the POSTURL in profile p1. 
+      (zero content length) by using the POSTURL 
+	  when using profile p1. 
       This can help the live encoder or media 
       ingest source to quickly detect whether the 
       live ingest publishing point is valid, 
-      and if there are any authentication or other conditions required.	  
+      and if there are any authentication 
+	  or other conditions required.	  
       
 <Mekuria>          Expires xxx                [Page5]
 
@@ -386,16 +408,8 @@ Table of Contents
       to POST each of the different segments from 
       the live encoder or ingest source 
       to the processing entity. 
-   6d. In case the manifest contains no relative paths, 
-      or no manifest is used the 
-      segments SHOULD be posted to the original 
-      POST_URL specified by the service. 
-   6e. In this case the tdft and trackids SHOULD 
-       be used by the processing entity 
-       to distinguish incoming segments 
-       instead of the target POST_URL.
 
-  7. The live encoder MAY send an updated version of the manifest,
+  7. The live encoder MAY send an updated versions of the manifest,
      when using profile p2, this manifest cannot override current 
 	 settings and relative paths or break currently running and 
 	 incoming POST requests. The updated manifest can only be 
@@ -425,12 +439,15 @@ Table of Contents
   10. The live encoder or ingest source SHOULD start 
       a new HTTP POST segment request sequence with the 
       init segment including header boxes "ftyp" and "moov"
+	  when using profile p1
   11. Following media segment requests SHOULD be corresponding 
       to the segments listed in the manifest if a manifest was sent
-	  when using profile p2. 
+	  when using profile p2. The requests when using profile p2
+      SHOULD use individual POST requests per segment.	  
   12. The payload of each request MAY start with the header boxes 
       "ftyp" and "moov", followed by segments which consist of 
-      a combination of "moof" and "mdat" boxes. 
+      a combination of "moof" and "mdat" boxes when using profile
+	  p1. 
       
       Note that the "ftyp", and "moov" boxes (in this order) MAY be 
       transmitted with each request, especially if the encoder must 
@@ -439,8 +456,9 @@ Table of Contents
       415 message. Resending the "moov" and "ftyp" boxes 
       allows the receiving entitity to recover the init segment 
       and the track information needed for interpretting the content.
+	  
   13. The encoder or ingest source SHOULD use chunked transfer 
-      encoding option of the HTTP POST command [RFC2626] for uploading 
+      encoding option of the HTTP POST command [RFC2626]
       as it might be difficult to predict the entire content length 
       of the segment. This can also be used for example to support use 
       cases that require low latency.
@@ -451,7 +469,7 @@ Table of Contents
       error prior to the end of the stream, the encoder MUST issue 
       a new POST request by using a new connection, and follow the 
       preceding requirements. Additionally, the encoder MAY resend 
-      the previous two segments that were already sent again.
+      the previous segment that was already sent again.
   16. In case fixed length POST Commands are used, the live source 
       entity MUST resend the segment to be posted decribed 
 	  in the manifest entirely in case of responses HTTP 400,
@@ -460,17 +478,20 @@ Table of Contents
   17. In case the live stream event is over the live media 
       source/encoder should signal 
       the stop by transmitting an empty "mfra" box 
-      towards the publishing point/processing entity.
+      towards the publishing point/processing entity 
+	  when using profile p1.
   18. The trackFragmentDecodeTime box "tfdt" box
       MUST be present for each segment posted.
-  19. The ISOBMFF media fragment duration SHOULD be constant, 
+  19. The ISOBMFF media fragment duration SHOULD be constant,
+      when using profile p1, this is   
       to reduce the size of the client manifests. 
       A constant MPEG-4 fragment duration also improves client 
       download heuristics through the use of repeat tags. 
       The duration MAY fluctuate to compensate 
       for non-integer frame rates. By choosing an appropriate 
       timescale (a multiple of the frame rate is recommended) 
-      this issue can be avoided.
+      this issue can be avoided. For profile p2 segment 
+	  durations MAY vary.
       
 <Mekuria>          Expires xxx                [Page6]
 
@@ -478,7 +499,7 @@ Table of Contents
 
 
   20. The MPEG-4 fragment durations SHOULD be between 
-      approximately 2 and 6 seconds.
+      approximately 1 and 6 seconds.
   21. The fragment decode timestamps "tfdt" of fragments in the 
       fragmentedMP4stream and the indexes base_media_decode_ time 
       SHOULD arrive in increasing order for each of the different 
@@ -510,11 +531,11 @@ Table of Contents
       sets for profile p2 and this information 
 	  SHOULD be signalled in the "moov" box in the init segment
 	  for profile p1,for more information see the next section.
-  27. Segments posted towards the media procesing entity MUST contain 
-      the bitrate "btrt" box specifying the target bitrate of 
-      the segments and the "tfdt" box specifying the fragments 
-      decode time and the "tfhd" box specifying the track id
-	  when using profile p1.
+  27. Segments posted towards the media procesing entity SHOULD 
+      contain the bitrate "btrt" box specifying the target 
+	  bitrate of the segments and the "tfdt" box specifying 
+	  the fragments decode time and the "tfhd" box 
+	  specifying the track id when using profile p1.
   28. The live encoder/media source SHOULD repeatedly resolve 
       the Hostname to adapt to changes in the IP to Hostname mapping
       such as for example by using the dynamic naming system 
@@ -543,7 +564,7 @@ Table of Contents
 4. Formatting Requirements for Timed Text, Captions and Subtitles
 
 The specification supports ingest of timed text, 
-images, captions and subtitles. we follow the normative 
+images, captions and subtitles. We follow the normative 
 reference [MPEG-4-30] in this section. 
 
   1. The tracks containing timed text, images, captions 
@@ -553,14 +574,14 @@ reference [MPEG-4-30] in this section.
   2. The segment data SHOULD be posted to the URL 
   corresponding to the path in the manifest for the segment 
   for profile p2, else they MUST be posted 
-  towards the original POST_URL  
+  towards the original POST_URL for profile p1  
   3. The track will be a sparse track signalled by a null media header 
   "nmhd" containing the timed text, images, captions corresponding 
   to the recommendation of storing tracks in fragmented MPEG-4 [CMAF]
   4. Based on this recommendation the trackhandler "hdlr" shall 
   be set to "text" for WebVTT and "subt" for TTML following [MPEG-4-30] 
   5. In case TTML is used the track must use the XMLSampleEntry 
-  to signal sample description of the sub-title stream 
+  to signal sample description of the sub-title stream [MPEG-4-30] 
   6. In case WebVTT is used the track must use the WVTTSampleEntry 
   to signal sample description of the text stream
   7. These boxes SHOULD signal the mime type and specifics as 
@@ -569,10 +590,10 @@ reference [MPEG-4-30] in this section.
   segment ("ftyp" + "moov") for the given track
   9. subtitles in CTA-608 and CTA-708 can be transmitted 
   following the recommendation section 11.5 in [CMAF] via 
-  SEI messages in the video track
+  SEI messages in the video track when using profile p1
   10. The "ftyp" box in the init segment for the track 
       containing timed text, images, captions and sub-titles 
-      can use signalling using CMAF profiles based on [CMAF] 
+      MAY use signalling using CMAF profiles based on [CMAF] 
    
    10a. WebVTT   Specified in 11.2 ISO/IEC 14496-30 
         [MPEG-4-30] 'cwvt'
@@ -600,20 +621,24 @@ reference [MPEG-4-30] in this section.
   
 
 
-5. Formatting Requirements for Timed Metadata
+5. Formatting Requirements for Timed Metadata (profile p1)
 
   This section discusses the specific formatting requirements 
   for ingest of timed metadata related to events and markers for 
-  ad- insertion or other timed metadata relating to the media
-  content such as information about the content. 
-  When delivering a live streaming presentation with a rich 
-  client experience, often it is necessary to transmit time-synced 
-  events, metadata or other signals in-band with the main 
+  ad insertion or other timed metadata relating to the media
+  content such as information about the content. This section
+  only aplies to p1 where the receiver uses this information 
+  for active media processing such as server side ad insertion.
+  When delivering a live streaming presentation with a 
+  rich client experience, often it is necessary 
+  to transmit time-synced events, metadata or 
+  other signals in-band with the main 
   media data. An example of these are opportunities for dynamic 
   live ad insertion signalled by SCTE-35 markers. This type of 
-  event signalling is different from regular audio/video streaming 
-  because of its sparse nature. In other words, the signalling data 
-  usually does not happen continuously, and the interval can 
+  event signalling is different from regular audio/video information 
+  because of its sparse nature. In this case, 
+  the signalling data usually does not 
+  happen continuously, and the intervals can 
   be hard to predict. Examples of timed metadata are ID3 tags 
   [ID3v2], SCTE-35 markers [SCTE-35] and DASH emsg 
   messages defined in section 5.10.3.3 of [DASH]. For example, 
@@ -621,7 +646,7 @@ reference [MPEG-4-30] in this section.
   the payload of the message. Table 1 provides some 
   example schemes in DASH event messages and Table 2 
   illustrates an example of a SCTE-35 marker stored 
-  in a dash emsg. The presented approach allows ingest of 
+  in a DASH emsg. The presented approach allows ingest of 
   timed metadata from different sources, 
   possibly on different locations by embedding them in 
   sparse metadata tracks.
@@ -663,49 +688,47 @@ message_data            | splice info section including CRC
   program information:
   1. Create a fragmentedMP4stream that contains only a sparse 
    metadata track which are tracks without audio/video.
-  2. Metadata tracks SHOULD be signalled in a manifest using an 
-   adaptationset with a sparse track when using profile p2 
-  3. For a metadata track the media handler type is "meta" 
+  2. For a metadata track the media handler type is "meta" 
    and the tracks handler box is a null media header box "nmhd".
-  4. The URIMetaSampleEntry entry contains, in a URIbox, 
+  3. The URIMetaSampleEntry entry contains, in a URIbox, 
      the URI following the URI syntax in [RFC3986] defining the form 
      of the metadata 
 
      (see the ISO Base media file format specification [ISOBMFF]).    
      For example, the URIBox could contain for ID3 tags  [ID3v2] 
      the URL  http://www.id3.org
-  5. For the case of ID3, a sample contains a single ID3 tag. 
+  4. For the case of ID3, a sample contains a single ID3 tag. 
      The ID3 tag may contain one or more ID3 frames.
-  6. For the case of DASH e-msg, a sample may contain 
+  5. For the case of DASH e-msg, a sample may contain 
      one or more event message ("emsg") boxes.  
      Version 0 Event Message SHOULD be used. 
      The presentation_time_delta field is relative to the absolute 
      timestamp specified in the TrackFragmentBaseMediaDecode-TimeBox 
     ("tfdt"). The timescale field should match the value specified 
      in the media header box "mdhd".
-  7. For the case of a DASH e-msg, the kind box 
+  6. For the case of a DASH e-msg, the kind box 
      (contained in the udta) MUST be used to signal 
-     the scheme URI of the type of metadata when using profile p1
-  8. A BitRateBox ("btrt") SHOULD be present at the end of 
+     the scheme URI of the type of metadata 
+  7. A BitRateBox ("btrt") SHOULD be present at the end of 
      MetaDataSampleEntry to signal the bit rate information 
-     of the stream when using profile p1.
-  9. If the specific format uses internal timing values, 
-     then the timescale must match the timescale field set 
+     of the stream.
+  8. If the specific format uses internal timing values, 
+     then the timescale MUST match the timescale field set 
      in the media header box "mdhd".
-  10. All Timed Metadata samples are sync samples [ISOBMFF], 
+  9. All Timed Metadata samples MUST be sync samples [ISOBMFF], 
     defining the entire set of metadata for the time interval 
     they cover. Hence, the sync sample table box is not present.
-  11.   When Timed Metadata is stored in a TrackRunBox ("trun"), 
+  10.   When Timed Metadata is stored in a TrackRunBox ("trun"), 
     a single sample is present with the duration set to the 
     duration for that run.
   
   Given the sparse nature of the signalling event, the following 
   is recommended:
-  12. At the beginning of the live event, for profile p1,
+  11. At the beginning of the live event, 
       the encoder or media ingest  source sends the initial 
 	  header boxes to the processing entity/publishing point, 
       which allows the service to register the sparse track.
-  13. When sending segments, the encoder SHOULD start sending 
+  12. When sending segments, the encoder SHOULD start sending 
       from the header boxes, followed by the new fragments. 
 
       
@@ -780,13 +803,11 @@ message_data            | splice info section including CRC
       as the initial POST URL for the 
       segment to be ingested.
    c. The new HTTP POST MUST include stream 
-      headers ("ftyp", and "moov" boxes) that are 
+      headers ("ftyp", and "moov" boxes) when 
+	  using p1 that are 
       identical to the stream headers in the 
       initial POST request for fragmented media ingest.
-   d. The last two fragments sent for each segment 
-      MAY be retransmitted. Other ISOBMFF fragment 
-      timestamps MUST increase continuously, 
-      even across HTTP POST requests.
+
   6.  The encoder or ingest source SHOULD terminate 
     the HTTP POST request if data is not being sent 
     at a rate commensurate with the MP4 segment duration. 
@@ -794,7 +815,7 @@ message_data            | splice info section including CRC
     prevent publishing points or media processing entities 
     from quickly disconnecting from the live encoder or 
     media ingest source in the event of a service update. 
-    For this reason, the HTTP POST for sparse (ad signal) 
+    For this reason, the HTTP POST for sparse  
     tracks SHOULD be short-lived, terminating as soon as 
     the sparse fragment is sent. 
    In addition this draft defines responses to the 
@@ -803,10 +824,9 @@ message_data            | splice info section including CRC
     or segment POST request due to authentication or permission 
     problems then it can return a permission denied HTTP 403 
    8.  In case the media processing entity can process the manifest 
-    or segment POSTED to the POST_URL it returns HTTP 200 OK or 
-    202 Accepted
+    or segment it returns HTTP 200 OK or 202 Accepted
    9.  In case the media processing entity can process 
-    the manifest or segment POST request but finds 
+    the manifest or segment in the POST request body but finds 
     the media type cannot be supported it returns HTTP 415 
     unsupported media type
    10. In case an unknown error happened during
@@ -815,8 +835,7 @@ message_data            | splice info section including CRC
    11. In case the media processing entity cannot 
        proces a segment posted 
        due to missing init segment, a HTTP 412 
-       unfulfilled condition
-       is returned
+       unfulfilled condition can be returned
    12. In case a media source receives an HTTP 412 response, 
        it SHOULD resend the manifest for profile p2 
 	   and "ftyp" and "moov" boxes for the track when using
@@ -904,7 +923,7 @@ responses is shown in the following figure:
         the same URL for HTTP POST requests as the failed instance.
   3.    The new encoder or media ingest source POST request 
         MUST include the same header boxes moov 
-        and ftyp as the failed instance and optionally 
+        and ftyp as the failed instance and 
 		the same manifest for profile p2.
   4.    The new encoder or media ingest source 
         MUST be properly synced with all other running encoders 
@@ -927,6 +946,7 @@ responses is shown in the following figure:
         fragments that it has already received and processed, so 
         it is better to error on the side of resending fragments 
         than to introduce discontinuities in the media timeline.
+		This recommendation applies to profile p1.
 
 8.  Security Considerations
 
@@ -953,7 +973,9 @@ Rufael Mekuria Unified Streaming
 Sam Zheqiang Microsoft
 Arjen Wagenaar Unified Streaming 
 Dirk Griffioen Unified Streaming 
-                  
+Matt Poole ITV 
+Alex Giladi Comcast
+                
 <Mekuria>          Expires xxx                 [Page14]
 
 
