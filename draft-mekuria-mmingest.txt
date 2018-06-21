@@ -693,7 +693,7 @@ message_data            | splice info section including CRC
   program information:
   
   1. Create a fragmentedMP4stream that conveys the metadata
-     , the media handler type is "meta", 
+     , the media handler (hdlr) is "meta", 
      the track handler box is a null media header box "nmhd".
   2. The metadata stream applies to the media streams 
      in the presentation ingested to the POST_URL corresponding
@@ -720,13 +720,16 @@ message_data            | splice info section including CRC
      time a next metadata fragment is received.
   6. The kind box can be used to group metadata and 
      other tracks posted to the POST_URL based on their
-     properties, this is corresponding
+     properties, this corresponds to
      to switching sets in [CMAF] that can be detected
-     in a similar manner.
-  7. All Timed Metadata samples SHOULD be sync samples [ISOBMFF], 
-    defining the entire set of metadata for the time interval 
-    they cover. Hence, the sync sample table box SHOULD 
-    not be present.
+     in a similar manner based on kind box.
+  7. All Timed Metadata samples SHOULD 
+     be sync samples [ISOBMFF], 
+     defining the entire set of 
+     metadata for the time interval 
+     they cover. Hence, the sync 
+     sample table box SHOULD 
+     not be present.
   
 
       
@@ -737,9 +740,12 @@ message_data            | splice info section including CRC
 
       
   8. The metadata segment becomes available to the 
-     publishing  point/processing entity when the corresponding 
-     track fragment that has an equal or larger timestamp 
-     compared to teh arival time signalled in the tfdt. 
+     publishing  point/processing entity 
+     when the corresponding 
+     track fragment that has an equal 
+     or larger timestamp 
+     compared to the arrival time signalled 
+     in the tfdt basemediadecodetime. 
      For example, if the sparse fragment 
      has a timestamp of t=1000, it is expected that after the 
      publishing point/processing entity sees "video" 
@@ -749,10 +755,8 @@ message_data            | splice info section including CRC
   9.  The payload of sparse track fragments is conveyed 
       in the mdat box as sample information. This enables 
       muxing of the metadata tracks. XML based metadata 
-      can for example be coded as base64 as in [SCTE35]
-  10. All Timed Metadata samples SHOULD be sync samples [ISOBMFF],
-    defining the entire set of metadata for the time interval
-    they cover. Hence, the sync sample table box is not present.
+      can for example be coded as base64 as
+      done in [SCTE35]
 
 6. Guidelines for Handling of Media Processing Entity Failover
 
