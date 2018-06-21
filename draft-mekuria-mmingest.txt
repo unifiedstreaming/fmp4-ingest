@@ -750,6 +750,9 @@ message_data            | splice info section including CRC
       in the mdat box as sample information. This enables 
       muxing of the metadata tracks. XML based metadata 
       can for example be coded as base64 as in [SCTE35]
+  10. All Timed Metadata samples SHOULD be sync samples [ISOBMFF],
+    defining the entire set of metadata for the time interval
+    they cover. Hence, the sync sample table box is not present.
 
 6. Guidelines for Handling of Media Processing Entity Failover
 
