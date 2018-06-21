@@ -633,9 +633,14 @@ reference [MPEG-4-30] in this section.
   rich client experience, often it is necessary 
   to transmit time-synced events, metadata or 
   other signals in-band with the main 
-  media data. An example of these are opportunities for dynamic 
-  live ad insertion signalled by SCTE-35 markers. This type of 
-  event signalling is different from regular audio/video information 
+  media data. This type of data has an arrival time that is 
+  signalled by the transmitter. This type of data also 
+  of often have a presentation time, which is the 
+  time when the message is applied in the media 
+  presentation. An example of these are opportunities 
+  for dynamic live ad insertion signalled by SCTE-35 markers. 
+  This type of  event signalling is different 
+  from regular audio/video information 
   because of its sparse nature. In this case, 
   the signalling data usually does not 
   happen continuously, and the intervals can 
@@ -686,50 +691,43 @@ message_data            | splice info section including CRC
   The following steps are recommended for timed metadata 
   ingest related to events, tags, ad markers and 
   program information:
-  1. Create a fragmentedMP4stream that contains only a sparse 
-   metadata track which are tracks without audio/video.
-  2. For a metadata track the media handler type is "meta" 
-   and the tracks handler box is a null media header box "nmhd".
-  3. The URIMetaSampleEntry entry contains, in a URIbox, 
-     the URI following the URI syntax in [RFC3986] defining the form 
-     of the metadata 
-
-     (see the ISO Base media file format specification [ISOBMFF]).    
-     For example, the URIBox could contain for ID3 tags  [ID3v2] 
-     the URL  http://www.id3.org
-  4. For the case of ID3, a sample contains a single ID3 tag. 
-     The ID3 tag may contain one or more ID3 frames.
-  5. For the case of DASH e-msg, a sample may contain 
-     one or more event message ("emsg") boxes.  
-     Version 0 Event Message SHOULD be used. 
-     The presentation_time_delta field is relative to the absolute 
-     timestamp specified in the TrackFragmentBaseMediaDecode-TimeBox 
-    ("tfdt"). The timescale field should match the value specified 
-     in the media header box "mdhd".
-  6. For the case of a DASH e-msg, the kind box 
-     (contained in the udta) MUST be used to signal 
-     the scheme URI of the type of metadata 
-  7. A BitRateBox ("btrt") SHOULD be present at the end of 
-     MetaDataSampleEntry to signal the bit rate information 
-     of the stream.
-  8. If the specific format uses internal timing values, 
-     then the timescale MUST match the timescale field set 
-     in the media header box "mdhd".
-  9. All Timed Metadata samples MUST be sync samples [ISOBMFF], 
-    defining the entire set of metadata for the time interval 
-    they cover. Hence, the sync sample table box is not present.
-  10.   When Timed Metadata is stored in a TrackRunBox ("trun"), 
-    a single sample is present with the duration set to the 
-    duration for that run.
   
-  Given the sparse nature of the signalling event, the following 
-  is recommended:
-  11. At the beginning of the live event, 
-      the encoder or media ingest  source sends the initial 
-	  header boxes to the processing entity/publishing point, 
-      which allows the service to register the sparse track.
-  12. When sending segments, the encoder SHOULD start sending 
-      from the header boxes, followed by the new fragments. 
+  1. Create a fragmentedMP4stream that conveys the metadata
+     , the media handler type is "meta", 
+     the track handler box is a null media header box "nmhd".
+  2. The metadata stream applies to the media streams 
+     in the presentation ingested to the POST_URL corresponding
+     to the ingest/publishing point 
+  3. The URIMetaSampleEntry entry contains, in a URIbox, 
+     the URI following the URI syntax in [RFC3986] 
+     defining the form  of the metadata 
+     (see the ISO Base media file format 
+     specification [ISOBMFF]). For example, the URIBox 
+     could contain for ID3 tags  [ID3v2] 
+     the URL  http://www.id3.org or
+     or urn:scte:scte35:2013a:bin 
+     for scte 35 markers [SCTE35]
+  4. The timescale of the metadata should match the value 
+     specified in the media header box "mdhd" 
+     for timed metadata.
+  5. The Arrival time is signalled in the "tfdt" box 
+     of the track fragment  as the basemediadecode
+     time, this time is often different
+     from the media presentation time, which is occurs
+     when a message is applied. The duration of 
+     a metadata fragment can be set to zero, 
+     letting it be determined by the 
+     time a next metadata fragment is received.
+  6. The kind box can be used to group metadata and 
+     other tracks posted to the POST_URL based on their
+     properties, this is corresponding
+     to switching sets in [CMAF] that can be detected
+     in a similar manner.
+  7. All Timed Metadata samples SHOULD be sync samples [ISOBMFF], 
+    defining the entire set of metadata for the time interval 
+    they cover. Hence, the sync sample table box SHOULD 
+    not be present.
+  
 
       
         
@@ -738,23 +736,20 @@ message_data            | splice info section including CRC
   
 
       
-  14. The sparse track segment becomes available to the 
+  8. The metadata segment becomes available to the 
      publishing  point/processing entity when the corresponding 
-     parent track fragment that has an equal or larger timestamp 
-     value is made available. For example, if the sparse fragment 
+     track fragment that has an equal or larger timestamp 
+     compared to teh arival time signalled in the tfdt. 
+     For example, if the sparse fragment 
      has a timestamp of t=1000, it is expected that after the 
      publishing point/processing entity sees "video" 
     (assuming the parent track name is "video") 
     fragment timestamp 1000 or beyond, it can retrieve the 
-    sparse fragment t=1000. Note that the actual 
-    signal could be used for a different position 
-    in the presentation timeline for its designated purpose. 
-    In this example, it is possible that the sparse fragment 
-    of t=1000 has an XML payload, which is for inserting 
-    an ad in a position that is a few seconds later.
-  15.   The payload of sparse track fragments can be in 
-    different formats (such as XML, text, or binary), 
-    depending on the scenario
+    sparse fragment from the binary payload.
+  9.  The payload of sparse track fragments is conveyed 
+      in the mdat box as sample information. This enables 
+      muxing of the metadata tracks. XML based metadata 
+      can for example be coded as base64 as in [SCTE35]
 
 6. Guidelines for Handling of Media Processing Entity Failover
 
