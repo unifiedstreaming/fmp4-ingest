@@ -1,0 +1,46 @@
+notes call media ingest June 29 2018 19:00 CEST
+
+Attendants: Sam Z., Will Law, Rufael Mekuria
+
+agenda
+1. discussion on the draft
+2. discussion approach for metadata
+3. discussion on standardization 
+
+1. discussion on the draft
+  MS separate p1 and p2 in separate sections 
+  US idea was to deal with technical content first then separate the two sections for p1 and p2
+  this idea is ok but it seems the technical part is at a state were we may split the profiles and then
+  
+MS Comment on point 9 in the general section, resending 412 in case init segment was not received 
+seems like it is not needed, as the behavior is to start send the init segment when each TCP connection 
+is established, 
+-> editors note this assumes long running post connection, what about multiple short running posts ?
+   perhaps p1 will go to only long running posts again ? editors note: perhaps semit long running posts is possible.
+
+Restructuring the document 
+  ->  outline scenario, workflow, error code etc. AP. Sam to propose a structure for the document
+  ->  AP. Rufael restructure the document to a p1 and p2 
+  ->  will can contribute later to the sections on the second profile
+
+2. discussion on meta data transport
+Discussion on some of the comments from Unified streaming on the azure ingest using smooth ingest on meta data
+
+- Unified Streaming request on usage of standardized boxes based on CMAF or DASH, needs to be checked
+- mdat signalling of SCTE-35 was an example in the azure smooth ingest description, 
+- azure/smooth also supports the sparse track ingest and delivery to client (smooth)
+- unified streaming mentions the use of sparse track for meta-data for ingest as proposed in the draft and azure smooth ingest
+- MS ok as long as the content in the mdat is appropriately signalled in the headers
+- MS sparse tracks have also been used for other timed metadata like thumbnails 
+- US advantage of this approach is that timed meta data handled similar than media and can be muxed
+- US overhead of sending metadata in each track is avoided 
+- US however in CMAF e-messages are signalled in band in each track
+- some discussion on the overhead of requests on the edge for sparse tracks, but the additional load is limited 
+  as the content is sparse and only requested, also this content is cacheable quite easily, parent track is used in liveservermanifest
+- also the sparse track is mainly used for the ingest protocol under consideration, we prefer not to touch standards like DASH/HLS,
+  however sparse track also supported in the smooth streaming protocol
+- another advantage is late binding, meta-data is its own track, this is useful for many use cases in broadcasting
+
+3. standards discussion 
+ -> some discussion on paths to do the specification work, no clear path chosen yet DASH/IF MPEG or AOM or SVA could be of interest
+
