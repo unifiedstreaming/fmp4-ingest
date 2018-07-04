@@ -2,7 +2,7 @@
 
                                             R. Mekuria
                                             Unified Streaming
-Internet Engineering Task Force             Sam Zheqiang 
+Internet Engineering Task Force             Sam Geqiang Zhang 
 Internet-Draft                              Microsoft 
 Expires: xxx, 2018                 
 
