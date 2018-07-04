@@ -95,7 +95,7 @@ Table of Contents
        8.3 Requirements for Timed Text, Caption and Subtitle Streams
        8.4 Requirements for Timed Metadata
        8.5 Requirements for Media Processing Entity Failover
-       8.6 Requirements for Live Media Source failover
+       8.6 Requirements for Live Media Source Failover
    9.  Security Considerations
    10. IANA Considerations
    11. Contributors
@@ -1112,7 +1112,7 @@ message_data            | splice info section including CRC
         it is better to error on the side of resending fragments 
         than to introduce discontinuities in the media timeline.
 		
-7. Profile 2: DASH ingest general considerations
+7. Profile 2: DASH Ingest General Considerations
     
    Profile 2 is designed to ingest media into entities that only 
    provide pass through functionality. In this case the media 
@@ -1175,7 +1175,7 @@ message_data            | splice info section including CRC
 ||        ||                                     ||              ||
 ||===============================================================|| 	
 
-8.  profile 2: DASH ingest protocol behavior
+8.  profile 2: DASH Ingest Protocol Behavior
 
 This section describes the protocol behavior specific to 
 profile 2: DASH  ingest. Operation of this 
@@ -1246,7 +1246,7 @@ profile MUST also adhere to general requirements in section 4.
      track as recommended in [CMAF]
      3. DASH event messages SHOULD also be signalled in the Manifest
 	  
-8.4  Requirements for Media processing entitiy Failover
+8.4  Requirements for Media Processing Entity Failover
      1. Requirements for failover are similar as stated in 6.4 
      2. In addition the live encoder source SHOULD resend the manifest
         before sending any track segments	 
