@@ -83,17 +83,19 @@ Table of Contents
    5.  Profile 1: Fragmented MPEG-4 Ingest General Considerations
    6.  Profile 1: Fragmented MPEG-4 Ingest Protocol Behavior
        6.1 General Protocol Requirements
-       6.2 Requirements for Timed Text Captions and Subtitle Streams
-       6.3 Requirements for Timed Metadata
-       6.4 Requirements for Media Processing Entity Failover
-       6.5 Requirements for Live Media Source Failover
-   7.  Profile 2: DASH and HLS Ingest General Considerations
-   8.  Profile 2: DASH and HLS Ingest Protocol Behavior
+	   6.2 Requirements for Formatting Media Tracks
+       6.3 Requirements for Timed Text Captions and Subtitle Streams
+       6.4 Requirements for Timed Metadata
+       6.5 Requirements for Media Processing Entity Failover
+       6.6 Requirements for Live Media Source Failover
+   7.  Profile 2: DASH Ingest General Considerations
+   8.  Profile 2: DASH Ingest Protocol Behavior
        8.1 General Protocol requirements
-       8.2 Requirements for Timed Text, Caption and Subtitle Streams
-       8.3 Requirements for Timed Metadata
-       8.4 Requirements for Media Processing Entity Failover
-       8.5 Requirements for Live Media Source failover
+	   8.2 Requirements for Formatting Media Tracks
+       8.3 Requirements for Timed Text, Caption and Subtitle Streams
+       8.4 Requirements for Timed Metadata
+       8.5 Requirements for Media Processing Entity Failover
+       8.6 Requirements for Live Media Source failover
    9.  Security Considerations
    10. IANA Considerations
    11. Contributors
@@ -535,11 +537,11 @@ Table of Contents
   ============       ==============      ==============
 
   Diagram 4:
-  Streaming workflow with DASH and HLS ingest in profile 2
+  Streaming workflow with DASH ingest in profile 2
   ============ingest ==============      
   || live   || DASH  || Content  ||   
   || media  ||====>>>||Delivery  ||==>>>> Client
-  || source || HLS   || Network  ||  
+  || source ||       || Network  ||  
   ============       ==============     
 
   Practice has shown that the ingest schemes
@@ -803,7 +805,7 @@ This section describes the protocol behavior specific to
 profile 1: fragmented MPEG-4 ingest. Operation of this 
 profile MUST also adhere to general requirements in secion 4.
 
-6.1. General protocol requirements
+6.1. General Protocol Requirements
 
    1. The live encoder or ingest source SHOULD start
       by sending an HTTP POST request with an empty "body"
@@ -826,48 +828,52 @@ profile MUST also adhere to general requirements in secion 4.
       a new connection, and follow the 
       preceding requirements. Additionally, the encoder MAY resend 
       the previous segment that was already sent again.	
-   5. The encoder or ingest source MUST handle any error or failed 
-      authentication responses received from the media processing,
-      by issueing a new connection and following the preceding 
+   5. The live encoder or ingest source MUST handle 
+      any error or failed authentication responses 
+	  received from the media processing, by issueing 
+	  a new connection and following the preceding 
 	  requirements inlcluding retransmitting the ftyp and moov boxes. 
    6. In case the live stream event is over the live media 
       source or ingest source should signal 
       the stop by transmitting an empty "mfra" box 
       towards the publishing point/processing entity.
-   7. The trackFragmentDecodeTime box "tfdt" box
+   7. The live ingest source SHOULD use a separate TCP
+      connection for ingest of each different track
+	  
+6.2. Requirements for formatting Media Tracks
+   
+   1. The trackFragmentDecodeTime box "tfdt" box
       MUST be present for each segment posted.
-   8. The ISOBMFF media fragment duration SHOULD be constant, 
+   2. The ISOBMFF media fragment duration SHOULD be constant, 
       the duration MAY fluctuate to compensate 
       for non-integer frame rates. By choosing an appropriate 
       timescale (a multiple of the frame rate is recommended) 
       this issue SHOULD be avoided.
-   9. The MPEG-4 fragment durations SHOULD be between 
+   3. The MPEG-4 fragment durations SHOULD be between 
       approximately 1 and 6 seconds.
-   10. The live ingest source SHOULD use a separate TCP
-      connection for ingest of each different track
-   11. The fragment decode timestamps "tfdt" of fragments in the 
+   4. The fragment decode timestamps "tfdt" of fragments in the 
       fragmentedMP4stream and the indexes base_media_decode_ time 
       SHOULD arrive in increasing order for each of the different 
-      tracks/streams that are ingested for profile p1.
-   12. The segments formatted as fragmented MP4 stream SHOULD use 
+      tracks/streams that are ingested.
+   5. The segments formatted as fragmented MP4 stream SHOULD use 
       a timescale for video streams based on the framerate 
       and 44.1 KHz or 48 KHz for audio streams 
       or any another timescale that enables integer 
       increments of the decode times of 
       fragments signalled in the "tfdt" box based on this scale.
-   13. The language of the stream SHOULD be signalled in the 
+   6. The language of the stream SHOULD be signalled in the 
 	  "mdhd" box or "elng" boxes in the 
 	  init segment and/or moof headers ("mdhd").
-   14. Encryption specific information SHOULD be signalled 
+   7. Encryption specific information SHOULD be signalled 
 	  in the "pssh","schm" and "sinf" boxes following [ISOBMFF] [CENC]
-   15. Segments posted towards the media procesing entity SHOULD 
+   8. Segments posted towards the media procesing entity SHOULD 
       contain the bitrate "btrt" box specifying the target 
 	  bitrate of the segments 
-   16. Segments  posted towards the media procesing entity SHOULD 
+   9. Segments  posted towards the media procesing entity SHOULD 
 	 contain the "tfdt" box specifying  the fragments decode time 
 	 and the "tfhd" box specifying the track id.
 
-6.2  Requirements for Timed Text Captions and Subtitle streams
+6.3  Requirements for Timed Text Captions and Subtitle streams
 
 The media ingest follows the following requirements for ingesting 
 a track with timed text, captions and/or subtitle streams.
@@ -903,7 +909,7 @@ a track with timed text, captions and/or subtitle streams.
        Caption data is embedded in SEI messages in video track; 
       'ccea'
 	  
-6.3 Requirements for Timed Metadata
+6.4 Requirements for Timed Metadata
 
   This section discusses the specific formatting requirements 
   for ingest of timed metadata related to events and markers for 
@@ -1006,7 +1012,7 @@ message_data            | splice info section including CRC
 	 XML metadata can for example be coded as base64 as
      common for [SCTE-35] metadata messages
  
-6.4. Requirements for Media Processing Entity Failover
+6.5 Requirements for Media Processing Entity Failover
 
   Given the nature of live streaming, good failover support is 
   critical for ensuring the availability of the service. 
@@ -1050,10 +1056,10 @@ message_data            | splice info section including CRC
       headers ("ftyp", and "moov" boxes) 
       identical to the stream headers in the 
       initial POST request for fragmented media ingest.
-   6.  In case the media processing entity cannot process the manifest 
-    or segment POST request due to authentication or permission 
+   6.  In case the media processing entity cannot process the 
+       POST request due to authentication or permission 
     problems then it SHOULD return a permission denied HTTP 403 
-   7.  In case the media processing entity can process the manifest 
+   7.  In case the media processing entity can process the request
        it SHOULD return an HTTP 200 OK or 202 Accepted
    8.  In case the media processing entity can process 
        the manifest or segment in the POST request body but finds 
@@ -1069,7 +1075,7 @@ message_data            | splice info section including CRC
    11. In case a media source receives an HTTP 412 response, 
        it SHOULD resend "ftyp" and "moov" boxes 
 	   
-6.5. Requirements for Live Media Source Failover
+6.6 Requirements for Live Media Source Failover
  
   Live encoder or media ingest source failover is the second type
   of failover scenario that needs to be addressed for end-to-end 
@@ -1106,19 +1112,22 @@ message_data            | splice info section including CRC
         it is better to error on the side of resending fragments 
         than to introduce discontinuities in the media timeline.
 		
-7. Profile 2: DASH and HLS ingest general considerations
+7. Profile 2: DASH ingest general considerations
     
-   // additional text to be added //
-   /////////////////////////////////////////////////////////
-   // The live source sender first sends the manifest 
-   // to the path http://hostname/presentationpath/ allowing 
-   // the receiving entity to setup reception paths for the following 
-   // segments and manifests for profile p2. 
-   // In case no manifest is used any POST_URL
-   // setup for media ingest such as http://hostname/presentationpath/
-   // can be used as recommended for profile  .
-   //////////////////////////////////////////////////////////////
-
+   Profile 2 is designed to ingest media into entities that only 
+   provide pass thruogh functionality. In this case the media 
+   ingest source also provides the manifest based on MPEG DASH[DASH]. 
+   
+   The flow of operation in profile 2 is shown in Diagram 12. In this 
+   case the live ingest source (media source) sends a manifest first. 
+   Based on this manifest the media processing entity can setup 
+   reception paths for the ingest url http://hostname/presentationpath. 
+   
+   In the next step segments are send in individual post requests 
+   using URLS corresponding to relative paths and segment names in the manifest. 
+   e.g. http://hostname/presentationpath/relative_path/segment1.cmf
+   
+   Diagram 12
 ||===============================================================|| 
 ||=====================            ============================  || 
 ||| live media source |            |  Media processing entity |  ||
@@ -1160,17 +1169,17 @@ message_data            | splice info section including CRC
 ||        ||                                     ||              ||
 ||===============================================================|| 	
 
-8.  profile 2: DASH and HLS ingest protocol behavior
+8.  profile 2: DASH ingest protocol behavior
 
 This section describes the protocol behavior specific to 
-profile 2: DASH and HLS ingest. Operation of this 
+profile 2: DASH  ingest. Operation of this 
 profile MUST also adhere to general requirements in section 4.
 	 
-8.1  DASH and HLS ingest: general protocol requirements  
+8.1  General protocol requirements  
 
   1. Before sending the segments 
       based on fragmentedMP4Stream the live encoder/source
-      MUST send a manifest for DASH or HLS 
+      MUST send a manifest for DASH [DASH] 
       with the following the limitations/constraints.
    1a. Only relative URL paths to be used for each segment
    1b. Only unique paths are used for each new presentation
@@ -1182,74 +1191,67 @@ profile MUST also adhere to general requirements in section 4.
       to the processing entity. 
 
   2. The live encoder or ingest source MAY send 
-     an updated versions of the manifest,
-     when using profile p2, this manifest cannot override current 
+     updated versions of the manifest,
+     this manifest cannot override current 
 	 settings and relative paths or break currently running and 
 	 incoming POST requests. The updated manifest can only be 
 	 slightly different from the one that was send previously, 
 	 e.g. introduce new segments available or event messages. 
 	 The updated manifest SHOULD be send using a PUT request 
 	 instead of a POST request.
-         
-     Note: this manifest will be useful for passive media processing 
-           entities mostly, for ingest towards active media processing 
-           entities this manifest could be avoided and information 
-           is signalled through the boxes available in the ISOBMFF.  
 
   3. Following media segment requests SHOULD be corresponding 
-      to the segments listed in the manifest.  
+      to the segments listed in the manifest POST_URL + relative URLs.  
 	 
   4. The encoder or ingest source SHOULD use individual HTTP POST 
       commands [RFC2626] for uploading media segments when ready. 
 
   5. In case fixed length POST Commands are used, the live source 
       entity MUST resend the segment to be posted decribed 
-	  in the manifest entirely in case of responses HTTP 400,
+	  in the manifest entirely in case of responses HTTP 400, 404
 	  412 or 415 together with the init segment consisting 
 	  of "moov" and "ftyp" boxes.
-  6. The manifest SHOULD be used to signal the language of the stream
-      for profile p2, which MAY also be signalled in the 
-	  "mdhd" box or "elng" boxes in the init segment and/or moof headers 
-	  ("mdhd").
-  7. The manifest SHOULD be used to signal encryption specific 
-      information for profile p2, which MAY also be signalled 
-	  in the "pssh","schm" and "sinf" boxes.
-  8. The manifest SHOULD be used to signal information 
-      about the different 
-      tracks such as the durations,  media encoding types, 
-      content types for profile p2
 
+  6. A persistent connection SHOULD be used for the different 
+        individual POST requests as defined in [HTTP]
 
-8.2  DASH and HLS ingest: requirements for timed text
-    captions and subtitle streams
-    
-    1. The manifest SHOULD be used to signal information 
-      about the timed text, images and sub-titles in adaptation 
-      sets for profile 	
-	2. The tracks containing timed text, images, captions 
-       or subtitles SHOULD be signalled in the manifest by 
-       an adaptationset with the different segments 
-       containing the data of the track. 
-	3. The sparse track containing the timed text SHOULD 
-	   use the same formattin as in section 6.2.
-	   
-8.3  DASH and HLS ingest: requirements 
-     for timed metadata
+8.2  Requirements for formatting media data 
+
+    1. Media data tracks and segments MUST be formatted conforming 
+	   to the same requirements as in 6.2  
+	2. Media specific information SHOULD also be signalled in the manifest
+	3. Formatting described in manifest and media track MUST correspond to each other
+		
+8.3  Requirements for Timed Text captions and subtitle stream
 	
-	 1. The manifest SHOULD be used to signal timed metadata 
-      such [SCTE-32] using the DASH emsg box	
-	 2. The emsg box containing the metadata  MAY also be signalled
-	  in the track as recommended in [CMAF]
-	  
-8.4  DASH and HLS ingest: requirements for 
-     Media processing entitiy Failover
-     
-	 // text to be added TBD
-	 
-8.5  DASH and HLS ingest: requirements for 
-     Live Media Source Failover
+    1. Timed Text captions and subtitle stream tracks and segments MUST 
+	   be formatted conforming to the same requirements as in 6.3  
+	2. Timed Text captions and subtitle specific information 
+	   SHOULD also be signalled in the manifest
+    3. Formatting described in manifest and 
+	   media track MUST correspond to each other
 
-     // text to be added TBD
+	   
+8.4  Requirements for Timed Metadata
+	
+     1. Timed Metadata tracks SHOULD be formatted conforming
+	    to the same requirements as in 8.4 	
+	 2. In addition, the emsg box containing the metadata  
+	    SHOULD also be signalled in inband in the media 
+		track as recommended in [CMAF]
+	 3. DASH event messages SHOULD also be signalled in the Manifest
+	  
+8.4  Requirements for Media processing entitiy Failover
+     
+	 1. Requirements for failover are similar as stated in 6.4 
+     2. In addition the live encoder source SHOULD resend the manifest
+        before sending any track segments	 
+	 
+8.5  Requirements for Live Media Source Failover
+
+     1. Requirements for failover are similar as stated in 6.5 
+     2. In addition the live encoder source SHOULD resend the manifest 
+	    before sending any of the segments 	
 
      
 9.  Security Considerations
@@ -1283,7 +1285,7 @@ John Deutscher Microsoft
 Patrick Gendron Harmonic Inc. 
 Nikos Kyriopoulos MediaExcel
 Rufael Mekuria Unified Streaming
-Sam Zheqiang Microsoft
+Sam Geqiang Microsoft
 Arjen Wagenaar Unified Streaming 
 Dirk Griffioen Unified Streaming 
 Matt Poole ITV 
