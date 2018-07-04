@@ -490,7 +490,7 @@ Table of Contents
    the presentation. The rsegmentpath can be a different optional 
    extended path based on the relative paths in the manifest file.   
    The identifier describes the filename of the segment which is 
-   corresponding to the manifest in the profile 2. 
+   corresponding to the manifest in profile 2 DASH Ingest. 
    
    A fragmentedMP4stream can be defined
    using the IETF RFC 5234 ANB [RFC5234] as follows.
@@ -500,8 +500,7 @@ Table of Contents
    fragments = X fragment
    fragment = Moof Mdat
    
-  This fragmentedMP$ stream is used directly in the ingest defined 
-  in profile 1.
+  This fragmentedMP4 stream is used in both profiles.
 
 3.  Media Ingest Workflows and Use Cases
 
