@@ -1115,7 +1115,7 @@ message_data            | splice info section including CRC
 7. Profile 2: DASH ingest general considerations
     
    Profile 2 is designed to ingest media into entities that only 
-   provide pass thruogh functionality. In this case the media 
+   provide pass through functionality. In this case the media 
    ingest source also provides the manifest based on MPEG DASH[DASH]. 
    
    The flow of operation in profile 2 is shown in Diagram 12. In this 
@@ -1126,6 +1126,12 @@ message_data            | splice info section including CRC
    In the next step segments are send in individual post requests 
    using URLS corresponding to relative paths and segment names in the manifest. 
    e.g. http://hostname/presentationpath/relative_path/segment1.cmf
+   
+   This profile re-uses as much functionality as posisble from profile 
+   1 as the manifest can be seen as a complementary addition to the 
+   fragmented MPEG-4 stream. The main difference lies in the way 
+   the connection is setup and the way data is transmitted, it largely
+   uses the same fragmented MPEG-4 layer based on [ISOBMFF] and [CMAF]
    
    Diagram 12
 ||===============================================================|| 
@@ -1219,31 +1225,29 @@ profile MUST also adhere to general requirements in section 4.
 
     1. Media data tracks and segments MUST be formatted conforming 
 	   to the same requirements as in 6.2  
-	2. Media specific information SHOULD also be signalled in the manifest
-	3. Formatting described in manifest and media track MUST correspond to each other
+    2. Media specific information SHOULD also be signalled in the manifest
+    3. Formatting described in manifest and media track MUST correspond to each other
 		
 8.3  Requirements for Timed Text captions and subtitle stream
 	
     1. Timed Text captions and subtitle stream tracks and segments MUST 
 	   be formatted conforming to the same requirements as in 6.3  
-	2. Timed Text captions and subtitle specific information 
+    2. Timed Text captions and subtitle specific information 
 	   SHOULD also be signalled in the manifest
     3. Formatting described in manifest and 
 	   media track MUST correspond to each other
-
 	   
 8.4  Requirements for Timed Metadata
 	
      1. Timed Metadata tracks SHOULD be formatted conforming
 	    to the same requirements as in 8.4 	
-	 2. In addition, the emsg box containing the metadata  
-	    SHOULD also be signalled in inband in the media 
-		track as recommended in [CMAF]
-	 3. DASH event messages SHOULD also be signalled in the Manifest
+     2. In addition, the emsg box containing the metadata  
+     SHOULD also be signalled in inband in the media 
+     track as recommended in [CMAF]
+     3. DASH event messages SHOULD also be signalled in the Manifest
 	  
 8.4  Requirements for Media processing entitiy Failover
-     
-	 1. Requirements for failover are similar as stated in 6.4 
+     1. Requirements for failover are similar as stated in 6.4 
      2. In addition the live encoder source SHOULD resend the manifest
         before sending any track segments	 
 	 
@@ -1275,7 +1279,6 @@ profile MUST also adhere to general requirements in section 4.
   This memo includes no request to IANA.
 
 11.  Contributors
-
 
 Will Law Akamai 
 James Gruessing BBC R&D
