@@ -1181,7 +1181,7 @@ This section describes the protocol behavior specific to
 profile 2: DASH  ingest. Operation of this 
 profile MUST also adhere to general requirements in section 4.
 	 
-8.1  General protocol requirements  
+8.1  General Protocol Requirements  
 
   1. Before sending the segments 
       based on fragmentedMP4Stream the live encoder/source
@@ -1221,15 +1221,15 @@ profile MUST also adhere to general requirements in section 4.
   6. A persistent connection SHOULD be used for the different 
         individual POST requests as defined in [HTTP]
 
-8.2  Requirements for formatting media data 
+8.2  Requirements for Formatting Media Tracks 
 
     1. Media data tracks and segments MUST be formatted conforming 
 	   to the same requirements as in 6.2  
     2. Media specific information SHOULD also be signalled in the manifest
     3. Formatting described in manifest and media track MUST correspond to each other
 		
-8.3  Requirements for Timed Text captions and subtitle stream
-	
+8.3  Requirements for Timed Text Captions and Subtitle stream
+
     1. Timed Text captions and subtitle stream tracks and segments MUST 
 	   be formatted conforming to the same requirements as in 6.3  
     2. Timed Text captions and subtitle specific information 
