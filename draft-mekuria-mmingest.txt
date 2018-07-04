@@ -1127,11 +1127,11 @@ message_data            | splice info section including CRC
    using URLS corresponding to relative paths and segment names in the manifest. 
    e.g. http://hostname/presentationpath/relative_path/segment1.cmf
    
-   This profile re-uses as much functionality as posisble from profile 
+   This profile re-uses as much functionality as possible from profile 
    1 as the manifest can be seen as a complementary addition to the 
    fragmented MPEG-4 stream. The main difference lies in the way 
    the connection is setup and the way data is transmitted, it largely
-   uses the same fragmented MPEG-4 layer based on [ISOBMFF] and [CMAF]
+   uses the same fragmented MPEG-4 layer based on [ISOBMFF] and [CMAF].
    
    Diagram 12
 ||===============================================================|| 
