@@ -1185,14 +1185,13 @@ profile MUST also adhere to general requirements in section 4.
 
   1. Before sending the segments 
       based on fragmentedMP4Stream the live encoder/source
-      MUST send a manifest for DASH [DASH] 
+      MUST send a manifest [DASH] 
       with the following the limitations/constraints.
    1a. Only relative URL paths to be used for each segment
    1b. Only unique paths are used for each new presentation
    1c. In case the manifest contains these relative paths, 
       these paths SHOULD be used in combination with the 
-      POST_URL + relative URLs 
-      to POST each of the different segments from 
+      POST_URL to POST each of the different segments from 
       the live encoder or ingest source 
       to the processing entity. 
 
@@ -1206,11 +1205,11 @@ profile MUST also adhere to general requirements in section 4.
 	 The updated manifest SHOULD be send using a PUT request 
 	 instead of a POST request.
 
-  3. Following media segment requests SHOULD be corresponding 
-      to the segments listed in the manifest POST_URL + relative URLs.  
+  3. Following media segment requests POST_URLs SHOULD be corresponding 
+      to the segments listed in the manifest as POST_URL + relative URLs.  
 	 
   4. The encoder or ingest source SHOULD use individual HTTP POST 
-      commands [RFC2626] for uploading media segments when ready. 
+      commands [RFC2626] for uploading media segments when available. 
 
   5. In case fixed length POST Commands are used, the live source 
       entity MUST resend the segment to be posted decribed 
@@ -1219,27 +1218,29 @@ profile MUST also adhere to general requirements in section 4.
 	  of "moov" and "ftyp" boxes.
 
   6. A persistent connection SHOULD be used for the different 
-        individual POST requests as defined in [HTTP]
+        individual POST requests as defined in [HTTP] enabling 
+	re-use of the TCP connection for multiple POST requests.
 
 8.2  Requirements for Formatting Media Tracks 
 
-    1. Media data tracks and segments MUST be formatted conforming 
-	   to the same requirements as in 6.2  
-    2. Media specific information SHOULD also be signalled in the manifest
-    3. Formatting described in manifest and media track MUST correspond to each other
+    1. Media data tracks and segments MUST be formatted and delivered 
+       conforming  to the same requirements as stated in 6.2  
+    2. Media specific information SHOULD be signalled in the manifest
+    3. Formatting described in manifest and media track MUST correspond 
+       consistently
 		
 8.3  Requirements for Timed Text Captions and Subtitle stream
 
-    1. Timed Text captions and subtitle stream tracks and segments MUST 
+    1. Timed Text, caption and subtitle stream tracks  MUST 
 	   be formatted conforming to the same requirements as in 6.3  
     2. Timed Text captions and subtitle specific information 
 	   SHOULD also be signalled in the manifest
     3. Formatting described in manifest and 
-	   media track MUST correspond to each other
+	   media track MUST correspond consistently
 	   
 8.4  Requirements for Timed Metadata
 	
-     1. Timed Metadata tracks SHOULD be formatted conforming
+     1. Timed Metadata tracks MAY be formatted conforming
 	    to the same requirements as in 8.4 	
      2. In addition, the emsg box containing the metadata  
      SHOULD also be signalled in inband in the media 
@@ -1249,13 +1250,13 @@ profile MUST also adhere to general requirements in section 4.
 8.4  Requirements for Media Processing Entity Failover
      1. Requirements for failover are similar as stated in 6.4 
      2. In addition the live encoder source SHOULD resend the manifest
-        before sending any track segments	 
+        before sending any of the other segments	 
 	 
 8.5  Requirements for Live Media Source Failover
 
      1. Requirements for failover are similar as stated in 6.5 
      2. In addition the live encoder source SHOULD resend the manifest 
-	    before sending any of the segments 	
+        before sending any of the other segments 	
 
      
 9.  Security Considerations
@@ -1263,15 +1264,16 @@ profile MUST also adhere to general requirements in section 4.
 
    Security consideration are extremely important 
    for media ingest. Retrieving media from a illicit
-   source can cause inapropriate content 
+   source can cause inappropriate content 
    to be broadcasted
-   and possibly failure of infrastructure. 
+   and possibly lead to failure of infrastructure. 
    Basic security requirements have been covered in 
    section 4.
    No security considerations except the ones mentioned 
    in this part of the text are expelictly considered. 
    Further security considerations will be updated 
-   once they have been investigated. TBD
+   once they have been investigated further based
+   on review of this draft. 
   
 
 10.  IANA Considerations
