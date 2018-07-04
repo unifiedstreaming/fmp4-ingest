@@ -620,7 +620,7 @@ Table of Contents
   || source ||   //  ||  Entity  ||  \\ 
   ============  //   ==============   \\  ============        
   || live   || //                      \\ || load   || 
-  || media  ||// redundand stream       >>||balancer|| ==>>> Client
+  || media  ||// redundant stream       >>||balancer|| ==>>> Client
   || source ||\\ stream                // =============
   ============ \\     =============   // 
   || live   ||  \\   || Media     || //     
@@ -632,7 +632,7 @@ Table of Contents
   || source ||       
   ============      
 
-4. Generic Ingest Protocol Behavior 
+4. General Ingest Protocol Behavior 
 
   The media ingest follows the following general requirements for both target profiles.
 
