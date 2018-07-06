@@ -88,8 +88,8 @@ Table of Contents
        6.4 Requirements for Timed Metadata
        6.5 Requirements for Media Processing Entity Failover
        6.6 Requirements for Live Media Source Failover
-   7.  Profile 2: DASH Ingest General Considerations
-   8.  Profile 2: DASH Ingest Protocol Behavior
+   7.  Profile 2: DASH and HLS Ingest General Considerations
+   8.  Profile 2: DASH and HLS Ingest Protocol Behavior
        8.1 General Protocol requirements
        8.2 Requirements for Formatting Media Tracks
        8.3 Requirements for Timed Text, Caption and Subtitle Streams
@@ -1115,7 +1115,14 @@ message_data            | splice info section including CRC
     
    Profile 2 is designed to ingest media into entities that only 
    provide pass through functionality. In this case the media 
-   ingest source also provides the manifest based on MPEG DASH[DASH]. 
+   ingest source also provides the manifest based on MPEG DASH[DASH]
+   or HTTP Live Streaming [HLS].
+   
+   The key idea here is to reuse the fragmented MPEG-4 ingest to 
+   enable simulataneous ingest of DASH and HLS based on the 
+   fragmented MPEG-4 files using commonalities as 
+   described in [CMAF] which is a format based on fragmented 
+   MPEG-4 that can be used in both [DASH] and [HLS] presentations.
    
    The flow of operation in profile 2 is shown in Diagram 12. In this 
    case the live ingest source (media source) sends a manifest first. 
@@ -1128,9 +1135,12 @@ message_data            | splice info section including CRC
    
    This profile re-uses as much functionality as possible from profile 
    1 as the manifest can be seen as a complementary addition to the 
-   fragmented MPEG-4 stream. The main difference lies in the way 
-   the connection is setup and the way data is transmitted, it largely
-   uses the same fragmented MPEG-4 layer based on [ISOBMFF] and [CMAF].
+   fragmented MPEG-4 stream. A difference lies in the way 
+   the connection is setup and the way data is transmitted, 
+   which can use relative URL paths for the segments based on the 
+   paths in the manifest. For the rest, it largely
+   uses the same fragmented MPEG-4 layer based on [ISOBMFF] 
+   and [CMAF].
    
    Diagram 12
 ||===============================================================|| 
@@ -1174,11 +1184,10 @@ message_data            | splice info section including CRC
 ||        ||                                     ||              ||
 ||===============================================================|| 	
 
-8.  profile 2: DASH Ingest Protocol Behavior
+8.  profile 2: DASH and HLS Ingest Protocol Behavior
 
-This section describes the protocol behavior specific to 
-profile 2: DASH  ingest. Operation of this 
-profile MUST also adhere to general requirements in section 4.
+Operation of this profile MUST also adhere 
+to general requirements in section 4.
 	 
 8.1  General Protocol Requirements  
 
