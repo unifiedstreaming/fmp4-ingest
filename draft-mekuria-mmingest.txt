@@ -209,7 +209,7 @@ Table of Contents
    encrypting or transcoding the stream. 
    Other operations could include watermarking,
    content insertion and generating streaming manifests 
-   based on [MPEG DASH] or [HLS]. What is typical 
+   based on [MPEG DASH] or HLS[RFC8216]. What is typical 
    of these operations is that they actively inspect,
    or modify the media content and may 
    generate new derived media content. 
@@ -292,7 +292,7 @@ Table of Contents
    the media is not altered actively, and further 
    media processing perhaps restricted to the manifests. 
    A key idea of this part of the specification is to re-use
-   the similarities of MPEG DASH and HLS protocols 
+   the similarities of MPEG DASH [DASH] and HLS[RFC8216] protocols 
    to enable a simultaneous ingest of media 
    presentations of these two formats using 
    common media segments such as based on [ISOBMFF] 
@@ -339,7 +339,7 @@ Table of Contents
    MPEG-4 will make things easier 
    and that the industry is already heading 
    in this direction following recent specifications 
-   like [CMAF] and [HLS].
+   like [CMAF] and HLS[RFC8216].
    
    Regarding the transports protocol, in future versions, 
    alternative transport protocols could be considered 
@@ -1116,13 +1116,13 @@ message_data            | splice info section including CRC
    Profile 2 is designed to ingest media into entities that only 
    provide pass through functionality. In this case the media 
    ingest source also provides the manifest based on MPEG DASH[DASH]
-   or HTTP Live Streaming [HLS].
+   or HTTP Live Streaming [RFC8216].
    
    The key idea here is to reuse the fragmented MPEG-4 ingest to 
    enable simulataneous ingest of DASH and HLS based on the 
    fragmented MPEG-4 files using commonalities as 
    described in [CMAF] which is a format based on fragmented 
-   MPEG-4 that can be used in both [DASH] and [HLS] presentations.
+   MPEG-4 that can be used in both DASH and HLS presentations.
    
    The flow of operation in profile 2 is shown in Diagram 12. In this 
    case the live ingest source (media source) sends a manifest first. 
