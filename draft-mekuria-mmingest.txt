@@ -20,8 +20,9 @@ Abstract
    Two profiles of the media ingest are defined covering the most 
    common use cases. The first profile facilates active media 
    processing and is based on the fragmented MPEG-4 format. 
-   The second profile enables ingest of media streaming 
-   presentations based on established streaming protocols. 
+   The second profile enables efficient ingest of media streaming 
+   presentations based on established streaming protocols
+   by also adding a manifest besides the fragmented MPEG-4 stream. 
    Details on carriage of metadata markers, timed text, 
    subtitles and encryption specific metadata are also included.    
   
