@@ -193,7 +193,7 @@ Table of Contents
    work together in a redundant workflow where 
    some of the components might fail.    
 
-   This document provides an Industry best 
+   This document provides an industry best 
    practice approach for establishing these 
    interoperability points for live media ingest. 
    The approaches are based on known standardized 
@@ -311,7 +311,7 @@ Table of Contents
    combined into one, as was the case 
    in a prior version of this draft.
    
-   We fruther motivate this best practice presented 
+   We further motivate this best practice presented 
    in this document supporting using 
    HTTP [HTTP] and [ISOBMFF] a bit more. 
    We believe that Smooth streaming [MS-SSTR] 
@@ -321,7 +321,7 @@ Table of Contents
    ingest fits well with current HTTP 
    based streaming protocols including [DASH]. 
    In addition, there is good support for HTTP 
-   middleboxes, HTTP routing available,
+   middleboxes and HTTP routing available
    making it easier to debug and trace errors. 
    The HTTP POST provides a push based 
    method for delivery for pusing the  
@@ -376,10 +376,10 @@ Table of Contents
     
    
   
-   Live Ingest stream: 
+   Live Ingest Stream: 
             the stream of media produced by the live source 
             transmitted to the media processing entity.
-   Live stream event: 
+   Live Stream Event: 
             the total live stream for the ingest.
             (Live) encoder: entity performing live 
 			encoding and producing a high quality live stream, 
@@ -426,7 +426,7 @@ Table of Contents
         (these are samples that require no prior 
         or other samples for decoding) [ISOBMFF].
    tfdt: 
-        the TrackFragmentDecodeTimeBox box "tfdt" 
+        the TrackFragmentBaseMediaDecodeTimeBox box "tfdt" 
         in the base media file format [ISOBMFF] used
         to signal the decode time of the media 
         fragment signalled in the moof box.  
@@ -441,7 +441,7 @@ Table of Contents
          information according to the MPEG Common Encryption [CENC]
    sinf: 
          Protection scheme information box "sinf" defined in 
-		 [ISOBMFF] that provides information on the encryption 
+         [ISOBMFF] that provides information on the encryption 
          scheme used in the file
    elng: 
          extended language box "elng" defined in [ISOBMFF] that 
@@ -459,6 +459,7 @@ Table of Contents
    fragmentedMP4stream: 
         stream of [ISOBMFF] fragments 
         (moof and mdat), a more precise definition will follow
+	later in this section.
    POST_URL: 
         Target URL of a POST command in the HTTP protocol 
         for posting data from a source to a destination.
@@ -489,7 +490,7 @@ Table of Contents
    is the path to the specific presentation at the publishing point. 
    The manifest path can be used to signal the specific manifest of 
    the presentation. The rsegmentpath can be a different optional 
-   extended path based on the relative paths in the manifest file.   
+   extended path based on the relative paths.   
    The identifier describes the filename of the segment which is 
    corresponding to the manifest in profile 2 DASH Ingest. 
    
@@ -507,9 +508,9 @@ Table of Contents
 
   In this section we highlight some of the target use cases
   and example workflows for the media ingest. 
-  Diagram 3 shows an example workflow of media ingest with profile 1
-  in a streaming workflow. The live media is ingested 
-  into the media processing entity that performs 
+  Diagram 3 shows an example workflow of media ingest 
+  with profile 1 in a streaming workflow. The live media
+  is ingested into the media processing entity that performs 
   operations like on-the-fly encryption, content stitching 
   packaging and possibly other operations before 
   delivery of the final media presentation to the client. 
@@ -526,7 +527,8 @@ Table of Contents
   passive media entity such as a storage. In this case
   the live media source posts the segments and the 
   manifests for the media presentation. 
-  In this case, still fragmented MPEG-4 segments can be used, but the 
+  In this case, still fragmented MPEG-4 segments can be used,
+  but the ingest works slightly different.
 
   Diagram 3: 
   Streaming workflow with fragmented MPEG-4 ingest in profile 1
@@ -545,10 +547,11 @@ Table of Contents
   ============       ==============     
 
   Practice has shown that the ingest schemes
-  can be quite different, and that combining 
-  them into a single protocol will result in overhead
-  such as sending duplicate information in the 
-  manifest or ISOBMFF moov box, and increased 
+  can be quite different for the two configurations
+  , and that combining them into a single protocol 
+  will result in overhead such as sending 
+  duplicate information in the manifest or 
+  ISOBMFF moov box, and increased 
   signalling overhead for starting, closing 
   and resetting the connection. Therefore, 
   the two procedures for media ingest in 
@@ -576,7 +579,7 @@ Table of Contents
   on many factors. The media ingest best practice 
   covers these two types of workflows by two different 
   profiles. The best choice for a specific platform depends
-  on many of the use case secific requirements and circumstances 
+  on many of the use case specific requirements, circumstances 
   and the available technologies. 
 
   In Diagram 6 we highlight another aspect taken into 
@@ -713,7 +716,7 @@ The ftyp and moov box contain the track specific information
 and can be seen as a header of the stream, sometimes referred
 as a [CMAF] header. The styp box can be used to signal the 
 type of segment. The combination of styp moof mdat can be referred
-as a segment, the combination of ftype and moof can be referred 
+as a segment, the combination of ftyp and moof can be referred 
 to as an init segment or a CMAF header. 
 
 Diagram 8: fragmented mp4 stream: 
@@ -764,7 +767,7 @@ DNS resolution (if needed) and an authentication step (Authy,
 TLS certificate) to establish a secure TCP connection. 
 In some private datacenter deployments where nodes 
 are not reachable from outside, a non authenticated connection 
-could also be used. The ingest source then issues an empty POST
+MAY also be used. The ingest source then issues an empty POST
 to test that the media processing entity is listening. It then 
 start sending the moov + ftyp box (the init segment), followed
 by the rest of the segments in the fragmented MPEG-4 stream. In 
@@ -887,14 +890,15 @@ a track with timed text, captions and/or subtitle streams.
    3. In case TTML is used the track must use the XMLSampleEntry 
       to signal sample description of the sub-title stream [MPEG-4-30] 
    4. In case WebVTT is used the track must use the WVTTSampleEntry 
-      to signal sample description of the text stream
+      to signal sample description of the text stream [MPEG-4-30]
    5. These boxes SHOULD signal the mime type and specifics as 
       described in [CMAF] sections 11.3 ,11.4 and 11.5
    6. The boxes described in 2-5 must be present in the init 
       segment (ftyp + moov) for the given track
-   7. subtitles in CTA-608 and CTA-708 can be transmitted 
+   7. subtitles in CTA-608 and CTA-708 format SHOULD be conveyed 
       following the recommendation section 11.5 in [CMAF] via 
-      SEI messages in the video track
+      Supplemental Enhancement Information SEI messages 
+      in the video track [CMAF]
    8. The "ftyp" box in the init segment for the track 
       containing timed text, images, captions and sub-titles 
       MAY use signalling using CMAF profiles based on [CMAF] 
