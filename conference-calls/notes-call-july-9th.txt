@@ -1,0 +1,42 @@
+weibz (bitmovin)
+chris (bitmovin)
+Florian (bitmovin)
+kevin johns (Centurylink)
+James gruessing (BBC R&D)
+weibing (MS)
+Sam Z. (MS)
+Dirk G. (Unified)
+Arjen wagenaar (Unified)
+peter chave (akamai)
+
+1. Go over the revised version of the draft before uploading next ietf 
+2. Additional explanation/overview of the draft and the motivation of decision made 
+3. comment/input from bitmovin on the support for out of order arrival of segments 
+      - parallel out of order typically known for VoD, latency will be introduced for live 
+      AP: bitmovin to develop the issue and post an issue on github explaining the use case and the issue
+4. Question on the grouping of streams and publishing point 
+     - the idea is a bundle of streams is posted to a publishing point URL created for the presentation
+     - the active processing entity will generate the final media presentation for the client, also based 
+       on hte user preferences. 
+5. Some comments on the URL path and signalling  
+      - right now the URL is explained in section 2, URL should probably also be made specific 
+        to the two profiles such that it is easy to understand
+      - later in the spec draft in section 4 add information on the POST_URL 
+      - one stream per TCP stream 
+      - for example allow different relative URL paths in p1 to post the different streams 
+6.  Question on the imperative of constant lenght segments 
+      - main reason is to support redundant workflows where different encoders are posting 
+        the same stream, or in case an encoder is replaced in a workflow
+      - other reason is reducing the size of the manifest
+      - request about making this a MUST -> this is perhaps a bit to strong as it not always possible 
+        to have segments of exactly the same length
+7. Some initial discussion on the workflow diagram, MS may provide some diagrams 
+         AP: Sam to check with John about this.
+8. Draft will be updated, new version as IETF draft will be uploaded before august 
+9. Dataformat for metadata (fragmented mp4 sparse track) will be proposed in MPEG 
+   to allign with NBMP and CMAF, only the MP4 file structure not the protocol behavior
+
+AP Bitmovin: make git issue explain the out of order delivery for live. 
+AP Sam: check with John about the diagram 
+AP Rufael: work out some ideas on specific text on the URL contstruction for the different profiles
+AP Rufael: schedule next call and update the draft
