@@ -35,8 +35,10 @@ peter chave (akamai)
 8. Draft will be updated, new version as IETF draft will be uploaded before august 
 9. Dataformat for metadata (fragmented mp4 sparse track) will be proposed in MPEG 
    to allign with NBMP and CMAF, only the MP4 file structure not the protocol behavior
+   10. Some input received from Will Law (Akamai) on p2, to be discussed offline AP Will make github issue
 
 AP Bitmovin: make git issue explain the out of order delivery for live. 
 AP Sam: check with John about the diagram 
 AP Rufael: work out some ideas on specific text on the URL contstruction for the different profiles
 AP Rufael: schedule next call and update the draft
+AP Will Law: make issue explaining the proposed updates
