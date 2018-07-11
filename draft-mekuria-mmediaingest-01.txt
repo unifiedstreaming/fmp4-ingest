@@ -7,7 +7,7 @@ Internet-Draft                              Microsoft
 Expires: February 1st, 2019                 
 
 
-Intended status: Best Current Practice      August 1, 2018
+Intended status: Best Current Practice      July 14 2018
 
 
           Live Media and Metadata Ingest Protocol
@@ -53,7 +53,7 @@ Status of This Memo
    
    
    
-   Mekuria & Zhang          Expires August 1 2019           [Page1]
+   Mekuria & Zhang          Expires January 14 2019        [Page1]
    
 
 
@@ -111,7 +111,7 @@ Table of Contents
  
  
   
-Mekuria & Zhang        Expires August 1 2019                [Page2]
+Mekuria & Zhang        Expires January 14 2019                [Page2]
    
  
 
@@ -167,7 +167,7 @@ Mekuria & Zhang        Expires August 1 2019                [Page2]
    metadata like ID3 tags [ID3v2].   
    
     
-  Mekuria & Zhang         Expires August 1 2019             [Page3]
+  Mekuria & Zhang         Expires January 14 2019             [Page3]
    
  
    
@@ -223,7 +223,7 @@ Mekuria & Zhang        Expires August 1 2019                [Page2]
    
    
    
-     Mekuria & Zhang         Expires August 1 2019              [Page4]
+     Mekuria & Zhang         Expires January 14 2019              [Page4]
    
  
 
@@ -281,7 +281,7 @@ Mekuria & Zhang        Expires August 1 2019                [Page2]
    the Microsoft Azure cloud.
      
    
-        Mekuria & Zhang         Expires August 1 2019          [Page5]
+        Mekuria & Zhang         Expires January 14 2019          [Page5]
    
  
    This protocol has shown 
@@ -339,7 +339,7 @@ Mekuria & Zhang        Expires August 1 2019                [Page2]
    The HTTP POST provides a push based 
    method for delivery for pusing the  
    live content when available.  
-   Mekuria & Zhang         Expires August 1 2019            [Page6]
+   Mekuria & Zhang         Expires January 14 2019            [Page6]
    
  
    The binary media format for conveying 
@@ -397,7 +397,7 @@ Mekuria & Zhang        Expires August 1 2019                [Page2]
 
 
   
-<Mekuria>          Expires August 1 2019                    [Page7]
+<Mekuria>          Expires January 14 2019                    [Page7]
 
     
    
@@ -455,7 +455,7 @@ Mekuria & Zhang        Expires August 1 2019                [Page2]
         in the base media file format [ISOBMFF] used
         to signal the decode time of the media 
         fragment signalled in the moof box. 
-<Mekuria>          Expires August 1 2019 [Page8]
+<Mekuria>          Expires January 14 2019              [Page8]
 
     
 
@@ -497,40 +497,6 @@ Mekuria & Zhang        Expires August 1 2019                [Page2]
        Transmission Control Protocol (TCP) as defined in [RFC793]
    URI_SAFE_IDENTIFIER: 
        identifier/string formatted according to [RFC3986]
- 
-   An example of a POST URL 
-   targeting the publishing point is:
-   http://HostName/presentationPath/manifestpath
-   /rsegmentpath/Identifier
-
-   
-      The PostURL the syntax is defined as follows using the 
-   IETF RFC 5234 ANB [RFC5234] to specify the structure.
-
-   PostURL = Protocol ://BroadcastURL Identifier
-   Protocol = "http" / "https"
-   BroadcastURL = HostName "/" PresentationPath
-   HostName = URI_SAFE_IDENTIFIER
-   
-   
-   Mekuria & Zhang          Expires August 1 2019             [Page9]
-
-   
-
-
-   PresentationPath = URI_SAFE_IDENTIFIER
-   ManifestPath = URI_SAFE_IDENTIFIER
-   Rsegmentpath = URI_SAFE_IDENTIFIER
-   Identifier = segment_file_name
-   
-   In this PostURL the HostName is typically the hostname of the 
-   media processing entity or publishing point. The presentation path
-   is the path to the specific presentation at the publishing point. 
-   The manifest path can be used to signal the specific manifest of 
-   the presentation. The rsegmentpath can be a different optional 
-   extended path based on the relative paths.   
-   The identifier describes the filename of the segment which is 
-   corresponding to the manifest in profile 2 DASH Ingest. 
    
    A fragmentedMP4stream can be defined
    using the IETF RFC 5234 ANB [RFC5234] as follows.
@@ -541,6 +507,20 @@ Mekuria & Zhang        Expires August 1 2019                [Page2]
    fragment = Moof Mdat
    
   This fragmentedMP4 stream is used in both profiles.
+
+   
+   
+   
+   
+   
+   Mekuria & Zhang          Expires January 14 2019            [Page9]
+
+   
+
+
+
+   
+
 
 3.  Media Ingest Workflows and Use Cases
 
@@ -568,14 +548,7 @@ Mekuria & Zhang        Expires August 1 2019                [Page2]
   In this case, still fragmented MPEG-4 segments can be used,
   but the ingest works slightly different.
 
-  
-  
-  
-     Mekuria & Zhang          Expires August 1 2019             [Page10]
-
- 
-
-  Diagram 3: 
+   Diagram 3: 
   Streaming workflow with fragmented MPEG-4 ingest in profile 1
   ============       ==============      ==============
   || live   ||ingest ||  Media   || HLS  || Content  ||  HLS
@@ -589,7 +562,20 @@ Mekuria & Zhang        Expires August 1 2019                [Page2]
   || live   || DASH  || Content  ||   
   || media  ||====>>>||Delivery  ||==>>>> Client
   || source ||       || Network  ||  
-  ============       ==============     
+  ============       ==============      
+  
+  
+  
+  
+  
+  
+  
+  
+     Mekuria & Zhang          Expires January 14 2019           [Page10]
+
+ 
+
+
 
   Practice has shown that the ingest schemes
   can be quite different for the two configurations
@@ -629,7 +615,7 @@ Mekuria & Zhang        Expires August 1 2019                [Page2]
 
   
   
-Mekuria & Zhang          Expires August 1 2019                  [Page11]
+Mekuria & Zhang          Expires January 14 2019               [Page11]
 
  
 
@@ -687,7 +673,7 @@ Mekuria & Zhang          Expires August 1 2019                  [Page11]
   ============      
 
   
-  Mekuria & Zhang          Expires August 1 2019 [Page11]
+  Mekuria & Zhang          Expires January 14 2019           [Page11]
 
  
 
@@ -728,6 +714,9 @@ Mekuria & Zhang          Expires August 1 2019                  [Page11]
       data such as sparse tracks SHOULD be short-lived, 
       terminating as soon as 
       the sparse fragment is sent.
+   8. The POST request uses a POST_URL to the basepath of the 
+      publishing point at the media processing entity and 
+      MAY use a relative path for different streams and segments.
 
 5. Profile 1: Fragmented MPEG-4 Ingest General Considerations
 
@@ -742,10 +731,7 @@ The workflow ingesting multiple media ingest streams with
 fragmented MPEG-4 ingest is illustrated in Diagram 7.
 
 
-
-
-
-  Mekuria & Zhang          Expires August 1 2019             [Page13]
+  Mekuria & Zhang          Expires January 14 2019             [Page13]
 
  
 
@@ -803,7 +789,7 @@ live ingest source.
 
 
 
-Mekuria & Zhang          Expires August 1 2019 [Page14]
+Mekuria & Zhang          Expires January 14      2019 [Page14]
 
  
 
@@ -861,7 +847,7 @@ empty mfra box to close the connection.
 
 
 
-Mekuria & Zhang          Expires August 1 2019              [Page15]
+Mekuria & Zhang          Expires January 14  2019              [Page15]
 
  
 
@@ -911,23 +897,19 @@ profile MUST also adhere to general requirements in secion 4.
        or other conditions required. 
    2. The live encoder or ingest source MUST initiate 
       a media ingest connection by POSTING the 
-      header boxes "ftyp" and "moov" after step 1  
-
-
-
-
-
-
-
-    Mekuria & Zhang          Expires August 1 2019            [Page16]
-
- 
-
+      header boxes "ftyp" and "moov" after step 1
    3. The encoder or ingest source SHOULD use chunked transfer 
       encoding option of the HTTP POST command [RFC2626] 
       as it might be difficult to predict the entire content length 
       of the segment. This can also be used for example to support 
       use cases that require low latency.
+
+
+    Mekuria & Zhang          Expires January 14 2019            [Page16]
+
+ 
+
+ 
    4. If the HTTP POST request terminates or times out with a TCP 
       error prior to the end of the stream, the encoder MUST issue 
       a new connection, and follow the 
@@ -944,6 +926,8 @@ profile MUST also adhere to general requirements in secion 4.
       towards the publishing point/processing entity.
    7. The live ingest source SHOULD use a separate TCP
       connection for ingest of each different track
+   8. The live ingest source MAY use a separate relative path 
+      in the POST_URL for ingest of each different track
       
 6.2. Requirements for formatting Media Tracks
    
@@ -977,7 +961,9 @@ profile MUST also adhere to general requirements in secion 4.
    9. Segments  posted towards the media procesing entity SHOULD 
      contain the "tfdt" box specifying  the fragments decode time 
      and the "tfhd" box specifying the track id.
-    Mekuria & Zhang          Expires August 1 2019 [Page17]
+   
+   
+   Mekuria & Zhang          Expires January 14 2019 [Page17]
 
  
 
@@ -1035,7 +1021,7 @@ a track with timed text, captions and/or subtitle streams.
   messages defined in section 5.10.3.3 of [DASH]. For example, 
   DASH Event messages contain a schemeIdUri that defines 
   the payload of the message.  
-    Mekuria & Zhang          Expires August 1 2019           [Page18]
+    Mekuria & Zhang          Expires January 14 2019           [Page18]
 
  
   
@@ -1093,7 +1079,7 @@ message_data            | splice info section including CRC
   4. The timescale of the metadata should match the value 
      specified in the media header box "mdhd" of the 
      metadata track.  
-    Mekuria & Zhang          Expires August 1 2019        [Page19]
+    Mekuria & Zhang          Expires January 14 2019        [Page19]
 
  
 
@@ -1151,7 +1137,7 @@ message_data            | splice info section including CRC
   
   
   
-     Mekuria & Zhang          Expires August 1 2019 [Page20]
+     Mekuria & Zhang          Expires January 14 2019        [Page20]
 
 
   
@@ -1209,7 +1195,7 @@ message_data            | splice info section including CRC
 
 
 
-     Mekuria & Zhang          Expires August 1 2019      [Page21]
+     Mekuria & Zhang          Expires January 14 2019      [Page21]
 
 
 
@@ -1267,7 +1253,7 @@ message_data            | splice info section including CRC
 
 
 
-     Mekuria & Zhang          Expires August 1 2019            [Page22]
+     Mekuria & Zhang          Expires January 14 2019         [Page22]
 
 
 
@@ -1325,7 +1311,7 @@ message_data            | splice info section including CRC
 
 
 
-     Mekuria & Zhang          Expires August 1 2019           [Page23]
+     Mekuria & Zhang          Expires January 14 2019            [Page23]
 
 
    
@@ -1383,7 +1369,7 @@ message_data            | splice info section including CRC
 
 
 
-    Mekuria & Zhang          Expires August 1 2019          [Page24]
+    Mekuria & Zhang          Expires January 14 2019           [Page24]
 
 
 
@@ -1441,7 +1427,7 @@ to general requirements in section 4.
     3. Formatting described in manifest and media track MUST
        correspond consistently
        
-    Mekuria & Zhang          Expires August 1 2019          [Page25]
+    Mekuria & Zhang          Expires January 14 2019          [Page25]
 
 
 
@@ -1499,7 +1485,7 @@ to general requirements in section 4.
   
   
   
-      Mekuria & Zhang          Expires August 1 2019         [Page26]
+      Mekuria & Zhang          Expires January 14 2019      [Page26]
 
 
 
@@ -1557,7 +1543,7 @@ Alex Giladi Comcast
 
 
 
-    Mekuria & Zhang          Expires August 1 2019 [Page27]
+    Mekuria & Zhang          Expires January 14 2019        [Page27]
 
 
 
@@ -1613,7 +1599,7 @@ Alex Giladi Comcast
     (last acessed)
 
 
-    Mekuria & Zhang          Expires August 1 2019         [Page28]
+    Mekuria & Zhang          Expires January 14 2019         [Page28]
 
 
 
