@@ -1,0 +1,73 @@
+Media ingest call
+October 3rd 19:00 CEST
+Rufael (Unified)
+Sam Zhang (Microsot)
+Steve Geiger (bitmovin)
+Igor (bitmovin)
+Kevin J (CenturyLink)
+Weibin  (Microsoft)
+Will Law (Akamai)
+
+agenda proposed 
+1. spec feedback (including open issues)
+2. standardization and open source tools 
+3. low latency
+4. redundancy 
+5. failures 
+
+1. spec feedback 
+a. SCTE 214 (Kevin Johns)
+ -> useful specification, we are moving away from TS to support modern streaming protocols 
+based on fmp4 and allow easy retransission of segments and caching in cdn's having clear segment
+boundaries is what matters. AP study the spec deeper and reference it with explanation of differences
+b. template for ietf spec drafting
+   some discussion it only works on linux, it is commonly used in ietf, use for next draft such that it allows better editing
+c. out of order segments (bitmovin)
+   a. discussion on the media track requirement 4. that fragments should arrive with increasing basemediadecodetime in the tdft, solution proposed
+      by unified streaming to introduce an encoder latency buffering segments and posting them in order, otherwise it will result in 404 timeline 
+      gap that is cached in the cdn. The main idea to have a should is that in some cases with two encoders this might happen when one encoder 
+      is faster than another or other edge cases. Rufael points out that should still means required for most cases. It breaks the continuous post. 
+      The 404 is problematic as it will be cached in the CDN giving eronous responses to all clients requesting the segment. Will Law confirms
+      that this is still the case even in akamai, but that new logic is under investigation to solve this issue in the future. Akamai recomends
+      that the encoder produces and posts the segments in order. Will Law also highlights that out of order delivery or making segments available
+      out of order to a client is not correct behavior in dash.
+      Sam (Microsoft) makes another statement that this breaks the simplicity of the protocol
+      in the current protocol segments can be fetched and storing them will always result in a valid fmp4 file, which would not be the case with 
+      out of order arrival. This would break archival features of the protocol. Another argument is that at the encoder you have more context on the nature
+      of the out of order that can be exploited, for example a timed window. The media processing entitity can keep a buffer/time window but does not 
+      know what the maximum out of order is. As the encoder has more knowledge this would be the best place to fix the ordering instead of further downstream
+      in the media processing, CDN or player. The out of order will potentially also confuse clients (see will laws comments). For an origin it is strange
+      as it would need to retrospectivly fix a dynamic mpd. Will law emphasizes that in DASH sequential order of segments in manifest is requirement, low latency 
+      would easily fail. 404 would get cached and many clients would try to resolve the Base URLS as a failover behavior which is undesirable.
+      Bitmovin agrees that in this regard the ingest spec is accurate. Will law once more emphasizes that to be conformant in a test "shoulds" also need 
+      to pass.
+  d. Will law (akamai) proposes usage of producer reference time box in segments to make debugging in the CDN easier.  
+      seems reasonable proposal this is also in CMAF existent, support from MS and Unified more details needed on TBD in next meeting. 
+
+2. Standardization & Open Source 
+  a) Work Item in DASH-IF 
+     - this was the goal before MS joined, BBC&Unified still support this, 
+        AP. MS/Unified need to see offline if MS can support this as other persons in MS are involved with this (John Deutscher for example)
+        Akamai supports this 
+        Centurylink not member dash-if, may join and/or be invited expert 
+        will be separate work item/project in DASH-IF 
+        initial goal will be to pass through the industry forum and publish on DASH-IF, as no standardization body is targeted yet 
+     - For DASH-IF work item 5 supporting companies are needed, target will be encoder vendors that need to implement this 
+         they are already involved and member, e.g. AWS, Harmonic, MediaExcel , Bitmovin
+         - it will not be chaired by thomas but by Rufael and an additional co-chair to host calls.
+     - Will law puts awareness that DASH-IF cannot be used for royalties etc. it targets specs without such constraint
+   b) Foms MS/Unified discussed promoting this work in open source community, Will law will give a pitch at FOMS 2018 , 5 minute standup 
+      this is a conference with many developers working on the browsers. it will emphasize live streaming and low latency and redundancy. 
+   c) open source/tools unified wants to contribute a tool to ingest streams with the currently defined protocol. 
+ 3. low latency 
+   a) rufael studied the spec and DASH-IF low latency work, it seems adding low latency is very small step as we already support cmaf chunks indirectly 
+      and chunked transfer. For low latency the main aspect will be the media processing entity if it can continuously read the media. To summarize 
+      the ingest spec natively support low latency cmaf, and this can be mentioned in one additional point in the spec. 
+      Sam also agrees that it is possible to piggyback on the low latency CMAF work, and that adding low latency is quite easy. Therefore LL should 
+      be added for the next version of the spec 
+
+4. call is over, next call will be scheduled in around 3 weeks, notes will be published. Thanks to those that joined and actively contributed. 
+ 
+     
+
+        
