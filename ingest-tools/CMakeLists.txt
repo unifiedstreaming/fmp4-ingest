@@ -1,0 +1,11 @@
+cmake_minimum_required (VERSION 2.8)
+project (fmp4ingest)
+include_directories("${PROJECT_SOURCE_DIR}")
+link_directories("${PROJECT_SOURCE_DIR}")
+
+#add_library (fmp4stream fmp4stream.cpp fmp4stream.h)
+add_executable(fmp4ingest fmp4ingest.cpp fmp4stream.cpp fmp4stream.h base64.cpp base64.h)
+target_link_libraries(fmp4ingest libcurl)
+add_executable(fmp4dump fmp4dump.cpp fmp4stream.cpp fmp4stream.h base64.cpp base64.h)
+add_executable(fmp4sparse fmp4sparse.cpp fMP4stream.cpp fmp4stream.h base64.cpp base64.h)
+add_executable(fmp4Init fmp4Init.cpp fMP4stream.cpp fmp4stream.h base64.cpp base64.h)
