@@ -112,7 +112,7 @@ int main(int argc, char *argv[])
 				  res = curl_easy_perform(curl);
 
 				  if (res != CURLE_OK) {
-					  fprintf(stderr, "------ post of media segment failed: %s\n",
+					  fprintf(stderr, "---- post of media segment failed: %s\n",
 						  curl_easy_strerror(res));
 				      
 					  int retry_count = 0;
@@ -143,7 +143,7 @@ int main(int argc, char *argv[])
 				  auto t1 = std::chrono::high_resolution_clock::now();
 				  auto dt = std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0).count();
 				  
-				  cout << " --- segment push completed in ---- " << dt << "  milliseconds" << endl;
+				  cout << " ---- segment push completed in ---- " << dt << "  milliseconds" << endl;
 
 				  if(time_scale)
 				  if (dt < (long long) (1000 * frag_dur / time_scale)) {
@@ -152,7 +152,7 @@ int main(int argc, char *argv[])
 					  else
 						  this_thread::sleep_for(chrono::milliseconds(1000 * frag_dur / time_scale - dt));
 				  }
-				  cout << " --- posting next segment ---- " << i << endl;
+				  cout << " ---- posting next segment ---- " << i << endl;
 				 
 			  }
 

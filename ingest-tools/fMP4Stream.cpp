@@ -225,6 +225,8 @@ void tfdt::parse(char* ptr)
 
 };
 
+
+
 uint64_t trun::size()
 {
 	uint64_t l_size = full_box::size() + 4;
@@ -518,6 +520,16 @@ void emsg::parse(char * ptr, unsigned int data_size)
 	//	cout << "program splice table detected " << endl;
 }
 
+void emsg::write_emsg_as_mpd_event(ostream *ostr, uint64_t base_time)
+{
+	*ostr << "<Event" << endl \
+		<< "presentationTime=" << '"' << (this->m_version ? m_presentation_time : base_time + m_presentation_time_delta) << '"' << endl \
+		<< "duration=" << '"' << m_event_duration << '"' << endl \
+		<< "id=" << '"' << m_id << "'" << '>' << endl \
+		<< base64_encode(this->m_message_data.data(), this->m_message_data.size()) << endl
+		<< "</Event>" << endl;
+}
+
 //
 void emsg::print()
 {
@@ -610,7 +622,8 @@ uint32_t emsg::write(ostream *ostr)
 }
 
 //! write an emsg message as a sparse fragment with advertisement time timestamp announce second before the application time
-void emsg::write_emsg_as_fmp4_fragment(ostream *ostr, uint64_t timestamp, uint32_t track_id = 1, uint32_t announce = 4 /* announce n seconds in advance*/)
+void emsg::write_emsg_as_fmp4_fragment(ostream *ostr, uint64_t timestamp_tdft, uint32_t track_id = 1,
+	uint64_t next_tdft=0 /* announce n seconds in advance*/)
 {
 	if (m_scheme_id_uri.size())
 	{
@@ -642,9 +655,8 @@ void emsg::write_emsg_as_fmp4_fragment(ostream *ostr, uint64_t timestamp, uint32
 		// --- init tfdt
 		tfdt l_tfdt = {};
 		l_tfdt.m_version = 1;
-		l_tfdt.m_basemediadecodetime = timestamp;
+		l_tfdt.m_basemediadecodetime = timestamp_tdft;
 		uint64_t l_tfdt_size = l_tfdt.size(); // size should be 12 + 8 = 20
-		
 
 		// --- init trun
 		trun l_trun = {};
@@ -660,11 +672,15 @@ void emsg::write_emsg_as_fmp4_fragment(ostream *ostr, uint64_t timestamp, uint32
 		//-- init sentry in trun write 3 samples
 		l_trun.m_sentry.resize(3);
 		l_trun.m_sentry[0].m_sample_size = 0;
-		l_trun.m_sentry[0].m_sample_duration = announce;   // announce in advance via basemediadecodetime (4 seconds in advance)
+		l_trun.m_sentry[0].m_sample_duration = this->m_presentation_time_delta;   // announce in advance via basemediadecodetime (4 seconds in advance)
 		l_trun.m_sentry[1].m_sample_size = (uint32_t)size();
-		l_trun.m_sentry[1].m_sample_duration = 1;       // duration is 1 
+		l_trun.m_sentry[1].m_sample_duration = this->m_event_duration;       // duration is 1 
 		l_trun.m_sentry[2].m_sample_size = 0;
-		l_trun.m_sentry[2].m_sample_duration = 0;
+		// calculate the gap that needs to be filled up to the next tdft
+		int32_t gap_duration = (int32_t) (next_tdft - timestamp_tdft - m_event_duration - m_presentation_time_delta);
+		cout << "gap_dur" << gap_duration << endl;
+		cout << "next_tdft" << next_tdft << endl;
+		l_trun.m_sentry[2].m_sample_duration = next_tdft ? (gap_duration > 0 ? gap_duration :  0) : 0; // if unknown set the gap duration to zero
 
 
 		//--- initialize the box sizes
@@ -1218,11 +1234,17 @@ int ingest_stream::write_to_sparse_emsg_file(string &out_file, uint32_t track_id
 			if (it->m_emsg.m_scheme_id_uri.size())
 			{
 
+				uint64_t next_tdft = 0;
+				//find the next tdft 
+				if ( (it + 1) != this->m_media_fragment.end())
+					next_tdft = (it+1)->m_tfdt.m_basemediadecodetime;
 				//cout << " writing emsg fragment " << endl;
-				it->m_emsg.write_emsg_as_fmp4_fragment(&ot, it->m_tfdt.m_basemediadecodetime, track_id, announce);
+				it->m_emsg.write_emsg_as_fmp4_fragment(&ot, it->m_tfdt.m_basemediadecodetime, track_id, next_tdft);
 
 			}
 		}
+
+		ot.write((char *)empty_mfra, 8);
 
 		ot.close();
 		cout << "*** wrote sparse track file: " <<  out_file << "  ***" << std::endl;
@@ -1231,6 +1253,42 @@ int ingest_stream::write_to_sparse_emsg_file(string &out_file, uint32_t track_id
 		cout << "error" << endl;
 	return 0;
 };
+
+// 
+void ingest_stream::write_to_dash_event_stream(string &out_file)
+{
+	ofstream ot(out_file);
+
+
+	if (ot.good()) {
+
+		uint32_t time_scale = m_init_fragment.get_time_scale();
+		string scheme_id_uri = "";
+
+		if (m_media_fragment.size() > 0)
+			scheme_id_uri = m_media_fragment[0].m_emsg.m_scheme_id_uri;
+
+		ot << "<EventStream " << endl
+			<< "schemeIdUri=" << '"' << scheme_id_uri << '"' << endl
+			<< "timescale=" << '"' << time_scale << '"' << ">" << endl;
+
+		// write each of the event messages as moof mdat combinations in sparse track 
+		for (auto it = this->m_media_fragment.begin(); it != this->m_media_fragment.end(); ++it)
+		{
+			//it->print();
+			if (it->m_emsg.m_scheme_id_uri.size())
+			{
+				
+				//cout << " writing emsg fragment " << endl;
+				it->m_emsg.write_emsg_as_mpd_event(&ot, it->m_tfdt.m_basemediadecodetime);
+
+			}
+		}
+
+		ot << "</EventStream> " << endl;
+	}
+	ot.close();
+}
 
 //! dump the contents of the sparse track to screen
 void ingest_stream::print()

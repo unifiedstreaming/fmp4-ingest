@@ -23,9 +23,7 @@ int main(int argc, char *argv[])
 {
 
 	ingest_stream l_ingest_stream;
-	uint32_t l_track_id = 1;  // the track id of the output metadata track
-	uint32_t l_announce = 8;  // the ennounce time of the output metadata track
-	string l_out_file = "out_file.cmfm";
+	string l_out_file = "out_mpd_event.mpd";
 	string urn;
 
 	if (argc > 1)
@@ -45,17 +43,6 @@ int main(int argc, char *argv[])
 			l_out_file = string(argv[2]);
 		}
 
-		if (argc > 3) {
-			l_track_id = stoi(argv[3]);
-			cout << "track id is: " << l_track_id << endl;
-		}
-
-		if (argc > 4) {
-			l_announce = stoi(argv[4]);
-			urn = string(argv[5]);
-		    cout << " urn scheme for meta data: " << urn  << endl;
-		}
-
 		// cmfv, cmfa files containing emsg boxes 
 		l_ingest_stream.load_from_file(&l_input);
 		l_input.close();
@@ -63,14 +50,13 @@ int main(int argc, char *argv[])
 	    // output a sparse fragmented emsg track file 
 		cout << " ******* writing " << l_out_file << "********" <<  endl;
 		
-		l_ingest_stream.write_to_sparse_emsg_file(l_out_file,l_track_id,l_announce,urn);
+		l_ingest_stream.write_to_dash_event_stream(l_out_file);
 
 		return 1;
 	}
 	else 
 	{ 
-		cout << "simple program to convert a cmaf file containing emsg to a sparse track" << endl;
-		cout << "usage: fmp4meta infile outfile [track_id=1] [urn=myscheme::emsg]" << endl;
+		cout << "usage: fmp4meta infile(sparse_meta_emsg) outfile(dash event xml)" << endl;
 	}
 		
 	return 0;
