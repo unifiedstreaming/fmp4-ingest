@@ -1,4 +1,4 @@
-﻿/*******************************************************************************
+/*******************************************************************************
 Supplementary software media ingest specification:
 https://github.com/unifiedstreaming/fmp4-ingest
 
