@@ -133,7 +133,6 @@ namespace fMP4Stream {
 
 	struct tfdt : public full_box
 	{
-		unsigned int m_version;
 		uint64_t m_basemediadecodetime;
 		tfdt() { m_btype = string("tfdt"); };
 
