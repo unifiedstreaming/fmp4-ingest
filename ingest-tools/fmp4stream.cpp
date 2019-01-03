@@ -1,4 +1,4 @@
-﻿/*******************************************************************************
+/*******************************************************************************
 Supplementary software media ingest specification: https://github.com/unifiedstreaming/fmp4-ingest
 
 Copyright (C) 2009-2018 CodeShop B.V.
@@ -7,7 +7,7 @@ http://www.code-shop.com
 ******************************************************************************/
 
 
-#include "fMP4Stream.h"
+#include "fmp4stream.h"
 #include <iostream>
 #include <stdint.h>
 #include <iomanip> 
