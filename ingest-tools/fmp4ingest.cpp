@@ -16,6 +16,7 @@ http://www.code-shop.com
 #include <memory>
 #include <chrono>
 #include <thread>
+#include <cstring>
 
 using namespace fMP4Stream;
 using namespace std;
