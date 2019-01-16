@@ -334,7 +334,7 @@ void trun::parse(char * ptr)
 	}
 }
 
-// duration from the trun box
+// duration from the trun box units of the timescale of the fragment
 uint64_t media_fragment::get_duration()
 {
 	uint64_t duration = 0;
