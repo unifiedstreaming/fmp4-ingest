@@ -24,7 +24,7 @@ fmp4DashEvent: convert a sparse track to an XML event stream
 
 # Examples 
 
-- push a stream in real time to publishing point: 
+- Push a stream in real time to publishing point: 
 
 fmp4ingest -r -u http://localhost/pubpoint/channel1.isml 1.cmfv 2.cmfv 3.cmft 
 
@@ -32,7 +32,7 @@ fmp4ingest -r -u http://localhost/pubpoint/channel1.isml 1.cmfv 2.cmfv 3.cmft
 
 fmp4init in.cmfv  
 
-- converts a cmfv file with inband messages to a sparse track as defined in the ingest spec:
+- convert a cmfv file with inband messages to a sparse track as defined in the ingest spec:
 
 fmp4sparse in.cmfv out.cmfm  
 
