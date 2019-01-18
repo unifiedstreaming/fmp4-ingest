@@ -1,15 +1,21 @@
 # Media-ingest
-Code for fmp4 ingest defined in:
+
+Code for fmp4/CMAF ingest defined in:
+
 https://dashif-documents.azurewebsites.net/Ingest/master/DASH-IF-Ingest.html
 
 # Overview 
 
-fmp4ingest: tool for doing fmp4 ingest according to cmaf ingest defined in: 
+fmp4ingest: tool for doing fmp4 ingest according to cmaf/fmp4 ingest defined in: 
+
 https://dashif-documents.azurewebsites.net/Ingest/master/DASH-IF-Ingest.html
-emulates the ingest source
+
 fmp4Init: retrieves the init fragment of a CMAF file 
+
 fmp4sparse: retrieve a sparse metadata track from a CMAF file with inband emsg
+
 fmp4dump: print the contents of an fmp4 file to the cout, including scte markers 
+
 fmp4DashEvent: convert a sparse track to an XML event stream
 
 
@@ -32,11 +38,19 @@ fmp4ingest -r -u http://localhost/pubpoint/channel1.isml 1.cmfv 2.cmfv 3.cmft
 
 fmp4init in.cmfv  
 
+<<<<<<< HEAD
 - Converts a cmfv file with inband messages to a sparse track as defined in the ingest spec:
 
 fmp4sparse in.cmfv out.cmfm  
 
 - Print the content of a cmaf or fmp4 to cout:
+=======
+- convert a cmfv file with inband messages to a sparse track as defined in the ingest spec:
+
+fmp4sparse in.cmfv out.cmfm  
+
+- print the content of a cmaf or fmp4 to cout:
+>>>>>>> 082abc574c9177e33896bf556860bf2dc7906642
 
 fmp4dump in.cmfv  
 
