@@ -201,13 +201,14 @@ static size_t read_callback(void *dest, size_t size, size_t nmemb, void *userp)
 		
 		if (st->opt_.realtime_) // if it is to early sleep until tfdt - frag_dur
 		{
-			double frag_dur = ((double)st->str_ptr_->media_fragment_[st->fnumber_].get_duration()) / ((double)st->timescale_);
+			// fixed delay of 3 seconds when posting fragments
+			double frag_delay = 3.0; //((double)st->str_ptr_->media_fragment_[st->fnumber_].get_duration()) / ((double)st->timescale_);
 			double media_time = ( (double) c_tfdt - st->start_time_stamp_)/ ((double) st->timescale_);
 			chrono::duration<double> diff = chrono::system_clock::now() - *(st->start_time_);
 			double start_offset = (double) st->opt_.tsoffset_ / ((double)st->timescale_);
-			if ((diff.count() + start_offset) < (media_time - frag_dur)) // if it is to early sleep until tfdt - frag_dur
+			if ((diff.count() + start_offset) < (media_time - frag_delay)) // if it is to early sleep until tfdt - frag_dur
 			{
-				this_thread::sleep_for(chrono::duration<double>((media_time - frag_dur) - diff.count()));
+				this_thread::sleep_for(chrono::duration<double>((media_time - frag_delay) - diff.count() - start_offset));
 			}
 		}
 		
