@@ -1,5 +1,5 @@
 # media-ingest
-Code for fmp4 ingest https://www.ietf.org/id/draft-mekuria-mmediaingest-01.txt
+Code for fmp4 ingest defined in:
 https://dashif-documents.azurewebsites.net/Ingest/master/DASH-IF-Ingest.html
 
 # overview 
@@ -24,16 +24,16 @@ fmp4DashEvent: convert a sparse track to an XML event stream
 
 # Examples 
 
-pushes streams in real time to publishing point: 
+- push a stream in real time to publishing point: 
 fmp4ingest -r -u http://localhost/pubpoint/channel1.isml 1.cmfv 2.cmfv 3.cmft 
 
-Copy the init fragment to init_in.cmfv:
+- Copy the init fragment to init_in.cmfv:
 fmp4init in.cmfv  
 
-converts a cmfv file with inband messages to a sparse track as defined in the ingest spec:
+- converts a cmfv file with inband messages to a sparse track as defined in the ingest spec:
 fmp4sparse in.cmfv out.cmfm  
 
-print the content of a cmaf or fmp4 to cout:
+- print the content of a cmaf or fmp4 to cout:
 fmp4dump in.cmfv  
 
 
