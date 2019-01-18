@@ -31,15 +31,15 @@ namespace fMP4Stream {
 	//----------------- structures for storing an fmp4 stream defined in ISOBMMF fMP4 ----------------------
 	struct box
 	{
-		uint32_t m_size;
-		uint64_t m_largesize;
-		string m_btype;
-		uint8_t m_extended_type[16];
-		vector<uint8_t> m_box_data;
-		bool m_is_large;
-		bool m_has_uuid;
+		uint32_t size_;
+		uint64_t large_size_;
+		string box_type_;
+		uint8_t extended_type_[16];
+		vector<uint8_t> box_data_;
+		bool is_large_;
+		bool has_uuid_;
 
-		box() : m_size(0), m_largesize(0), m_btype(""),m_is_large(false), m_has_uuid(false) {};
+		box() : size_(0), large_size_(0), box_type_(""),is_large_(false), has_uuid_(false) {};
 		virtual uint64_t size();
 		virtual void print();
 		virtual bool read(istream *istr);
@@ -49,9 +49,9 @@ namespace fMP4Stream {
 
 	struct full_box : public box
 	{
-		uint8_t m_version;
-		unsigned int m_flags;
-		uint32_t m_magic_conf;
+		uint8_t version_;
+		unsigned int flags_;
+		uint32_t magic_conf_;
 		
 		//
 		virtual void parse(char *ptr);
@@ -62,40 +62,40 @@ namespace fMP4Stream {
 
 	struct mvhd : public full_box
 	{
-		uint64_t m_creationTime;
-		uint64_t m_modificationTime;
+		uint64_t creation_time_;
+		uint64_t modification_time_;
 
-		uint32_t m_time_scale;
-		uint64_t m_duration;
+		uint32_t time_scale_;
+		uint64_t duration_;
 
-		float    m_rate;
-		float    m_volume;
+		float    rate_;
+		float    volume_;
 
-		vector<uint32_t>  m_matrix;
-		uint32_t m_nextTrackId;
+		vector<uint32_t>  matrix_;
+		uint32_t next_track_id_;
 
 		void parse(char *ptr);
 	};
 
 	struct tkhd : public full_box
 	{
-		uint64_t m_creation_time;
-		uint64_t m_modification_time;
-		uint32_t m_track_ID;
-		uint32_t m_reserved;
-		uint64_t m_duration;
+		uint64_t creation_time_;
+		uint64_t modification_time_;
+		uint32_t track_id_;
+		uint32_t reserved_;
+		uint64_t duration_;
 
-		uint32_t m_width;
-		uint32_t m_height;
+		uint32_t width_;
+		uint32_t height_;
 
-		uint32_t m_box_size; // use the box size we want to skip
+		uint32_t box_size_; // use the box size we want to skip
 	};
 
 	struct mfhd : public full_box
 	{
-		uint32_t m_seq_nr;
+		uint32_t seq_nr_;
 		void parse(char * ptr);
-		mfhd() : full_box() { m_btype = string("mfhd"); };
+		mfhd() : full_box() { box_type_ = string("mfhd"); };
 		void print(); 
 		uint64_t size() { return full_box::size() + 4; };
 	};
@@ -103,27 +103,27 @@ namespace fMP4Stream {
 
 	struct traf : public box
 	{
-		traf() : box() { m_btype = string("traf"); };
+		traf() : box() { box_type_ = string("traf"); };
 	};
 
 	struct tfhd : public full_box
 	{
-		bool m_base_data_offset_present;
-		bool m_sample_description_index_present;
-		bool m_default_sample_duration_present;
-		bool m_default_sample_size_present;
-		bool m_default_sample_flags_present;
-		bool m_duration_is_empty;
-		bool m_default_base_is_moof;
+		bool base_data_offset_present_;
+		bool sample_description_index_present_;
+		bool default_sample_duration_present_;
+		bool default_sample_size_present_;
+		bool default_sample_flags_present_;
+		bool duration_is_empty_;
+		bool default_base_is_moof_;
 
-		uint32_t m_track_id;
-		uint64_t m_base_data_offset;
-		uint32_t m_sample_description_index;
-		uint32_t m_default_sample_duration;
-		uint32_t m_default_sample_size;
-		uint32_t m_default_sample_flags;
+		uint32_t track_id_;
+		uint64_t base_data_offset_;
+		uint32_t sample_description_index_;
+		uint32_t default_sample_duration_;
+		uint32_t default_sample_size_;
+		uint32_t default_sample_flags_;
 
-		tfhd() { m_btype = string("tfhd"); };
+		tfhd() { box_type_ = string("tfhd"); };
 
 		virtual void parse(char * ptr);
 		virtual uint64_t size();
@@ -133,8 +133,8 @@ namespace fMP4Stream {
 
 	struct tfdt : public full_box
 	{
-		uint64_t m_basemediadecodetime;
-		tfdt() { m_btype = string("tfdt"); };
+		uint64_t base_media_decode_time_;
+		tfdt() { box_type_ = string("tfdt"); };
 
 		virtual uint64_t size();
 		virtual void parse(char * ptr);
@@ -145,34 +145,34 @@ namespace fMP4Stream {
 	{
 		struct sample_entry
 		{
-			uint32_t m_sample_duration;
-			uint32_t m_sample_size;
-			uint32_t m_sample_flags;
-			uint32_t m_sample_composition_time_offset_v0;
-			int32_t  m_sample_composition_time_offset_v1;
+			uint32_t sample_duration_;
+			uint32_t sample_size_;
+			uint32_t sample_flags_;
+			uint32_t sample_composition_time_offset_v0_;
+			int32_t  sample_composition_time_offset_v1_;
 			virtual void print()
 			{
 				//cout << "trun sample entry: "; 
-				cout << setw(33) << left << " sample duration: " << m_sample_duration << endl;
-				cout << setw(33) << left << " sample size: " << m_sample_size << endl;
+				cout << setw(33) << left << " sample duration: " << sample_duration_ << endl;
+				cout << setw(33) << left << " sample size: " << sample_size_ << endl;
 				//cout << "" << sample_flags << endl;
 				//cout << "" << sample_composition_time_offset_v0 <<endl;
 				//cout << "" << sample_composition_time_offset_v1 << endl;
 			};
 		};
 
-		uint32_t m_sample_count;
+		uint32_t sample_count_;
 		// optional fields
-		int32_t m_data_offset;
-		uint32_t m_first_sample_flags;
+		int32_t data_offset_;
+		uint32_t first_sample_flags_;
 
 		//flags
-		bool m_data_offset_present;
-		bool m_first_sample_flags_present;
-		bool m_sample_duration_present;
-		bool m_sample_size_present;
-		bool m_sample_flags_present;
-		bool m_sample_composition_time_offsets_present;
+		bool data_offset_present_;
+		bool first_sample_flags_present_;
+		bool sample_duration_present_;
+		bool sample_size_present_;
+		bool sample_flags_present_;
+		bool sample_composition_time_offsets_present_;
 		//entries
 		vector<sample_entry> m_sentry;
 		
@@ -181,7 +181,7 @@ namespace fMP4Stream {
 		virtual void parse(char * ptr);
 		virtual void print();
 		
-		trun() { this->m_btype = "trun"; }
+		trun() { this->box_type_ = "trun"; }
 	};
 
 	// other boxes in the moof box
@@ -208,7 +208,7 @@ namespace fMP4Stream {
 
 	struct mdat : public box
 	{
-		mdat() { this->m_btype = string("mdat"); };
+		mdat() { this->box_type_ = string("mdat"); };
 		vector<uint8_t> m_bytes;
 	};
 
@@ -216,17 +216,17 @@ namespace fMP4Stream {
 	struct emsg : public full_box
 	{
 		//emsg data
-		string m_scheme_id_uri;
-		string m_value;
-		uint32_t m_timescale;
-		uint32_t m_presentation_time_delta;
-		uint64_t m_presentation_time;
-		uint32_t m_event_duration;
-		uint32_t m_id;
-		vector<uint8_t> m_message_data;
+		string scheme_id_uri_;
+		string value_;
+		uint32_t timescale_;
+		uint32_t presentation_time_delta_;
+		uint64_t presentation_time_;
+		uint32_t event_duration_;
+		uint32_t id_;
+		vector<uint8_t> message_data_;
 
 		// emsg methods
-		emsg() { this->m_btype = string("emsg"); }
+		emsg() { this->box_type_ = string("emsg"); }
 		virtual uint64_t size();
 		virtual void parse(char * ptr, unsigned int data_size);
 		virtual void print();
@@ -248,23 +248,23 @@ namespace fMP4Stream {
 	struct sc35_splice_info
 	{
 		// scte 35 splice info fields
-		uint8_t m_table_id;
-		bool m_section_syntax_indicator;
-		bool m_private_indicator;
-		uint16_t m_section_length;
-		uint8_t m_protocol_version;
-		bool m_encrypted_packet;
-		uint8_t m_encryption_algorithm;
-		uint64_t m_pts_adjustment;
-		uint8_t m_cw_index;
-		uint32_t m_tier;
-		uint32_t m_splice_command_length;
-		uint8_t m_splice_command_type;
-		uint16_t m_descriptor_loop_length;
+		uint8_t table_id_;
+		bool section_syntax_indicator_;
+		bool private_indicator_;
+		uint16_t section_length_;
+		uint8_t protocol_version_;
+		bool encrypted_packet_;
+		uint8_t encryption_algorithm_;
+		uint64_t pts_adjustment_;
+		uint8_t cw_index_;
+		uint32_t tier_;
+		uint32_t splice_command_length_;
+		uint8_t splice_command_type_;
+		uint16_t descriptor_loop_length_;
 
 		// information for the splice insert command
-		uint32_t m_splice_insert_event_id;
-		bool m_splice_event_cancel_indicator;
+		uint32_t splice_insert_event_id_;
+		bool splice_event_cancel_indicator_;
 
 		void print(bool verbose = false);
 		void parse(uint8_t *ptr, unsigned int size);
@@ -274,27 +274,27 @@ namespace fMP4Stream {
 	//--------------------------- fmp4 ingest stream definition --------------------------------------------
 	struct init_fragment
 	{
-		box m_ftyp_box;
-		box m_moov_box;
+		box ftyp_box_;
+		box moov_box_;
 
 		uint32_t get_time_scale();
 	};
 
 	struct media_fragment
 	{
-		box m_styp;
-		box m_prft;
-		emsg m_emsg;
-		bool e_msg_is_in_mdat;
+		box styp_;
+		box prft_;
+		emsg emsg_;
+		bool e_msg_is_in_mdat_;
 		//
-		box m_moof_box;
-		box m_mdat_box;
+		box moof_box_;
+		box mdat_box_;
 		
 		// as cmaf only has one traf box we directly store the entries of it
-		mfhd m_mfhd;
-		tfhd m_tfhd;
-		tfdt m_tfdt;
-		trun m_trun;
+		mfhd mfhd_;
+		tfhd tfhd_;
+		tfdt tfdt_;
+		trun trun_;
 
 		// see what is in the fragment and store the sub boxes
 		void parse_moof();
@@ -304,10 +304,10 @@ namespace fMP4Stream {
 
 	struct ingest_stream
 	{
-		init_fragment m_init_fragment;
-		vector<media_fragment> m_media_fragment;
-		box m_sidx_box, m_meta_box, m_mfra_box;
-		int load_from_file(istream *input_file);
+		init_fragment init_fragment_;
+		vector<media_fragment> media_fragment_;
+		box sidx_box_, meta_box_, mfra_box_;
+		int load_from_file(istream *input_file, bool init_only=false);
 		int write_init_to_file(string &out_file);
 		int write_to_sparse_emsg_file(string &out_file, uint32_t track_id, uint32_t announce, string &urn);
 		uint64_t get_init_segment_data(vector<uint8_t> &init_seg_dat);

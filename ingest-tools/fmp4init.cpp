@@ -16,6 +16,7 @@ http://www.code-shop.com
 #include <chrono>
 #include <thread>
 #include <base64.h>
+
 using namespace fMP4Stream;
 using namespace std;
 
@@ -36,7 +37,7 @@ int main(int argc, char *argv[])
 		}
 
 		cout << " reading fmp4 input file " << endl;
-		ingest_stream.load_from_file(&input);
+		ingest_stream.load_from_file(&input, true);
 		input.close();
 
 		string out_file = "init_" + in_file;
@@ -47,8 +48,8 @@ int main(int argc, char *argv[])
 	}
 	else
 	{
-		cout << "fmp4init: returns init segment of fmp4 file" << endl;
-		cout << "usage fmp4init in_file [out_file]" << endl;
+		cout << "fmp4init: returns init fragment of fmp4 or cmaf file" << endl;
+		cout << "usage fmp4init in_file.cmfv [out_file]" << endl;
 	}
 
 	return 0;

@@ -2,7 +2,7 @@
 Supplementary software media ingest specification:
 https://github.com/unifiedstreaming/fmp4-ingest
 
-Copyright (C) 2009-2018 CodeShop B.V.
+Copyright (C) 2009-2019 CodeShop B.V.
 http://www.code-shop.com
 
 ******************************************************************************/
@@ -20,7 +20,6 @@ http://www.code-shop.com
 
 using namespace fMP4Stream;
 using namespace std;
-
 bool stop_all = false;
 
 // options for the ingest
@@ -54,7 +53,12 @@ struct push_options_t
 			" [--dont_close]                 Do not send empty mfra box\n"
 			" [--daemon]                     If you run as daemon, then use this flag\n"
 			" [--chunked]                    Use chunked Transfer-Encoding for POST\n"
+			" [--auth]                       Basic Auth Password"
+			" [--sslcert]                    TLS 1.2 client certificate"
+			" [--sslkey]                     SSL Key"
+			" [--sslkeypass]                 SSL Password"
 			" <input_files>                  CMAF streaming files (.cmf[atv])\n"
+
 			"\n");
 	}
 	void parse_options(int argc, char * argv[]) 
@@ -72,15 +76,19 @@ struct push_options_t
 				if (t.compare("--dont_close") == 0) { dont_close_ = true; continue; }
 				if (t.compare("--daemon") == 0) { daemon_ = true; continue; }
 				if (t.compare("--chunked") == 0) { chunked_ = true; continue; }
-
+				if (t.compare("--sslcert") == 0) { ssl_cert_ = string(argv[++i]); continue; }
+				if (t.compare("--sslkey") == 0) { ssl_key_ = string(argv[++i]); continue; }
+				if (t.compare("--keypass") == 0) {ssl_key_pass_= string(argv[++i]); continue;}
+				if (t.compare("--keypass") == 0) { basic_auth_ = string(argv[++i]); continue; }
 				input_files_.push_back(argv[i]);
 			}
+				
 		}
 		else
 			print_options();
 	}
 
-	std::string url_;
+	string url_;
 	bool realtime_;
 	bool daemon_;
 	bool loop_;
@@ -88,10 +96,17 @@ struct push_options_t
 	uint64_t stop_at_;
 	bool dont_close_;
 	bool chunked_;
+
 	unsigned int drop_every_;
 	bool prime_;
 	bool dry_run_;
 	int verbose_;
+
+	string ssl_cert_;
+	string ssl_key_;
+	string ssl_key_pass_;
+	string basic_auth_; // password with basic auth
+
 	vector<string> input_files_;
 };
 
@@ -108,11 +123,11 @@ struct ingest_post_state_t
 	ingest_stream *str_ptr_; // pointer to the ingest stream
 	bool is_done_; // flag set when the stream is done
 	string file_name_;
-	std::chrono::time_point<std::chrono::system_clock> *start_time_; // time point the post was started
+	chrono::time_point<chrono::system_clock> *start_time_; // time point the post was started
 	push_options_t opt_;
 };
 
-
+// callback for long running post
 static size_t read_callback(void *dest, size_t size, size_t nmemb, void *userp)
 {
 	ingest_post_state_t *st = (ingest_post_state_t *)userp;
@@ -154,11 +169,11 @@ static size_t read_callback(void *dest, size_t size, size_t nmemb, void *userp)
 	{
 		// stop if all fragments send or stop_at_ timestamp based
 		
-		bool frags_finished = st->str_ptr_->m_media_fragment.size() <= st->fnumber_;
+		bool frags_finished = st->str_ptr_->media_fragment_.size() <= st->fnumber_;
 		bool stop_at = false;
 		uint64_t c_tfdt = 0;
 		if (!frags_finished) {
-			c_tfdt = st->str_ptr_->m_media_fragment[st->fnumber_].m_tfdt.m_basemediadecodetime;
+			c_tfdt = st->str_ptr_->media_fragment_[st->fnumber_].tfdt_.base_media_decode_time_;
 			stop_at = st->opt_.stop_at_ && (c_tfdt >= st->opt_.stop_at_);
 		}
 		if ((frags_finished || stop_at) ) {
@@ -185,7 +200,7 @@ static size_t read_callback(void *dest, size_t size, size_t nmemb, void *userp)
 		
 		if (st->opt_.realtime_) // if it is to early sleep until tfdt - frag_dur
 		{
-			double frag_dur = ((double)st->str_ptr_->m_media_fragment[st->fnumber_].get_duration()) / ((double)st->timescale_);
+			double frag_dur = ((double)st->str_ptr_->media_fragment_[st->fnumber_].get_duration()) / ((double)st->timescale_);
 			double media_time = ( (double) c_tfdt - st->start_time_stamp_)/ ((double) st->timescale_);
 			chrono::duration<double> diff = chrono::system_clock::now() - *(st->start_time_);
 			double start_offset = (double) st->opt_.tsoffset_ / ((double)st->timescale_);
@@ -207,7 +222,7 @@ static size_t read_callback(void *dest, size_t size, size_t nmemb, void *userp)
 			
 
 			cout << " pushed media fragment: " << st->fnumber_ << " file_name: " <<  st->file_name_ << " fragment duration: " << \
-				((double)st->str_ptr_->m_media_fragment[st->fnumber_].get_duration()) / ((double)st->timescale_) << " seconds " << endl;
+				((double)st->str_ptr_->media_fragment_[st->fnumber_].get_duration()) / ((double)st->timescale_) << " seconds " << endl;
 			
 			st->fnumber_++;
 
@@ -223,7 +238,7 @@ static size_t read_callback(void *dest, size_t size, size_t nmemb, void *userp)
 }
 
 // main loop
-int push_thread(std::string file_name, push_options_t opt)
+int push_thread(string file_name, push_options_t opt)
 {
 	try
 	{
@@ -245,49 +260,111 @@ int push_thread(std::string file_name, push_options_t opt)
 			input.close();
 
 			// get the timescale
-			uint32_t time_scale = ingest_stream.m_init_fragment.get_time_scale();
-            uint32_t fragment_duration = ingest_stream.m_media_fragment[0].get_duration();
-			cout << "---- timescale movie header: " << time_scale << endl;
-			cout << "---- duration of first fragment: " << fragment_duration << endl;
-			cout << "url is: " << opt.url_ << endl;
-			cout << "---- finished loading fmp4 file starting the ingest " << endl;
+			uint32_t time_scale = ingest_stream.init_fragment_.get_time_scale();
+            uint32_t fragment_duration = ingest_stream.media_fragment_[0].get_duration();
+			//cout << "---- timescale movie header: " << time_scale << endl;
+			//cout << "---- duration of first fragment: " << fragment_duration << endl;
+			//cout << "url is: " << opt.url_ << endl;
+			string post_url_string = opt.url_ + "/Streams(" + file_name + ")";
+			cout << "---- finished loading fmp4 file starting the ingest to: " << post_url_string  << endl;
 
-			// setup the post
-			ingest_post_state_t post_state = {};
-			post_state.error_state_ = false;
-			post_state.fnumber_ = 0;
-			post_state.frag_duration_ = ingest_stream.m_media_fragment[0].get_duration();
-			post_state.init_done_ = false;
-			post_state.start_time_stamp_ = ingest_stream.m_media_fragment[0].m_tfdt.m_basemediadecodetime;
-			post_state.str_ptr_ = &ingest_stream;
-			post_state.timescale_ = ingest_stream.m_init_fragment.get_time_scale();
-			post_state.is_done_ = false; 
-			post_state.offset_in_fragment_ = 0;
-			post_state.opt_ = opt;
-			post_state.file_name_ = file_name;
-
-			chrono::time_point<std::chrono::system_clock> tp = std::chrono::system_clock::now();
-			post_state.start_time_ = &tp; // start time
-			std::string post_url_string = opt.url_ + "/Streams(" + file_name + ")";
-
-			if (opt.tsoffset_ > 0) // this offset is in the timescale of the track better would be to work with seconds double
-			{
-				// find the timestamp offset and update the fnumber, assume constant duration
-				unsigned int offset = ((opt.tsoffset_) / post_state.frag_duration_);
-				if (offset < ingest_stream.m_media_fragment.size())
-					post_state.fnumber_ = offset;
-			}
+			// check the connection with the post server
+			// create databuffer with init segment
+			vector<uint8_t> init_seg_dat;
+			ingest_stream.get_init_segment_data(init_seg_dat);
 
 			// setup curl
 			CURL * curl;
 			CURLcode res;
 			curl = curl_easy_init();
+
+			curl_easy_setopt(curl, CURLOPT_URL, post_url_string.c_str());
+			curl_easy_setopt(curl, CURLOPT_POSTFIELDS, (char *)&init_seg_dat[0]);
+			curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, (long)init_seg_dat.size());
+
+			curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
+			curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L);
+
+			if (opt.basic_auth_.size()) 
+			{
+				curl_easy_setopt(curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+				curl_easy_setopt(curl, CURLOPT_USERPWD, opt.basic_auth_.c_str());
+			}
+
+			if(opt.ssl_cert_.size())
+			   curl_easy_setopt(curl, CURLOPT_SSLCERT, opt.ssl_cert_.c_str());
+			if (opt.ssl_key_.size())
+			   curl_easy_setopt(curl, CURLOPT_SSLKEY, opt.ssl_key_.c_str());
+			if (opt.ssl_key_pass_.size())
+			   curl_easy_setopt(curl, CURLOPT_KEYPASSWD, opt.ssl_key_pass_.c_str());
+			res = curl_easy_perform(curl);
+
+			/* Check for errors */
+			if (res != CURLE_OK) 
+			{
+				fprintf(stderr, "---- connection with server failed  %s\n",
+					curl_easy_strerror(res));
+				curl_easy_cleanup(curl);
+				return 0; // nothing todo when connection fails
+			}
+			else 
+			{
+				fprintf(stderr, "---- connection with server sucessfull %s\n",
+					curl_easy_strerror(res));
+			}
+
+			// reinitialize curl, we will use long running post
+			curl_easy_reset(curl);
+
+			// setup the post
+			ingest_post_state_t post_state = {};
+			post_state.error_state_ = false;
+			post_state.fnumber_ = 0;
+			post_state.frag_duration_ = ingest_stream.media_fragment_[0].get_duration();
+			post_state.init_done_ = true; // the init fragment was already send
+			post_state.start_time_stamp_ = ingest_stream.media_fragment_[0].tfdt_.base_media_decode_time_;
+			post_state.str_ptr_ = &ingest_stream;
+			post_state.timescale_ = ingest_stream.init_fragment_.get_time_scale();
+			post_state.is_done_ = false; 
+			post_state.offset_in_fragment_ = 0;
+			post_state.opt_ = opt;
+			post_state.file_name_ = file_name;
+
+			chrono::time_point<chrono::system_clock> tp = chrono::system_clock::now();
+			post_state.start_time_ = &tp; // start time
+			
+
+			if (opt.tsoffset_ > 0) // this offset is in the timescale of the track better would be to work with seconds double
+			{
+				// find the timestamp offset and update the fnumber, assume constant duration
+				unsigned int offset = ((opt.tsoffset_) / post_state.frag_duration_);
+				if (offset < ingest_stream.media_fragment_.size())
+					post_state.fnumber_ = offset;
+			}
+
 			curl_easy_setopt(curl, CURLOPT_URL, post_url_string.data());
 			curl_easy_setopt(curl, CURLOPT_POST, 1);
 			curl_easy_setopt(curl, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_1);
 			curl_easy_setopt(curl, CURLOPT_READFUNCTION, read_callback);
 			curl_easy_setopt(curl, CURLOPT_READDATA, (void *) &post_state);
 			curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
+
+			curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
+			curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L);
+
+			if (opt.basic_auth_.size()) {
+				curl_easy_setopt(curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+				curl_easy_setopt(curl, CURLOPT_USERPWD, opt.basic_auth_.c_str());
+			}
+
+			// client side TLS certificates
+			if (opt.ssl_cert_.size())
+				curl_easy_setopt(curl, CURLOPT_SSLCERT, opt.ssl_cert_.c_str());
+			if (opt.ssl_key_.size())
+				curl_easy_setopt(curl, CURLOPT_SSLKEY, opt.ssl_key_.c_str());
+			if (opt.ssl_key_pass_.size())
+				curl_easy_setopt(curl, CURLOPT_KEYPASSWD, opt.ssl_key_pass_.c_str());
+
 			struct curl_slist *chunk = NULL;
 			chunk = curl_slist_append(chunk, "Transfer-Encoding: chunked");
 			chunk = curl_slist_append(chunk, "Expect:");
@@ -299,9 +376,16 @@ int push_thread(std::string file_name, push_options_t opt)
 				res = curl_easy_perform(curl);
 
 				/* Check for errors */
-				if (res != CURLE_OK) {
+				// 412
+				// 415
+				// 403
+				if (res != CURLE_OK) 
+				{
 					fprintf(stderr, "---- long running post failed: %s\n",
 						curl_easy_strerror(res));
+					// wait two seconds before trying again
+					post_state.offset_in_fragment_ = 0; // start again from beginning of fragment
+					this_thread::sleep_for(chrono::duration<double>(2));
 					post_state.error_state_ = true;
 				}
 				else
@@ -327,23 +411,24 @@ int push_thread(std::string file_name, push_options_t opt)
 	return 0;
 }
 
+// entry point
 int main(int argc, char * argv[])
 {
 	push_options_t opts;
 	opts.parse_options(argc, argv);
 
-	typedef std::shared_ptr<std::thread> thread_ptr;
-	typedef std::vector<thread_ptr> threads_t;
+	typedef shared_ptr<thread> thread_ptr;
+	typedef vector<thread_ptr> threads_t;
 	threads_t threads;
 
 	for (auto it = opts.input_files_.begin(); it != opts.input_files_.end(); ++it)
 	{
-		thread_ptr thread_n(new std::thread(push_thread, *it, opts));
+		thread_ptr thread_n(new thread(push_thread, *it, opts));
 		threads.push_back(thread_n);
 	}
 	
 	// wait for the push threads to finish
-	cout << " loaded, q press key to exit " << endl;
+	cout << " fmp4 ingest loading, press q to exit " << endl;
 	char c='0';
 	while(c=cin.get() != 'q');
 

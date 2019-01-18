@@ -45,7 +45,7 @@ int main(int argc, char *argv[])
 	}
 	else 
 	{
-		cout << "fmp4dump: dumps fmp4 information to the screen" << endl;
+		cout << "fmp4dump: dumps fmp4/cmaf information about fragments and emsg to the screen" << endl;
 		cout << "usage: fmp4dump input_file" << endl;
 	}
 }

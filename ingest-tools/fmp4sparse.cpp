@@ -69,8 +69,8 @@ int main(int argc, char *argv[])
 	}
 	else 
 	{ 
-		cout << "simple program to convert a cmaf file containing emsg to a sparse track" << endl;
-		cout << "usage: fmp4meta infile outfile [track_id=1] [urn=myscheme::emsg]" << endl;
+		cout << "program to convert a cmaf file containing inband emsg to a sparse track" << endl;
+		cout << "usage: fmp4meta infile.cmf[atv] outfile_sparse [track_id=1] [urn=myscheme::emsg]" << endl;
 	}
 		
 	return 0;
