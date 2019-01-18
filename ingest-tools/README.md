@@ -6,11 +6,9 @@ https://dashif-documents.azurewebsites.net/Ingest/master/DASH-IF-Ingest.html
 
 # Overview 
 
-fmp4ingest: tool for doing fmp4 ingest according to cmaf ingest defined in: 
+fmp4ingest: tool for doing fmp4 ingest according to cmaf/fmp4 ingest defined in: 
 
 https://dashif-documents.azurewebsites.net/Ingest/master/DASH-IF-Ingest.html
-
-emulates the ingest source
 
 fmp4Init: retrieves the init fragment of a CMAF file 
 
