@@ -461,7 +461,7 @@ uint64_t emsg::size()
 void emsg::parse(char * ptr, unsigned int data_size)
 {
 	full_box::parse(ptr);
-	unsigned int offset = full_box::size();
+	uint64_t offset = full_box::size();
 	if (version_ == 0)
 	{
 		scheme_id_uri_ = string((ptr + offset));
@@ -504,9 +504,9 @@ void emsg::parse(char * ptr, unsigned int data_size)
 		//cout << "value: " << value << endl;
 		offset = offset + value_.size() + 1;
 	}
-	for (unsigned int i = offset; i < data_size; i++)
+	for (unsigned int i = (unsigned int) offset; i < data_size; i++)
 	{
-		message_data_.push_back(*(ptr + offset));
+		message_data_.push_back(*(ptr + (size_t)offset));
 		offset++;
 	}
 
@@ -521,7 +521,7 @@ void emsg::write_emsg_as_mpd_event(ostream *ostr, uint64_t base_time)
 		<< "presentationTime=" << '"' << (this->version_ ? presentation_time_ : base_time + presentation_time_delta_) << '"' << endl \
 		<< "duration=" << '"' << event_duration_ << '"' << endl \
 		<< "id=" << '"' << id_ << "'" << '>' << endl \
-		<< base64_encode(this->message_data_.data(), this->message_data_.size()) << endl
+		<< base64_encode( this->message_data_.data(), (unsigned int) this->message_data_.size()) << endl
 		<< "</Event>" << endl;
 }
 
@@ -548,7 +548,7 @@ void emsg::print()
 		// splice table
 		//cout << " scte splice info" << endl;
 		sc35_splice_info l_splice;
-		l_splice.parse((uint8_t*)&message_data_[0], message_data_.size());
+		l_splice.parse((uint8_t*)&message_data_[0], (unsigned int)message_data_.size());
 		cout << "=============splice info==============" << endl;
 		l_splice.print();
 	}
@@ -558,7 +558,7 @@ void emsg::print()
 uint32_t emsg::write(ostream *ostr)
 {
 	uint32_t bytes_written = 0;
-	uint32_t size = this->size();
+	uint32_t size = (uint32_t)this->size();
 	ostr->write((char *)&size, 4);
 	bytes_written += 4;
 	ostr->put('e');
@@ -588,16 +588,16 @@ uint32_t emsg::write(ostream *ostr)
 		ostr->write(int_buf, 4);
 		bytes_written += 4;
 		ostr->write(scheme_id_uri_.c_str(), scheme_id_uri_.size() + 1);
-		bytes_written += scheme_id_uri_.size() + 1;
+		bytes_written += (uint32_t) scheme_id_uri_.size() + 1;
 		ostr->write(value_.c_str(), value_.size() + 1);
-		bytes_written += value_.size() + 1;
+		bytes_written += (uint32_t)value_.size() + 1;
 	}
 	else
 	{
 		ostr->write(scheme_id_uri_.c_str(), scheme_id_uri_.size() + 1);
-		bytes_written += scheme_id_uri_.size() + 1;
+		bytes_written += (uint32_t) scheme_id_uri_.size() + 1;
 		ostr->write(value_.c_str(), value_.size() + 1);
-		bytes_written += value_.size() + 1;
+		bytes_written += (uint32_t) value_.size() + 1;
 		fmp4_write_uint32(timescale_, int_buf);
 		ostr->write(int_buf, 4);
 		bytes_written += 4;
@@ -612,7 +612,7 @@ uint32_t emsg::write(ostream *ostr)
 		bytes_written += 4;
 	}
 	ostr->write((char *)&message_data_[0], message_data_.size());
-	bytes_written += message_data_.size();
+	bytes_written += (uint32_t) message_data_.size();
 	return bytes_written;
 }
 
@@ -683,7 +683,7 @@ void emsg::write_emsg_as_fmp4_fragment(ostream *ostr, uint64_t timestamp_tdft, u
 		uint64_t l_traf_size = 8 + l_trun_size + l_tfdt_size + l_tfhd_size;
 		// warning computing the moof size not always accurate (don't know why), hardcoded the value
 		uint64_t l_moof_size = 120; // 8 + l_traf_size + l_mfhd_size; // l_traf_size + 8 + l_mfhd_size;
-		l_trun.data_offset_ = l_moof_size + 8;
+		l_trun.data_offset_ = (int32_t) l_moof_size + 8;
 
 		// write the fragment 
 		char int_buf[4];
@@ -977,7 +977,7 @@ int ingest_stream::load_from_file(istream *infile, bool init_only)
 					// see if there is an emsg before
 					if (prev_box->box_type_.compare("emsg") == 0)
 					{
-						m.emsg_.parse((char *)& prev_box->box_data_[0], prev_box->box_data_.size());
+						m.emsg_.parse((char *)& prev_box->box_data_[0], (unsigned int)prev_box->box_data_.size());
 						//cout << "|emsg|";
 						cout << "found inband dash emsg box" << std::endl;
 					}
@@ -1000,7 +1000,7 @@ int ingest_stream::load_from_file(istream *infile, bool init_only)
 								string enc_box_name((char *)&name[4]);
 								if (enc_box_name.compare("emsg") == 0)
 								{
-									m.emsg_.parse((char *)&m.mdat_box_.box_data_[8], m.mdat_box_.box_data_.size() - 8);
+									m.emsg_.parse((char *)&m.mdat_box_.box_data_[8], (unsigned int) m.mdat_box_.box_data_.size() - 8);
 									m.e_msg_is_in_mdat_ = true;
 								}
 							}
@@ -1101,7 +1101,7 @@ void setSchemeURN(vector<uint8_t> &moov_in, string &urn)
 		{
 			//cout << "urim box found" << endl;
 			string or_urn = string((char *)&moov_in[k + 24]);
-			size_diff = or_urn.size() - urn.size();
+			size_diff = (uint16_t) (or_urn.size() - urn.size());
 
 			if (size_diff == 0) 
 			{

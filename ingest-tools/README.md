@@ -1,30 +1,41 @@
 # media-ingest
 Code for fmp4 ingest https://www.ietf.org/id/draft-mekuria-mmediaingest-01.txt
+https://dashif-documents.azurewebsites.net/Ingest/master/DASH-IF-Ingest.html
 
 # overview 
-Very simple program to post fmp4 fragments from a single cmaf stream to an origin server. 
-fmp4-ingest.exe infile.cmfv http:://publishingpoint/live/stream.isml/streams(1)
-dependency on libCURL, tested on windows 10 using unified origin
+
+fmp4ingest: tool for doing fmp4 ingest according to cmaf ingest defined in: 
+https://dashif-documents.azurewebsites.net/Ingest/master/DASH-IF-Ingest.html
+emulates the ingest source
+fmp4Init: retrieves the init fragment of a CMAF file 
+fmp4sparse: retrieve a sparse metadata track from a CMAF file with inband emsg
+fmp4dump: print the contents of an fmp4 file to the cout, including scte markers 
+fmp4DashEvent: convert a sparse track to an XML event stream
 
 
-# features implemented
-- parsing of fmp4 stream
-- HTTP POST of init and media fragments 
-- Retransmission of init fragment in case of failure
-- Example track file included for audio, metadata, ttml, webvtt 
-- tested with unified origin
-- multiple tracks can be uploaded only by multiple processes running the ingest tool (improvement todo)
+# features implemented in fmp4ingest
 
-# features to be added
-- HTTP over TLS 
-- HTTP AUTH 
-- Multiple track file upload
-- Chunked transfer mode
+- Parsing of fmp4 stream
+- HTTP POST of init and media fragments in long running post in real-time or not
+- Retransmission of init fragment in case of failures
+- posting with timestamp offset (to be improved to time accurate, currently fragment accurate)
+- HTTPS, HTTP, AUTH, Client TLS certificates
+- sample cmaf and sparse track files added in test_files
 
-# contact 
-for more information contact rufael@unified-streaming.com
-for more information on the specification: https://github.com/unifiedstreaming/fmp4-ingest
+# Examples 
 
-# note 
-A more sophisticated closed source tool is available from Unified Streaming, this tool is mainly to support the specification 
-work.
+pushes streams in real time to publishing point: 
+fmp4ingest -r -u http://localhost/pubpoint/channel1.isml 1.cmfv 2.cmfv 3.cmft 
+
+Copy the init fragment to init_in.cmfv:
+fmp4init in.cmfv  
+
+converts a cmfv file with inband messages to a sparse track as defined in the ingest spec:
+fmp4sparse in.cmfv out.cmfm  
+
+print the content of a cmaf or fmp4 to cout:
+fmp4dump in.cmfv  
+
+
+
+
