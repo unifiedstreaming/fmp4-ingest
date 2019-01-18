@@ -53,14 +53,15 @@ struct push_options_t
 			" [--dont_close]                 Do not send empty mfra box\n"
 			" [--daemon]                     If you run as daemon, then use this flag\n"
 			" [--chunked]                    Use chunked Transfer-Encoding for POST\n"
-			" [--auth]                       Basic Auth Password"
-			" [--sslcert]                    TLS 1.2 client certificate"
-			" [--sslkey]                     SSL Key"
-			" [--sslkeypass]                 SSL Password"
+			" [--auth]                       Basic Auth Password \n"
+			" [--sslcert]                    TLS 1.2 client certificate \n"
+			" [--sslkey]                     SSL Key \n"
+			" [--sslkeypass]                 SSL Password \n"
 			" <input_files>                  CMAF streaming files (.cmf[atv])\n"
 
 			"\n");
 	}
+	
 	void parse_options(int argc, char * argv[]) 
 	{
 		if (argc > 2) 
@@ -161,7 +162,7 @@ static size_t read_callback(void *dest, size_t size, size_t nmemb, void *userp)
 		else 
 		{
 			memcpy(dest, init_data.data(), buffer_size);
-			st->offset_in_fragment_ += buffer_size;
+			st->offset_in_fragment_ += (uint32_t) buffer_size;
 			return buffer_size;
 		}
 	}
@@ -211,7 +212,7 @@ static size_t read_callback(void *dest, size_t size, size_t nmemb, void *userp)
 		}
 		
 		vector<uint8_t> frag_data;
-		st->str_ptr_->get_media_segment_data(st->fnumber_,frag_data);
+		st->str_ptr_->get_media_segment_data((long)st->fnumber_,frag_data);
 		
 		// we can finish the fragment
 		if (frag_data.size() - st->offset_in_fragment_  <= buffer_size) 
@@ -231,7 +232,7 @@ static size_t read_callback(void *dest, size_t size, size_t nmemb, void *userp)
 		else // we cannot finish the fragment, write the buffer
 		{
 			memcpy(dest, frag_data.data() + st->offset_in_fragment_, buffer_size);
-			(st->offset_in_fragment_)+=buffer_size;
+			(st->offset_in_fragment_)+= (uint32_t) buffer_size;
 			return buffer_size;
 		}
 	}
@@ -261,7 +262,7 @@ int push_thread(string file_name, push_options_t opt)
 
 			// get the timescale
 			uint32_t time_scale = ingest_stream.init_fragment_.get_time_scale();
-            uint32_t fragment_duration = ingest_stream.media_fragment_[0].get_duration();
+            uint32_t fragment_duration = (uint32_t) ingest_stream.media_fragment_[0].get_duration();
 			//cout << "---- timescale movie header: " << time_scale << endl;
 			//cout << "---- duration of first fragment: " << fragment_duration << endl;
 			//cout << "url is: " << opt.url_ << endl;
@@ -337,7 +338,7 @@ int push_thread(string file_name, push_options_t opt)
 			if (opt.tsoffset_ > 0) // this offset is in the timescale of the track better would be to work with seconds double
 			{
 				// find the timestamp offset and update the fnumber, assume constant duration
-				unsigned int offset = ((opt.tsoffset_) / post_state.frag_duration_);
+				unsigned int offset = (unsigned int) ((opt.tsoffset_) / post_state.frag_duration_);
 				if (offset < ingest_stream.media_fragment_.size())
 					post_state.fnumber_ = offset;
 			}
@@ -428,7 +429,7 @@ int main(int argc, char * argv[])
 	}
 	
 	// wait for the push threads to finish
-	cout << " fmp4 ingest loading, press q to exit " << endl;
+	cout << " fmp4 and CMAF ingest, press q and enter to exit " << endl;
 	char c='0';
 	while(c=cin.get() != 'q');
 
