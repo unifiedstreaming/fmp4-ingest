@@ -1,8 +1,8 @@
-# media-ingest
+# Media-ingest
 Code for fmp4 ingest defined in:
 https://dashif-documents.azurewebsites.net/Ingest/master/DASH-IF-Ingest.html
 
-# overview 
+# Overview 
 
 fmp4ingest: tool for doing fmp4 ingest according to cmaf ingest defined in: 
 https://dashif-documents.azurewebsites.net/Ingest/master/DASH-IF-Ingest.html
@@ -13,7 +13,7 @@ fmp4dump: print the contents of an fmp4 file to the cout, including scte markers
 fmp4DashEvent: convert a sparse track to an XML event stream
 
 
-# features implemented in fmp4ingest
+# Features implemented in fmp4ingest
 
 - Parsing of fmp4 stream
 - HTTP POST of init and media fragments in long running post in real-time or not
