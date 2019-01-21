@@ -139,6 +139,8 @@ namespace fMP4Stream {
 		virtual uint64_t size();
 		virtual void parse(char * ptr);
 		virtual void print();
+
+		//static void update_tfdt(uint64_t new_base_media_decode_time, char * box_Data, size_t box_size);
 	};
 
 	struct trun : public full_box

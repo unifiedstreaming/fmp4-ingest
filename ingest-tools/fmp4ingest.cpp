@@ -33,7 +33,7 @@ struct push_options_t
 		, tsoffset_(0)
 		, stop_at_(0)
 		, dont_close_(false)
-		, chunked_(false)
+		, chunked_(true)
 		, drop_every_(0)
 		, prime_(false)
 		, dry_run_(false)
@@ -46,18 +46,16 @@ struct push_options_t
 		printf("Usage: fmp4ingest [options] <input_files>\n");
 		printf(
 			" [-u url]                       Publishing Point URL\n"
-			" [-l, --loop]                   Enable endless loop\n"
 			" [-r, --realtime]               Enable realtime mode\n"
-			" [--tsoffset offset]            Input timestamp offset\n"
-			" [--stop_at offset]             Stop at timestamp\n"
+			" [--tsoffset offset]            Input timestamp offset (fragment accurate) \n"
+			" [--stop_at offset]             Stop at timestamp (fragment accurate) \n"
 			" [--dont_close]                 Do not send empty mfra box\n"
-			" [--daemon]                     If you run as daemon, then use this flag\n"
 			" [--chunked]                    Use chunked Transfer-Encoding for POST\n"
 			" [--auth]                       Basic Auth Password \n"
 			" [--sslcert]                    TLS 1.2 client certificate \n"
 			" [--sslkey]                     SSL Key \n"
 			" [--sslkeypass]                 SSL Password \n"
-			" <input_files>                  CMAF streaming files (.cmf[atv])\n"
+			" <input_files>                  CMAF streaming files (.cmf[atvm])\n"
 
 			"\n");
 	}
@@ -126,6 +124,7 @@ struct ingest_post_state_t
 	string file_name_;
 	chrono::time_point<chrono::system_clock> *start_time_; // time point the post was started
 	push_options_t opt_;
+	uint64_t tfdt_loop_offset_;
 };
 
 // callback for long running post
@@ -173,11 +172,14 @@ static size_t read_callback(void *dest, size_t size, size_t nmemb, void *userp)
 		bool frags_finished = st->str_ptr_->media_fragment_.size() <= st->fnumber_;
 		bool stop_at = false;
 		uint64_t c_tfdt = 0;
+
 		if (!frags_finished) {
 			c_tfdt = st->str_ptr_->media_fragment_[st->fnumber_].tfdt_.base_media_decode_time_;
 			stop_at = st->opt_.stop_at_ && (c_tfdt >= st->opt_.stop_at_);
 		}
-		if ((frags_finished || stop_at) ) {
+
+		if ((frags_finished || stop_at) ) 
+		{
 			if (!st->opt_.loop_) {
 				if (!st->opt_.dont_close_) {
 					memcpy(dest, (char *)empty_mfra, 8);
@@ -193,8 +195,11 @@ static size_t read_callback(void *dest, size_t size, size_t nmemb, void *userp)
 			}
 			else // fix the looping, right now there is no good support for updating the tfdt
 			{
+				c_tfdt = st->str_ptr_->media_fragment_[st->fnumber_ - 1].tfdt_.base_media_decode_time_ \
+					+ st->str_ptr_->media_fragment_[st->fnumber_ - 1].get_duration();
 				cout << "looping" << endl; // this does not work fully as we need to increase the tfdt
 				//st->start_time = &chrono::system_clock::now();
+				st->tfdt_loop_offset_ = c_tfdt;
 				st->fnumber_ = 0;
 			}
 		}
@@ -202,7 +207,7 @@ static size_t read_callback(void *dest, size_t size, size_t nmemb, void *userp)
 		if (st->opt_.realtime_) // if it is to early sleep until tfdt - frag_dur
 		{
 			// fixed delay of 3 seconds when posting fragments
-			double frag_delay = 3.0; //((double)st->str_ptr_->media_fragment_[st->fnumber_].get_duration()) / ((double)st->timescale_);
+			double frag_delay = 2.0; //((double)st->str_ptr_->media_fragment_[st->fnumber_].get_duration()) / ((double)st->timescale_);
 			double media_time = ( (double) c_tfdt - st->start_time_stamp_)/ ((double) st->timescale_);
 			chrono::duration<double> diff = chrono::system_clock::now() - *(st->start_time_);
 			double start_offset = (double) st->opt_.tsoffset_ / ((double)st->timescale_);
@@ -250,7 +255,7 @@ int push_thread(string file_name, push_options_t opt)
 			
 			if (!input.good())
 			{
-				cout << "failed loading input file: [cmf[tav]]" << string(file_name) << endl;
+				cout << "failed loading input file: [cmf[tavm]]" << string(file_name) << endl;
 				push_options_t::print_options();
 				return 0;
 			}
@@ -331,6 +336,7 @@ int push_thread(string file_name, push_options_t opt)
 			post_state.offset_in_fragment_ = 0;
 			post_state.opt_ = opt;
 			post_state.file_name_ = file_name;
+			post_state.tfdt_loop_offset_ = 0;
 
 			chrono::time_point<chrono::system_clock> tp = chrono::system_clock::now();
 			post_state.start_time_ = &tp; // start time
@@ -396,7 +402,7 @@ int push_thread(string file_name, push_options_t opt)
 
 				// if not done wait one fragment duration before resuming
 				if(!post_state.is_done_ && !stop_all)
-				   this_thread::sleep_for(chrono::duration<double>(post_state.frag_duration_));
+				   this_thread::sleep_for(chrono::duration<double>(2.0));
 			}
 
 			cout << " done pushing file: " << file_name << " press q to quit " << endl;
@@ -407,7 +413,7 @@ int push_thread(string file_name, push_options_t opt)
 	}
 	catch (...)
 	{
-		cout << "Unkown Error" << endl;
+		cout << "Unknown Error" << endl;
 	}
 
 	return 0;
