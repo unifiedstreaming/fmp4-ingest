@@ -27,6 +27,7 @@ fmp4DashEvent: convert a sparse track to an XML event stream
 - posting with timestamp offset (to be improved to time accurate, currently fragment accurate)
 - HTTPS, HTTP, AUTH, Client TLS certificates
 - sample cmaf and sparse track files added in test_files
+- ingest of timed text, audio and video
 
 # Examples 
 
@@ -38,19 +39,11 @@ fmp4ingest -r -u http://localhost/pubpoint/channel1.isml 1.cmfv 2.cmfv 3.cmft
 
 fmp4init in.cmfv  
 
-<<<<<<< HEAD
 - Converts a cmfv file with inband messages to a sparse track as defined in the ingest spec:
 
 fmp4sparse in.cmfv out.cmfm  
 
 - Print the content of a cmaf or fmp4 to cout:
-=======
-- convert a cmfv file with inband messages to a sparse track as defined in the ingest spec:
-
-fmp4sparse in.cmfv out.cmfm  
-
-- print the content of a cmaf or fmp4 to cout:
->>>>>>> 082abc574c9177e33896bf556860bf2dc7906642
 
 fmp4dump in.cmfv  
 
