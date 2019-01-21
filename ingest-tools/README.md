@@ -27,6 +27,7 @@ fmp4DashEvent: convert a sparse track to an XML event stream
 - posting with timestamp offset (to be improved to time accurate, currently fragment accurate)
 - HTTPS, HTTP, AUTH, Client TLS certificates
 - sample cmaf and sparse track files added in test_files
+- ingest of timed text, audio and video
 
 # Examples 
 
