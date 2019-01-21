@@ -1,0 +1,20 @@
+Notes call 20th of march
+Attendants: Will, Patrick, Kevin J, Rufael, Dirk
+
+- Comments on diagram contributed by James -> how to handle 302 
+  Why PUT instead of POST -> Rufael thinks because you are overwriting existing manifest
+  AP: double check on the PUT usage and 302
+- comment on manifest update, why 2 seconds ? answer mainly for events
+- discussion on slowness of segment POSTs what if segments arrive in more than their duration/availbility ?
+- Dirk: discontinuity on timeline, archive would be ok though
+- well time client may get 404 request due to non-avialable segments
+- server with some buffering can reduce many of these problems
+- discussion on complete information in fmp4 stream (e.g. language, bit-rate, etc) in the fMP4 instead of manifest
+    media should always be correct, matching the content, with manifest mcuh parsing and keeping state will be needed, 
+    encoders did not object to the approach, but prefer not to have two different approaches for passive and active  
+- discussion on use of TCP/HTTP/UDP specifications for transport
+ingestion
+   AP: ask encoders to support both
+  discussion on segement avialability (item 8 on github issue) and what should go in the @media attribute
+- narrowing down of the manifest (item 9 on github issue by will law), Will proposes to use one of the DASH interops for this 
+- end of call notes to be distributed

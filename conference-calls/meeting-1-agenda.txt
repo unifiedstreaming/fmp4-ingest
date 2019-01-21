@@ -1,7 +1,0 @@
-draft agenda 
-
-- round call 
-- overview/aim/scope discussion, summary of MPEG contribution and status (USP)
-- requirements discussion 
-- presentation of draft specification and changes compared to azure ingest protocol
-- round up, plan for future call
