@@ -6,9 +6,6 @@ specification work moved to DASH industry forum under:
 
 https://github.com/Dash-Industry-Forum/Ingest
 
-# fmp4ingest reference implementation
+# fmp4ingest reference implementation and tools 
 
-This github repo hosts some supplementary tools and open source and the
-CMAF/fmp4 ingest reference implementation of CMAF fmp4 ingest in ingest-tools
-
-ingest-tools
+see ingest-tools
