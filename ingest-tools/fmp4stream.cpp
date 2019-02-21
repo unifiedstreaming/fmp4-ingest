@@ -13,17 +13,69 @@ http://www.code-shop.com
 #include <memory>
 #include <base64.h>
 
+namespace /* anonymous */ {
+
+//------------------ helpers for processing the bitstream ------------------------
+uint16_t fmp4_endian_swap16(uint16_t in) {
+	return ((in & 0x00FF) << 8) | ((in & 0xFF00) >> 8);
+};
+
+uint32_t fmp4_endian_swap32(uint32_t in) {
+	return  ((in & 0x000000FF) << 24) | \
+		((in & 0x0000FF00) << 8) | \
+		((in & 0x00FF0000) >> 8) | \
+		((in & 0xFF000000) >> 24);
+}
+
+uint64_t fmp4_endian_swap64(uint64_t in) {
+	return  ((in & 0x00000000000000FF) << 56) | \
+		((in & 0x000000000000FF00) << 40) | \
+		((in & 0x0000000000FF0000) << 24) | \
+		((in & 0x00000000FF000000) << 8) | \
+		((in & 0x000000FF00000000) >> 8) | \
+		((in & 0x0000FF0000000000) >> 24) | \
+		((in & 0x00FF000000000000) >> 40) | \
+		((in & 0xFF00000000000000) >> 56);
+	};
+
+uint16_t fmp4_read_uint16(char *pt)
+{
+	return IS_BIG_ENDIAN ? *((uint16_t *)pt) : fmp4_endian_swap16(*((uint16_t *)pt));
+}
+
+uint32_t fmp4_read_uint32(char *pt)
+{
+	return IS_BIG_ENDIAN ? *((uint32_t *)pt) : fmp4_endian_swap32(*((uint32_t *)pt));
+}
+
+uint64_t fmp4_read_uint64(char *pt)
+{
+	return IS_BIG_ENDIAN ? *((uint64_t *)pt) : fmp4_endian_swap64(*((uint64_t *)pt));
+}
+
+uint32_t fmp4_write_uint32(uint32_t in, char *pt)
+{
+	return IS_BIG_ENDIAN ? ((uint32_t *)pt)[0] = in : ((uint32_t *)pt)[0] = fmp4_endian_swap32(in);
+}
+
+uint64_t fmp4_write_uint64(uint64_t in,char *pt)
+{
+	return IS_BIG_ENDIAN ? ((uint64_t *)pt)[0] = in : ((uint64_t *)pt)[0] = fmp4_endian_swap64(in);
+}
+
+} // anonymous
+
 using namespace fMP4Stream;
 
 // base 64 sparse movie header
-string moov_64_enc("AAACNG1vb3YAAABsbXZoZAAAAAAAAAAAAAAAAAAAAAEAAAAAAAEAAAEAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAAAGYdHJhawAAAFx0a2hkAAAABwAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAABNG1kaWEAAAAgbWRoZAAAAAAAAAAAAAAAAAAAAAEAAAAAVcQAAAAAADFoZGxyAAAAAAAAAABtZXRhAAAAAAAAAAAAAAAAVVNQIE1ldGEgSGFuZGxlcgAAAADbbWluZgAAAAxubWhkAAAAAAAAACRkaW5mAAAAHGRyZWYAAAAAAAAAAQAAAAx1cmwgAAAAAQAAAKNzdGJsAAAAV3N0c2QAAAAAAAAAAQAAAEd1cmltAAAAAAAAAAEAAAA3dXJpIAAAAABodHRwOi8vd3d3LnVuaWZpZWQtc3RyZWFtaW5nLmNvbS9kYXNoL2Vtc2cAAAAAEHN0dHMAAAAAAAAAAAAAABBzdHNjAAAAAAAAAAAAAAAUc3RzegAAAAAAAAAAAAAAAAAAABBzdGNvAAAAAAAAAAAAAAAobXZleAAAACB0cmV4AAAAAAAAAAEAAAABAAAAAAAAAAAAAAAA");
+std::string moov_64_enc("AAACNG1vb3YAAABsbXZoZAAAAAAAAAAAAAAAAAAAAAEAAAAAAAEAAAEAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAAAGYdHJhawAAAFx0a2hkAAAABwAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAABNG1kaWEAAAAgbWRoZAAAAAAAAAAAAAAAAAAAAAEAAAAAVcQAAAAAADFoZGxyAAAAAAAAAABtZXRhAAAAAAAAAAAAAAAAVVNQIE1ldGEgSGFuZGxlcgAAAADbbWluZgAAAAxubWhkAAAAAAAAACRkaW5mAAAAHGRyZWYAAAAAAAAAAQAAAAx1cmwgAAAAAQAAAKNzdGJsAAAAV3N0c2QAAAAAAAAAAQAAAEd1cmltAAAAAAAAAAEAAAA3dXJpIAAAAABodHRwOi8vd3d3LnVuaWZpZWQtc3RyZWFtaW5nLmNvbS9kYXNoL2Vtc2cAAAAAEHN0dHMAAAAAAAAAAAAAABBzdHNjAAAAAAAAAAAAAAAUc3RzegAAAAAAAAAAAAAAAAAAABBzdGNvAAAAAAAAAAAAAAAobXZleAAAACB0cmV4AAAAAAAAAAEAAAABAAAAAAAAAAAAAAAA");
 
 
 void box::parse(char * ptr)
 {
 	size_ = fmp4_read_uint32(ptr);
 	char name[5] = { ptr[4],ptr[5],ptr[6],ptr[7],'\0' };
-	box_type_ = string(name);
+	box_type_ = std::string(name);
 	if (size_ == 1) {
 		large_size_ = fmp4_read_uint64(ptr + 8);
 	}
@@ -40,8 +92,8 @@ uint64_t box::size() {
 
 void box::print()
 {
-	cout << "=================" << box_type_ << "==================" << endl;
-	cout << setw(33) << left << " box size: " << size_ << endl;
+	std::cout << "=================" << box_type_ << "==================" << std::endl;
+	std::cout << std::setw(33) << std::left << " box size: " << size_ << std::endl;
 }
 
 void mvhd::parse(char *ptr)
@@ -55,7 +107,7 @@ void mvhd::parse(char *ptr)
 	return;
 }
 
-bool box::read(istream *istr)
+bool box::read(std::istream *istr)
 {
 	box_data_.resize(9);
 	large_size_ = 0;
@@ -63,7 +115,7 @@ bool box::read(istream *istr)
 	istr->read((char*)&box_data_[0], 8);
 	size_ = fmp4_read_uint32((char *)&box_data_[0]);
 	box_data_[8] = (uint8_t) '\0';
-	box_type_ = string((char *)&box_data_[4]);
+	box_type_ = std::string((char *)&box_data_[4]);
 	if (box_type_.compare("uuid") == 0)
 		has_uuid_ = true;
 
@@ -105,8 +157,8 @@ void full_box::parse(char *ptr)
 void full_box::print()
 {
 	box::print();
-	cout << setw(33) << left << "version: " << this->version_ << endl;
-	cout << setw(33) << left << "flags: " << flags_ << endl;
+	std::cout << std::setw(33) << std::left << "version: " << this->version_ << std::endl;
+	std::cout << std::setw(33) << std::left << "flags: " << flags_ << std::endl;
 }
 
 void mfhd::parse(char * ptr)
@@ -115,8 +167,8 @@ void mfhd::parse(char * ptr)
 }
 
 void mfhd::print() {
-	cout << "=================mfhd==================" << endl;
-	cout << setw(33) << left << " sequence number is: " << seq_nr_ << endl;
+	std::cout << "=================mfhd==================" << std::endl;
+	std::cout << std::setw(33) << std::left << " sequence number is: " << seq_nr_ << std::endl;
 };
 
 void tfhd::parse(char * ptr)
@@ -184,22 +236,22 @@ uint64_t tfhd::size()
 };
 
 void tfhd::print() {
-	cout << "=================tfhd==================" << endl;
+	std::cout << "=================tfhd==================" << std::endl;
 	//cout << setw(33) << left << " magic conf                 " << m_magic_conf << endl;
-	cout << setw(33) << left << " vflags                  " << flags_ << endl;
-	cout << setw(33) << left << " track id:                  " << track_id_ << endl;
+	std::cout << std::setw(33) << std::left << " vflags                  " << flags_ << std::endl;
+	std::cout << std::setw(33) << std::left << " track id:                  " << track_id_ << std::endl;
 	if (base_data_offset_present_)
-		cout << setw(33) << left << " base_data_offset: " << base_data_offset_ << endl;
+		std::cout << std::setw(33) << std::left << " base_data_offset: " << base_data_offset_ << std::endl;
 	if (sample_description_index_present_)
-		cout << setw(33) << left << " sample description: " << sample_description_index_ << endl;
+		std::cout << std::setw(33) << std::left << " sample description: " << sample_description_index_ << std::endl;
 	if (default_sample_duration_present_)
-		cout << setw(33) << left << " sample duration: " << default_sample_duration_ << endl;
+		std::cout << std::setw(33) << std::left << " sample duration: " << default_sample_duration_ << std::endl;
 	if (default_sample_size_present_)
-		cout  << setw(33) << left << " default sample size: " << default_sample_size_ << endl;
+		std::cout  << std::setw(33) << std::left << " default sample size: " << default_sample_size_ << std::endl;
 	if (default_sample_flags_present_)
-		cout << setw(33) << left << " default sample flags:  " << default_sample_flags_ << endl;
-	cout << setw(33) << left << " duration is empty " << duration_is_empty_ << endl;
-	cout << setw(33) << left << " default base is moof" << default_base_is_moof_ << endl;
+		std::cout << std::setw(33) << std::left << " default sample flags:  " << default_sample_flags_ << std::endl;
+	std::cout << std::setw(33) << std::left << " duration is empty " << duration_is_empty_ << std::endl;
+	std::cout << std::setw(33) << std::left << " default base is moof" << default_base_is_moof_ << std::endl;
 	//cout << "............." << std::endl;
 };
 
@@ -209,8 +261,8 @@ uint64_t tfdt::size()
 };
 
 void tfdt::print() {
-	cout << "=================tfdt==================" << endl;
-	cout << setw(33) << left << " basemediadecodetime: " << base_media_decode_time_ << endl;
+	std::cout << "=================tfdt==================" << std::endl;
+	std::cout << std::setw(33) << std::left << " basemediadecodetime: " << base_media_decode_time_ << std::endl;
 };
 
 void tfdt::parse(char* ptr)
@@ -242,22 +294,22 @@ uint64_t trun::size()
 
 void trun::print()
 {
-	cout << "==================trun=================" << endl;
-	cout << setw(33) << left << " magic conf                 " << magic_conf_ << endl;
-	cout << setw(33) << left << " sample count:      " << sample_count_ << endl;
+	std::cout << "==================trun=================" << std::endl;
+	std::cout << std::setw(33) << std::left << " magic conf                 " << magic_conf_ << std::endl;
+	std::cout << std::setw(33) << std::left << " sample count:      " << sample_count_ << std::endl;
 	if (data_offset_present_)
-		cout << setw(33) << left << " data_offset:        " << data_offset_ << endl;
+		std::cout << std::setw(33) << std::left << " data_offset:        " << data_offset_ << std::endl;
 	if (first_sample_flags_present_)
-		cout << " first sample flags:        " << first_sample_flags_ << endl;
-	cout << setw(33) << left << " first sample flags present:  " << first_sample_flags_present_ << endl;
+		std::cout << " first sample flags:        " << first_sample_flags_ << std::endl;
+	std::cout << std::setw(33) << std::left << " first sample flags present:  " << first_sample_flags_present_ << std::endl;
 	//if(sample_duration_present)
-	cout << setw(33) << left << " sample duration present: " << sample_duration_present_ << endl;
+	std::cout << std::setw(33) << std::left << " sample duration present: " << sample_duration_present_ << std::endl;
 	//if(sample_size_present)
-	cout << setw(33) << left << " sample_size_present: " << sample_size_present_ << endl;
+	std::cout << std::setw(33) << std::left << " sample_size_present: " << sample_size_present_ << std::endl;
 	//if(sample_flags_present)
-	cout << setw(33) << left << " sample_flags_present: " << sample_flags_present_ << endl;
+	std::cout << std::setw(33) << std::left << " sample_flags_present: " << sample_flags_present_ << std::endl;
 	//if(sample_composition_time_offsets_present)
-	cout << setw(33) << left << " sample_ct_offsets_present: " << sample_composition_time_offsets_present_ << endl;
+	std::cout << std::setw(33) << std::left << " sample_ct_offsets_present: " << sample_composition_time_offsets_present_ << std::endl;
 
 	/*
 	cout << " flags " << sample_count << endl;
@@ -350,66 +402,65 @@ uint64_t media_fragment::get_duration()
 void sc35_splice_info::print(bool verbose )
 {
 	if (verbose) {
-		cout << setw(33) << left << " table id: " << (unsigned int)table_id_ << endl;
-		cout << setw(33) << left << " section_syntax_indicator: " << section_syntax_indicator_ << endl;
-		cout << setw(33) << left << " private_indicator: " << private_indicator_ << endl;
-		cout << setw(33) << left << " section_length: " << (unsigned int)section_length_ << endl;
-		cout << setw(33) << left << " protocol_version: " << (unsigned int)protocol_version_ << endl;
-		cout << setw(33) << left << " encrypted_packet: " << encrypted_packet_ << endl;
-		cout << setw(33) << left << " encryption_algorithm: " << (unsigned int)encryption_algorithm_ << endl;
-		cout << setw(33) << left << " pts_adjustment: " << pts_adjustment_ << endl;
-		cout << setw(33) << left << " cw_index: " << (unsigned int)cw_index_ << endl;
-		cout << setw(33) << left << " tier: " << tier_ << endl;
-		cout << setw(33) << left << " splice_command_length: " << splice_command_length_ << endl;
-		cout << setw(33) << left << " splice_command_type: " << (unsigned int)splice_command_type_ << endl;
-		cout << setw(33) << left << " descriptor_loop_length: " << descriptor_loop_length_ << endl;
+		std::cout << std::setw(33) << std::left << " table id: " << (unsigned int)table_id_ << std::endl;
+		std::cout << std::setw(33) << std::left << " section_syntax_indicator: " << section_syntax_indicator_ << std::endl;
+		std::cout << std::setw(33) << std::left << " private_indicator: " << private_indicator_ << std::endl;
+		std::cout << std::setw(33) << std::left << " section_length: " << (unsigned int)section_length_ << std::endl;
+		std::cout << std::setw(33) << std::left << " protocol_version: " << (unsigned int)protocol_version_ << std::endl;
+		std::cout << std::setw(33) << std::left << " encrypted_packet: " << encrypted_packet_ << std::endl;
+		std::cout << std::setw(33) << std::left << " encryption_algorithm: " << (unsigned int)encryption_algorithm_ << std::endl;
+		std::cout << std::setw(33) << std::left << " pts_adjustment: " << pts_adjustment_ << std::endl;
+		std::cout << std::setw(33) << std::left << " cw_index: " << (unsigned int)cw_index_ << std::endl;
+		std::cout << std::setw(33) << std::left << " tier: " << tier_ << std::endl;
+		std::cout << std::setw(33) << std::left << " splice_command_length: " << splice_command_length_ << std::endl;
+		std::cout << std::setw(33) << std::left << " splice_command_type: " << (unsigned int)splice_command_type_ << std::endl;
+		std::cout << std::setw(33) << std::left << " descriptor_loop_length: " << descriptor_loop_length_ << std::endl;
 	}
-	cout << setw(33) << left << " pts_adjustment: " << pts_adjustment_ << endl;
-	cout << setw(33) << left << " Command type: ";
+	std::cout << std::setw(33) << std::left << " pts_adjustment: " << pts_adjustment_ << std::endl;
+	std::cout << std::setw(33) << std::left << " Command type: ";
 
 	switch (splice_command_type_)
 	{
-	case 0x00: cout << 0x00; // prints "1"
-		cout << setw(33) << left << " splice null " << endl;
+	case 0x00: std::cout << 0x00; // prints "1"
+		std::cout << std::setw(33) << std::left << " splice null " << std::endl;
 		break;       // and exits the switch
 	case 0x04:
-		cout << setw(33) << left << " splice schedule " << endl;
+		std::cout << std::setw(33) << std::left << " splice schedule " << std::endl;
 		break;
 	case 0x05:
-		cout << setw(33) << left << " splice insert " << endl;
-		cout << setw(33) << left << " event_id: " << splice_insert_event_id_ << endl;
-		cout << setw(33) << left << " cancel indicator: " << splice_event_cancel_indicator_ << endl;
+		std::cout << std::setw(33) << std::left << " splice insert " << std::endl;
+		std::cout << std::setw(33) << std::left << " event_id: " << splice_insert_event_id_ << std::endl;
+		std::cout << std::setw(33) << std::left << " cancel indicator: " << splice_event_cancel_indicator_ << std::endl;
 		break;
 	case 0x06:
-		cout << setw(33) << left << "time signal " << endl;
+		std::cout << std::setw(33) << std::left << "time signal " << std::endl;
 		break;
 	case 0x07:
-		cout << setw(33) << left << "bandwidth reservation " << endl;
+		std::cout << std::setw(33) << std::left << "bandwidth reservation " << std::endl;
 		break;
 	}
 }
 
 void sc35_splice_info::parse(uint8_t *ptr, unsigned int size)
 {
-	unsigned int pos = 0;
 	table_id_ = *ptr++;
 
 	if (table_id_ != 0xFC)
 	{
-		cout << " error parsing table id, tableid != 0xFC " << endl;
+		std::cout << " error parsing table id, tableid != 0xFC " << std::endl;
 		return;
 	}
 	//else
 	//	cout << "table id ok " << endl;
 
-	bitset<8> b(*ptr);
+	std::bitset<8> b(*ptr);
 	section_syntax_indicator_ = b[7];
 	private_indicator_ = b[6];
 	section_length_ = 0x0FFF & fmp4_read_uint16((char *)ptr);
 	ptr += 2;
 	protocol_version_ = (uint8_t)*ptr++;
 
-	b = bitset<8>(*ptr);
+	b = std::bitset<8>(*ptr);
 
 	encrypted_packet_ = b[7];
 	bool pts_highest_bit = b[0];
@@ -422,13 +473,13 @@ void sc35_splice_info::parse(uint8_t *ptr, unsigned int size)
 	pts_adjustment_ = (uint64_t)fmp4_read_uint32((char *)ptr);
 	if (pts_highest_bit)
 	{
-		pts_adjustment_ += (uint64_t)numeric_limits<uint32_t>::max();
+		pts_adjustment_ += (uint64_t)std::numeric_limits<uint32_t>::max();
 	}
 	ptr = ptr + 4;
 	cw_index_ = *ptr++;
 
 	uint32_t wd = fmp4_read_uint32((char *)ptr);
-	bitset<32> a(wd);
+	std::bitset<32> a(wd);
 	tier_ = (wd & 0xFFF00000) >> 20;
 	splice_command_length_ = (0x000FFF00 & wd) >> 8;
 	splice_command_type_ = (uint8_t)(0x000000FF & wd);
@@ -439,7 +490,7 @@ void sc35_splice_info::parse(uint8_t *ptr, unsigned int size)
 	if (splice_command_type_ == 0x05) {
 		splice_insert_event_id_ = fmp4_read_uint32((char *)ptr);
 		ptr += 4;
-		bitset<8> bb(*ptr);
+		std::bitset<8> bb(*ptr);
 		splice_event_cancel_indicator_ = bb[7];
 	}
 	// we don't support the cancel indicator yet (it should be added)
@@ -464,10 +515,10 @@ void emsg::parse(char * ptr, unsigned int data_size)
 	uint64_t offset = full_box::size();
 	if (version_ == 0)
 	{
-		scheme_id_uri_ = string((ptr + offset));
+		scheme_id_uri_ = std::string((ptr + offset));
 		//cout << "scheme_id_uri: " << scheme_id_uri << endl;
 		offset = offset + scheme_id_uri_.size() + 1;
-		value_ = string((ptr + offset));
+		value_ = std::string((ptr + offset));
 		//cout << "value: " << value << endl;
 		offset = offset + value_.size() + 1;
 		timescale_ = fmp4_read_uint32(ptr + offset);
@@ -497,10 +548,10 @@ void emsg::parse(char * ptr, unsigned int data_size)
 		id_ = fmp4_read_uint32(ptr + offset);
 		offset += 4;
 		//cout << "id: " << id << endl;
-		scheme_id_uri_ = string((ptr + offset));
+		scheme_id_uri_ = std::string((ptr + offset));
 		offset = offset + scheme_id_uri_.size() + 1;
 		//cout << "scheme_id_uri: " << scheme_id_uri << endl;
-		value_ = string((ptr + offset));
+		value_ = std::string((ptr + offset));
 		//cout << "value: " << value << endl;
 		offset = offset + value_.size() + 1;
 	}
@@ -515,31 +566,31 @@ void emsg::parse(char * ptr, unsigned int data_size)
 }
 
 //! emsg to mpd event
-void emsg::write_emsg_as_mpd_event(ostream *ostr, uint64_t base_time)
+void emsg::write_emsg_as_mpd_event(std::ostream *ostr, uint64_t base_time)
 {
-	*ostr << "<Event" << endl \
-		<< "presentationTime=" << '"' << (this->version_ ? presentation_time_ : base_time + presentation_time_delta_) << '"' << endl \
-		<< "duration=" << '"' << event_duration_ << '"' << endl \
-		<< "id=" << '"' << id_ << "'" << '>' << endl \
-		<< base64_encode( this->message_data_.data(), (unsigned int) this->message_data_.size()) << endl
-		<< "</Event>" << endl;
+	*ostr << "<Event" << std::endl \
+		<< "presentationTime=" << '"' << (this->version_ ? presentation_time_ : base_time + presentation_time_delta_) << '"' << std::endl \
+		<< "duration=" << '"' << event_duration_ << '"' << std::endl \
+		<< "id=" << '"' << id_ << "'" << '>' << std::endl \
+		<< base64_encode( this->message_data_.data(), (unsigned int) this->message_data_.size()) << std::endl
+		<< "</Event>" << std::endl;
 }
 
 //!
 void emsg::print()
 {
-	cout << "=================emsg==================" << endl;
-	cout << setw(33) << left << " e-msg box version: " << (unsigned int)version_ << endl;
-	cout << " scheme_id_uri:     " << scheme_id_uri_ << endl;
-	cout << setw(33) << left << " value:             " << value_ << endl;
-	cout << setw(33) << left << " timescale:         " << timescale_ << endl;
+	std::cout << "=================emsg==================" << std::endl;
+	std::cout << std::setw(33) << std::left << " e-msg box version: " << (unsigned int)version_ << std::endl;
+	std::cout << " scheme_id_uri:     " << scheme_id_uri_ << std::endl;
+	std::cout << std::setw(33) << std::left << " value:             " << value_ << std::endl;
+	std::cout << std::setw(33) << std::left << " timescale:         " << timescale_ << std::endl;
 	if (version_ == 1)
-		cout << setw(33) << left << " presentation_time: " << presentation_time_ << endl;
+		std::cout << std::setw(33) << std::left << " presentation_time: " << presentation_time_ << std::endl;
 	else
-		cout << setw(33) << left << " presentation_time_delta: " << presentation_time_delta_ << endl;
-	cout << setw(33) << left << " event duration:    " << event_duration_ << endl;
-	cout << setw(33) << left << " event id           " << event_duration_ << endl;
-	cout << setw(33) << left << " message data size  " << message_data_.size() << endl;
+		std::cout << std::setw(33) << std::left << " presentation_time_delta: " << presentation_time_delta_ << std::endl;
+	std::cout << std::setw(33) << std::left << " event duration:    " << event_duration_ << std::endl;
+	std::cout << std::setw(33) << std::left << " event id           " << event_duration_ << std::endl;
+	std::cout << std::setw(33) << std::left << " message data size  " << message_data_.size() << std::endl;
 
 	//print_payload
 
@@ -549,13 +600,13 @@ void emsg::print()
 		//cout << " scte splice info" << endl;
 		sc35_splice_info l_splice;
 		l_splice.parse((uint8_t*)&message_data_[0], (unsigned int)message_data_.size());
-		cout << "=============splice info==============" << endl;
+		std::cout << "=============splice info==============" << std::endl;
 		l_splice.print();
 	}
 }
 
 //! write an emsg box to a stream
-uint32_t emsg::write(ostream *ostr)
+uint32_t emsg::write(std::ostream *ostr)
 {
 	uint32_t bytes_written = 0;
 	uint32_t size = (uint32_t)this->size();
@@ -617,12 +668,12 @@ uint32_t emsg::write(ostream *ostr)
 }
 
 //! write an emsg message as a sparse fragment with advertisement time timestamp announce second before the application time
-void emsg::write_emsg_as_fmp4_fragment(ostream *ostr, uint64_t timestamp_tdft, uint32_t track_id = 1,
+void emsg::write_emsg_as_fmp4_fragment(std::ostream *ostr, uint64_t timestamp_tdft, uint32_t track_id = 1,
 	uint64_t next_tdft=0 /* announce n seconds in advance*/)
 {
 	if (scheme_id_uri_.size())
 	{
-		cout << "*** writing emsg fragment scheme: " << scheme_id_uri_ << "***" << endl;
+		std::cout << "*** writing emsg fragment scheme: " << scheme_id_uri_ << "***" << std::endl;
 
 		//--------- carefull code still unpolished contains few assertions------------------
 
@@ -673,8 +724,8 @@ void emsg::write_emsg_as_fmp4_fragment(ostream *ostr, uint64_t timestamp_tdft, u
 		l_trun.m_sentry[2].sample_size_ = 0;
 		// calculate the gap that needs to be filled up to the next tdft
 		int32_t gap_duration = (int32_t) (next_tdft - timestamp_tdft - event_duration_ - presentation_time_delta_);
-		cout << "gap_dur" << gap_duration << endl;
-		cout << "next_tdft" << next_tdft << endl;
+		std::cout << "gap_dur" << gap_duration << std::endl;
+		std::cout << "next_tdft" << next_tdft << std::endl;
 		l_trun.m_sentry[2].sample_duration_ = next_tdft ? (gap_duration > 0 ? gap_duration :  0) : 0; // if unknown set the gap duration to zero
 
 
@@ -754,7 +805,7 @@ void emsg::write_emsg_as_fmp4_fragment(ostream *ostr, uint64_t timestamp_tdft, u
 
 
 		// write the trun box, 44 bytes total 120 bytes
-		cout << "trun size release: " << l_trun_size << endl;
+		std::cout << "trun size release: " << l_trun_size << std::endl;
 		fmp4_write_uint32((uint32_t)l_trun_size, int_buf);
 		ostr->write(int_buf, 4);
 		//ostr->write("trun", 4);
@@ -792,7 +843,7 @@ void emsg::write_emsg_as_fmp4_fragment(ostream *ostr, uint64_t timestamp_tdft, u
 		ostr->put('t');
 
 		// write the emsg as an mdat box
-		uint32_t bw = write(ostr);
+		write(ostr);
 	
 		// we are done writing the emsg message as a sparse fragment
 	}
@@ -804,18 +855,18 @@ uint32_t init_fragment::get_time_scale()
 {
 	if (moov_box_.box_data_.size() > 30) {
 		char * ptr = (char *)moov_box_.box_data_.data();
-		if (string((char *)(ptr + 12)).compare("mvhd") == 0)
+		if (std::string((char *)(ptr + 12)).compare("mvhd") == 0)
 		{
 			unsigned int version = (unsigned int) ptr[16];
 			return version ? fmp4_read_uint32(ptr + 36) : fmp4_read_uint32(ptr + 28);
 		}
 		else {
-			cout << "provide mvhd in beginning of file for correct timescale" << endl;
+			std::cout << "provide mvhd in beginning of file for correct timescale" << std::endl;
 			return 0;
 		}
 	}
 	else {
-		cout << "provide mvhd in beginning of file for correct timescale" << endl;
+		std::cout << "provide mvhd in beginning of file for correct timescale" << std::endl;
 		return 0;
 	}
 }
@@ -842,7 +893,7 @@ void media_fragment::parse_moof()
 			box_size = fmp4_read_uint64((char *)& ptr[offset + temp_off]);
 		}
 
-		if (string(name).compare("mfhd") == 0)
+		if (std::string(name).compare("mfhd") == 0)
 		{
 			mfhd_.parse((char *)& ptr[offset + temp_off]);
 			offset += (uint64_t)box_size;
@@ -850,21 +901,21 @@ void media_fragment::parse_moof()
 			continue;
 		}
 
-		if (string(name).compare("trun") == 0)
+		if (std::string(name).compare("trun") == 0)
 		{
 			trun_.parse((char *)& ptr[offset + temp_off]);
 			offset += (uint64_t)box_size;
 			continue;
 		}
 
-		if (string(name).compare("tfdt") == 0)
+		if (std::string(name).compare("tfdt") == 0)
 		{
 			tfdt_.parse((char *)& ptr[offset + temp_off]);
 			offset += (uint64_t)box_size;
 			continue;
 		}
 
-		if (string(name).compare("tfhd") == 0)
+		if (std::string(name).compare("tfhd") == 0)
 		{
 			tfhd_.parse((char *)& ptr[offset + temp_off]);
 			offset += (uint64_t)box_size;
@@ -872,7 +923,7 @@ void media_fragment::parse_moof()
 		}
 
 		// cmaf style only one traf box per moof so we skip it
-		if (string(name).compare("traf") == 0)
+		if (std::string(name).compare("traf") == 0)
 		{
 			offset += 8;
 		}
@@ -888,14 +939,14 @@ uint64_t ingest_stream::get_init_segment_data(std::vector<uint8_t> &init_seg_dat
 	init_seg_dat.resize(ssize);
 
 	// hard copy the init segment data to the output vector
-	copy(init_fragment_.ftyp_box_.box_data_.begin(), init_fragment_.ftyp_box_.box_data_.end(), init_seg_dat.begin());
-	copy(init_fragment_.moov_box_.box_data_.begin(), init_fragment_.moov_box_.box_data_.end(), init_seg_dat.begin() + init_fragment_.ftyp_box_.large_size_);
+	std::copy(init_fragment_.ftyp_box_.box_data_.begin(), init_fragment_.ftyp_box_.box_data_.end(), init_seg_dat.begin());
+	std::copy(init_fragment_.moov_box_.box_data_.begin(), init_fragment_.moov_box_.box_data_.end(), init_seg_dat.begin() + init_fragment_.ftyp_box_.large_size_);
 
 	return ssize;
 };
 
 //! function to support the ingest of segments 
-uint64_t ingest_stream::get_media_segment_data(long index, std::vector<uint8_t> &media_seg_dat)
+uint64_t ingest_stream::get_media_segment_data(std::size_t index, std::vector<uint8_t> &media_seg_dat)
 {
 	if (!(media_fragment_.size() > index))
 		return 0;
@@ -904,8 +955,8 @@ uint64_t ingest_stream::get_media_segment_data(long index, std::vector<uint8_t> 
 	media_seg_dat.resize(ssize);
 
 	// hard copy the init segment data to the output vector
-	copy(media_fragment_[index].moof_box_.box_data_.begin(), media_fragment_[index].moof_box_.box_data_.end(), media_seg_dat.begin());
-	copy(media_fragment_[index].mdat_box_.box_data_.begin(), media_fragment_[index].mdat_box_.box_data_.end(), media_seg_dat.begin() + media_fragment_[index].moof_box_.large_size_);
+	std::copy(media_fragment_[index].moof_box_.box_data_.begin(), media_fragment_[index].moof_box_.box_data_.end(), media_seg_dat.begin());
+	std::copy(media_fragment_[index].mdat_box_.box_data_.begin(), media_fragment_[index].mdat_box_.box_data_.end(), media_seg_dat.begin() + media_fragment_[index].moof_box_.large_size_);
 
 	return ssize;
 };
@@ -929,13 +980,13 @@ void media_fragment::print()
 }
 
 //! parse an fmp4 file for media ingest
-int ingest_stream::load_from_file(istream *infile, bool init_only)
+int ingest_stream::load_from_file(std::istream *infile, bool init_only)
 {
 	try
 	{
 		if (infile)
 		{
-			vector<box> ingest_boxes;
+			std::vector<box> ingest_boxes;
 
 			while (infile->good()) // read box by box in a vector
 			{
@@ -979,7 +1030,7 @@ int ingest_stream::load_from_file(istream *infile, bool init_only)
 					{
 						m.emsg_.parse((char *)& prev_box->box_data_[0], (unsigned int)prev_box->box_data_.size());
 						//cout << "|emsg|";
-						cout << "found inband dash emsg box" << std::endl;
+						std::cout << "found inband dash emsg box" << std::endl;
 					}
 					//cout << "|moof|";
 					while (!mdat_found)
@@ -997,7 +1048,7 @@ int ingest_stream::load_from_file(istream *infile, bool init_only)
 								for (int i = 0; i < 8; i++)
 									name[i] = m.mdat_box_.box_data_[i + 8];
 								name[8] = '\0';
-								string enc_box_name((char *)&name[4]);
+								std::string enc_box_name((char *)&name[4]);
 								if (enc_box_name.compare("emsg") == 0)
 								{
 									m.emsg_.parse((char *)&m.mdat_box_.box_data_[8], (unsigned int) m.mdat_box_.box_data_.size() - 8);
@@ -1019,42 +1070,42 @@ int ingest_stream::load_from_file(istream *infile, bool init_only)
 				if (it->box_type_.compare("sidx") == 0)
 				{
 					this->sidx_box_ = *it;
-					cout << "|sidx|";
+					std::cout << "|sidx|";
 				}
 				if (it->box_type_.compare("meta") == 0)
 				{
 					this->meta_box_ = *it;
-					cout << "|meta|";
+					std::cout << "|meta|";
 				}
 			}
 		}
-		cout << endl;
-		cout << "***  finished reading fmp4 fragments  ***" << endl;
-		cout << "***  read  fmp4 init fragment         ***" << endl;
-		cout << "***  read " << media_fragment_.size() << " fmp4 media fragments ***" << endl;
+		std::cout << std::endl;
+		std::cout << "***  finished reading fmp4 fragments  ***" << std::endl;
+		std::cout << "***  read  fmp4 init fragment         ***" << std::endl;
+		std::cout << "***  read " << media_fragment_.size() << " fmp4 media fragments ***" << std::endl;
 
 		return 1;
 	}
 	catch (std::exception e)
 	{
-		cout << e.what() << std::endl;
+		std::cout << e.what() << std::endl;
 		return 0;
 	}
 }
 
 //! archival function, write init segment to a file
-int ingest_stream::write_init_to_file(string &ofile)
+int ingest_stream::write_init_to_file(std::string &ofile)
 {
 	// write the stream to an output file
-	ofstream out_file(ofile, ofstream::binary);
+	std::ofstream out_file(ofile, std::ofstream::binary);
 
 	if (out_file.good())
 	{
-		vector<uint8_t> init_data;
+		std::vector<uint8_t> init_data;
 		get_init_segment_data(init_data);
 		out_file.write((char *)init_data.data(), init_data.size());
 		out_file.close();
-		cout << " done written init segment to file: " << ofile << std::endl;
+		std::cout << " done written init segment to file: " << ofile << std::endl;
 	}
 	else
 	{
@@ -1065,11 +1116,11 @@ int ingest_stream::write_init_to_file(string &ofile)
 }
 
 //! carefull only use with the testes=d pre-encoded moov boxes to write streams
-void setTrackID(vector<uint8_t> &moov_in, uint32_t track_id)
+void setTrackID(std::vector<uint8_t> &moov_in, uint32_t track_id)
 {
-	for (int k = 0; k < moov_in.size() - 16; k++)
+	for (std::size_t k = 0; k < moov_in.size() - 16; k++)
 	{
-		if(string( (char *) &moov_in[k]).compare("tkhd") == 0)
+		if(std::string( (char *) &moov_in[k]).compare("tkhd") == 0)
 		{
 			//cout << "tkhd found" << endl;
 			if ((uint8_t)moov_in[k + 4] == 1)
@@ -1088,31 +1139,31 @@ void setTrackID(vector<uint8_t> &moov_in, uint32_t track_id)
 }
 
 //! carefull only use with the tested pre-encoded moov boxes to write streams
-void setSchemeURN(vector<uint8_t> &moov_in, string &urn)
+void setSchemeURN(std::vector<uint8_t> &moov_in, std::string &urn)
 {
 	uint16_t size_diff=0;
-	vector<uint8_t> l_first;
-	vector<uint8_t> l_last;
+	std::vector<uint8_t> l_first;
+	std::vector<uint8_t> l_last;
 
 	// find the uri box containing the description of the urn, caerfull only use for the enclosed mdat box in the source code
-	for (int k = 0; k < moov_in.size() - 16; k++)
+	for (std::size_t k = 0; k < moov_in.size() - 16; k++)
 	{
-		if (string((char *)&moov_in[k]).compare("urim") == 0)
+		if (std::string((char *)&moov_in[k]).compare("urim") == 0)
 		{
 			//cout << "urim box found" << endl;
-			string or_urn = string((char *)&moov_in[k + 24]);
+			std::string or_urn = std::string((char *)&moov_in[k + 24]);
 			size_diff = (uint16_t) (or_urn.size() - urn.size());
 
 			if (size_diff == 0) 
 			{
-				for (int l = 0; l < urn.size(); l++)
+				for (std::size_t l = 0; l < urn.size(); l++)
 					moov_in[k + 24 + l] = urn[l];
 			}
 			else {
 			   // first part of the string
-			   l_first = vector<uint8_t>(moov_in.begin(), moov_in.begin() + k + 24);
+			   l_first = std::vector<uint8_t>(moov_in.begin(), moov_in.begin() + k + 24);
 			   // last part of the string
-			    l_last = vector<uint8_t>(moov_in.begin() + k + 24 + or_urn.size() + 1, moov_in.end());
+			    l_last = std::vector<uint8_t>(moov_in.begin() + k + 24 + or_urn.size() + 1, moov_in.end());
 	 	    } 
 			break;
 		}
@@ -1126,57 +1177,57 @@ void setSchemeURN(vector<uint8_t> &moov_in, string &urn)
 		moov_in.resize(l_first.size());
 		moov_in.reserve(moov_in.size() + urn.size() + l_last.size() + 1);
 
-		for (int i = 0; i < urn.size(); i++)
+		for (std::size_t i = 0; i < urn.size(); i++)
 			moov_in.push_back(urn[i]);
 		moov_in.push_back('\0');
-		for (int i = 0; i < l_last.size(); i++)
+		for (std::size_t i = 0; i < l_last.size(); i++)
 			moov_in.push_back(l_last[i]);
 
-		for (int i = 0; i < moov_in.size(); i++)
+		for (std::size_t i = 0; i < moov_in.size(); i++)
 		{
-			if (string((char *)&moov_in[i]).compare("stsd") == 0)
+			if (std::string((char *)&moov_in[i]).compare("stsd") == 0)
 			{
 				uint32_t or_size = fmp4_read_uint32((char *)&moov_in[i - 4]);
 				or_size = or_size - size_diff;
 				fmp4_write_uint32(or_size, (char *)&moov_in[i - 4]);
 			}
-			if (string((char *)&moov_in[i]).compare("stbl") == 0)
+			if (std::string((char *)&moov_in[i]).compare("stbl") == 0)
 			{
 				uint32_t or_size = fmp4_read_uint32((char *)&moov_in[i - 4]);
 				or_size = or_size - size_diff;
 				fmp4_write_uint32(or_size, (char *)&moov_in[i - 4]);
 			}
-			if (string((char *)&moov_in[i]).compare("uri ") == 0)
+			if (std::string((char *)&moov_in[i]).compare("uri ") == 0)
 			{
 				uint32_t or_size = fmp4_read_uint32((char *)&moov_in[i - 4]);
 				or_size = or_size - size_diff;
 				fmp4_write_uint32(or_size, (char *)&moov_in[i - 4]);
 			}
-			if (string((char *)&moov_in[i]).compare("urim") == 0)
+			if (std::string((char *)&moov_in[i]).compare("urim") == 0)
 			{
 				uint32_t or_size = fmp4_read_uint32((char *)&moov_in[i - 4]);
 				or_size = or_size - size_diff;
 				fmp4_write_uint32(or_size, (char *)&moov_in[i - 4]);
 			}
-			if (string((char *)&moov_in[i]).compare("minf") == 0)
+			if (std::string((char *)&moov_in[i]).compare("minf") == 0)
 			{
 				uint32_t or_size = fmp4_read_uint32((char *)&moov_in[i - 4]);
 				or_size = or_size - size_diff;
 				fmp4_write_uint32(or_size, (char *)&moov_in[i - 4]);
 			}
-			if (string((char *)&moov_in[i]).compare("mdia") == 0)
+			if (std::string((char *)&moov_in[i]).compare("mdia") == 0)
 			{
 				uint32_t or_size = fmp4_read_uint32((char *)&moov_in[i - 4]);
 				or_size = or_size - size_diff;
 				fmp4_write_uint32(or_size, (char *)&moov_in[i - 4]);
 			}
-			if (string((char *)&moov_in[i]).compare("trak") == 0)
+			if (std::string((char *)&moov_in[i]).compare("trak") == 0)
 			{
 				uint32_t or_size = fmp4_read_uint32((char *)&moov_in[i - 4]);
 				or_size = or_size - size_diff;
 				fmp4_write_uint32(or_size, (char *)&moov_in[i - 4]);
 			}
-			if (string((char *)&moov_in[i]).compare("moov") == 0)
+			if (std::string((char *)&moov_in[i]).compare("moov") == 0)
 			{
 				uint32_t or_size = fmp4_read_uint32((char *)&moov_in[i - 4]);
 				or_size = or_size - size_diff;
@@ -1187,16 +1238,15 @@ void setSchemeURN(vector<uint8_t> &moov_in, string &urn)
 };
 
 //! writes sparse emsg file, set the track, the scheme
-int ingest_stream::write_to_sparse_emsg_file(string &out_file, uint32_t track_id, uint32_t announce, string &urn)
+int ingest_stream::write_to_sparse_emsg_file(std::string &out_file, uint32_t track_id, uint32_t announce, std::string &urn)
 {
 	//ifstream moov_s_in("sparse_moov.inc", ios::binary);
 	
-	unsigned int seq_nr = 1;
-	vector<uint8_t> sparse_moov = base64_decode(moov_64_enc);
+	std::vector<uint8_t> sparse_moov = base64_decode(moov_64_enc);
 	setTrackID(sparse_moov, track_id);
 	if(urn.size())
 	    setSchemeURN(sparse_moov, urn );
-	ofstream ot(out_file, ios::binary);
+	std::ofstream ot(out_file, std::ios::binary);
 	//cout << sparse_moov.size() << endl;
 
 	if (ot.good())
@@ -1226,30 +1276,30 @@ int ingest_stream::write_to_sparse_emsg_file(string &out_file, uint32_t track_id
 		ot.write((char *)empty_mfra, 8);
 
 		ot.close();
-		cout << "*** wrote sparse track file: " <<  out_file << "  ***" << std::endl;
+		std::cout << "*** wrote sparse track file: " <<  out_file << "  ***" << std::endl;
 	}
 	else
-		cout << "error" << endl;
+		std::cout << "error" << std::endl;
 	return 0;
 };
 
 //!  
-void ingest_stream::write_to_dash_event_stream(string &out_file)
+void ingest_stream::write_to_dash_event_stream(std::string &out_file)
 {
-	ofstream ot(out_file);
+	std::ofstream ot(out_file);
 
 
 	if (ot.good()) {
 
 		uint32_t time_scale = init_fragment_.get_time_scale();
-		string scheme_id_uri = "";
+		std::string scheme_id_uri = "";
 
 		if (media_fragment_.size() > 0)
 			scheme_id_uri = media_fragment_[0].emsg_.scheme_id_uri_;
 
-		ot << "<EventStream " << endl
-			<< "schemeIdUri=" << '"' << scheme_id_uri << '"' << endl
-			<< "timescale=" << '"' << time_scale << '"' << ">" << endl;
+		ot << "<EventStream " << std::endl
+			<< "schemeIdUri=" << '"' << scheme_id_uri << '"' << std::endl
+			<< "timescale=" << '"' << time_scale << '"' << ">" << std::endl;
 
 		// write each of the event messages as moof mdat combinations in sparse track 
 		for (auto it = this->media_fragment_.begin(); it != this->media_fragment_.end(); ++it)
@@ -1264,7 +1314,7 @@ void ingest_stream::write_to_dash_event_stream(string &out_file)
 			}
 		}
 
-		ot << "</EventStream> " << endl;
+		ot << "</EventStream> " << std::endl;
 	}
 	ot.close();
 }

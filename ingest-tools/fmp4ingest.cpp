@@ -267,8 +267,8 @@ int push_thread(string file_name, push_options_t opt)
 			input.close();
 
 			// get the timescale
-			uint32_t time_scale = ingest_stream.init_fragment_.get_time_scale();
-            uint32_t fragment_duration = (uint32_t) ingest_stream.media_fragment_[0].get_duration();
+			// uint32_t time_scale = ingest_stream.init_fragment_.get_time_scale();
+			// uint32_t fragment_duration = (uint32_t) ingest_stream.media_fragment_[0].get_duration();
 			//cout << "---- timescale movie header: " << time_scale << endl;
 			//cout << "---- duration of first fragment: " << fragment_duration << endl;
 			//cout << "url is: " << opt.url_ << endl;
@@ -438,7 +438,7 @@ int main(int argc, char * argv[])
 	// wait for the push threads to finish
 	cout << " fmp4 and CMAF ingest, press q and enter to exit " << endl;
 	char c='0';
-	while(c=cin.get() != 'q');
+	while((c=cin.get()) != 'q');
 
 	stop_all = true;
 

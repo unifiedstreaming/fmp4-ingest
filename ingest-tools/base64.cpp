@@ -89,7 +89,7 @@ std::string base64_encode(unsigned char const* bytes_to_encode, unsigned int in_
 }
 
 vector<uint8_t> base64_decode(std::string & encoded_string) {
-  int in_len = encoded_string.size();
+  std::size_t in_len = encoded_string.size();
   int i = 0;
   int j = 0;
   int in_ = 0;

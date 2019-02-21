@@ -23,7 +23,6 @@ http://www.code-shop.com
 #include <memory>
 #include <iomanip>
 
-using namespace std;
 #define IS_BIG_ENDIAN (*(uint16_t *)"\0\xff" < 0x100)
 
 namespace fMP4Stream {
@@ -33,16 +32,16 @@ namespace fMP4Stream {
 	{
 		uint32_t size_;
 		uint64_t large_size_;
-		string box_type_;
+		std::string box_type_;
 		uint8_t extended_type_[16];
-		vector<uint8_t> box_data_;
+		std::vector<uint8_t> box_data_;
 		bool is_large_;
 		bool has_uuid_;
 
 		box() : size_(0), large_size_(0), box_type_(""),is_large_(false), has_uuid_(false) {};
 		virtual uint64_t size();
 		virtual void print();
-		virtual bool read(istream *istr);
+		virtual bool read(std::istream *istr);
 		virtual void parse(char * ptr);
 	
 	};
@@ -71,7 +70,7 @@ namespace fMP4Stream {
 		float    rate_;
 		float    volume_;
 
-		vector<uint32_t>  matrix_;
+		std::vector<uint32_t>  matrix_;
 		uint32_t next_track_id_;
 
 		void parse(char *ptr);
@@ -95,7 +94,7 @@ namespace fMP4Stream {
 	{
 		uint32_t seq_nr_;
 		void parse(char * ptr);
-		mfhd() : full_box() { box_type_ = string("mfhd"); };
+		mfhd() : full_box() { box_type_ = std::string("mfhd"); };
 		void print(); 
 		uint64_t size() { return full_box::size() + 4; };
 	};
@@ -103,7 +102,7 @@ namespace fMP4Stream {
 
 	struct traf : public box
 	{
-		traf() : box() { box_type_ = string("traf"); };
+		traf() : box() { box_type_ = std::string("traf"); };
 	};
 
 	struct tfhd : public full_box
@@ -123,7 +122,7 @@ namespace fMP4Stream {
 		uint32_t default_sample_size_;
 		uint32_t default_sample_flags_;
 
-		tfhd() { box_type_ = string("tfhd"); };
+		tfhd() { box_type_ = std::string("tfhd"); };
 
 		virtual void parse(char * ptr);
 		virtual uint64_t size();
@@ -134,7 +133,7 @@ namespace fMP4Stream {
 	struct tfdt : public full_box
 	{
 		uint64_t base_media_decode_time_;
-		tfdt() { box_type_ = string("tfdt"); };
+		tfdt() { box_type_ = std::string("tfdt"); };
 
 		virtual uint64_t size();
 		virtual void parse(char * ptr);
@@ -155,8 +154,8 @@ namespace fMP4Stream {
 			virtual void print()
 			{
 				//cout << "trun sample entry: "; 
-				cout << setw(33) << left << " sample duration: " << sample_duration_ << endl;
-				cout << setw(33) << left << " sample size: " << sample_size_ << endl;
+				std::cout << std::setw(33) << std::left << " sample duration: " << sample_duration_ << std::endl;
+				std::cout << std::setw(33) << std::left << " sample size: " << sample_size_ << std::endl;
 				//cout << "" << sample_flags << endl;
 				//cout << "" << sample_composition_time_offset_v0 <<endl;
 				//cout << "" << sample_composition_time_offset_v1 << endl;
@@ -176,7 +175,7 @@ namespace fMP4Stream {
 		bool sample_flags_present_;
 		bool sample_composition_time_offsets_present_;
 		//entries
-		vector<sample_entry> m_sentry;
+		std::vector<sample_entry> m_sentry;
 		
 		//trun methods
 		virtual uint64_t size();
@@ -210,31 +209,31 @@ namespace fMP4Stream {
 
 	struct mdat : public box
 	{
-		mdat() { this->box_type_ = string("mdat"); };
-		vector<uint8_t> m_bytes;
+		mdat() { this->box_type_ = std::string("mdat"); };
+		std::vector<uint8_t> m_bytes;
 	};
 
 	// dash emsg box
 	struct emsg : public full_box
 	{
 		//emsg data
-		string scheme_id_uri_;
-		string value_;
+		std::string scheme_id_uri_;
+		std::string value_;
 		uint32_t timescale_;
 		uint32_t presentation_time_delta_;
 		uint64_t presentation_time_;
 		uint32_t event_duration_;
 		uint32_t id_;
-		vector<uint8_t> message_data_;
+		std::vector<uint8_t> message_data_;
 
 		// emsg methods
-		emsg() { this->box_type_ = string("emsg"); }
+		emsg() { this->box_type_ = std::string("emsg"); }
 		virtual uint64_t size();
 		virtual void parse(char * ptr, unsigned int data_size);
 		virtual void print();
-		uint32_t write(ostream *ostr);
-		void write_emsg_as_fmp4_fragment(ostream *ostr, uint64_t timestamp, uint32_t track_id, uint64_t next_tdft);
-		void write_emsg_as_mpd_event(ostream *ostr, uint64_t base_time);
+		uint32_t write(std::ostream *ostr);
+		void write_emsg_as_fmp4_fragment(std::ostream *ostr, uint64_t timestamp, uint32_t track_id, uint64_t next_tdft);
+		void write_emsg_as_mpd_event(std::ostream *ostr, uint64_t base_time);
 	};	
 
 	const uint8_t empty_mfra[8] = {
@@ -307,68 +306,15 @@ namespace fMP4Stream {
 	struct ingest_stream
 	{
 		init_fragment init_fragment_;
-		vector<media_fragment> media_fragment_;
+		std::vector<media_fragment> media_fragment_;
 		box sidx_box_, meta_box_, mfra_box_;
-		int load_from_file(istream *input_file, bool init_only=false);
-		int write_init_to_file(string &out_file);
-		int write_to_sparse_emsg_file(string &out_file, uint32_t track_id, uint32_t announce, string &urn);
-		uint64_t get_init_segment_data(vector<uint8_t> &init_seg_dat);
-		uint64_t get_media_segment_data(long index, vector<uint8_t> &media_seg_dat);
-		void write_to_dash_event_stream(string &out_file);
+		int load_from_file(std::istream *input_file, bool init_only=false);
+		int write_init_to_file(std::string &out_file);
+		int write_to_sparse_emsg_file(std::string &out_file, uint32_t track_id, uint32_t announce, std::string &urn);
+		uint64_t get_init_segment_data(std::vector<uint8_t> &init_seg_dat);
+		uint64_t get_media_segment_data(std::size_t index, std::vector<uint8_t> &media_seg_dat);
+		void write_to_dash_event_stream(std::string &out_file);
 		void print();
-	};
-
-	//------------------ helpers for processing the bitstream ------------------------
-	static uint16_t fmp4_endian_swap16(uint16_t in) {
-		return ((in & 0x00FF) << 8) | ((in & 0xFF00) >> 8);
-	};
-
-	static uint32_t fmp4_endian_swap32(uint32_t in) {
-		return  ((in & 0x000000FF) << 24) | \
-			((in & 0x0000FF00) << 8) | \
-			((in & 0x00FF0000) >> 8) | \
-			((in & 0xFF000000) >> 24);
-	};
-
-	static uint64_t fmp4_endian_swap64(uint64_t in) {
-		return  ((in & 0x00000000000000FF) << 56) | \
-			((in & 0x000000000000FF00) << 40) | \
-			((in & 0x0000000000FF0000) << 24) | \
-			((in & 0x00000000FF000000) << 8) | \
-			((in & 0x000000FF00000000) >> 8) | \
-			((in & 0x0000FF0000000000) >> 24) | \
-			((in & 0x00FF000000000000) >> 40) | \
-			((in & 0xFF00000000000000) >> 56);
-	};
-
-	static uint16_t fmp4_read_uint16(char *pt)
-	{
-		return IS_BIG_ENDIAN ? *((uint16_t *)pt) : fmp4_endian_swap16(*((uint16_t *)pt));
-	};
-
-	static uint32_t fmp4_read_uint32(char *pt)
-	{
-		return IS_BIG_ENDIAN ? *((uint32_t *)pt) : fmp4_endian_swap32(*((uint32_t *)pt));
-	};
-
-	static uint64_t fmp4_read_uint64(char *pt)
-	{
-		return IS_BIG_ENDIAN ? *((uint64_t *)pt) : fmp4_endian_swap64(*((uint64_t *)pt));
-	};
-
-	static uint16_t fmp4_write_uint16(uint16_t in, char *pt)
-	{
-		return IS_BIG_ENDIAN ?  ((uint16_t *)pt)[0] = in : ((uint16_t *)pt)[0] = fmp4_endian_swap16(in);
-	};
-
-	static uint32_t fmp4_write_uint32(uint32_t in, char *pt)
-	{
-		return IS_BIG_ENDIAN ? ((uint32_t *)pt)[0] = in : ((uint32_t *)pt)[0] = fmp4_endian_swap32(in);
-	};
-
-	static uint64_t fmp4_write_uint64(uint64_t in,char *pt)
-	{
-		return IS_BIG_ENDIAN ? ((uint64_t *)pt)[0] = in : ((uint64_t *)pt)[0] = fmp4_endian_swap64(in);
 	};
 
 	
