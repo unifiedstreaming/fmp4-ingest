@@ -5,7 +5,7 @@
 
    Version: 1.01.00
 
-   Copyright (C) 2004-2017 René Nyffenegger
+   Copyright (C) 2004-2017 RenÃ© Nyffenegger
 
    This source code is provided 'as-is', without any express or implied
    warranty. In no event will the author be held liable for any damages
@@ -25,7 +25,7 @@
 
    3. This notice may not be removed or altered from any source distribution.
 
-   René Nyffenegger rene.nyffenegger@adp-gmbh.ch
+   RenÃ© Nyffenegger rene.nyffenegger@adp-gmbh.ch
 
 */
 
@@ -33,8 +33,6 @@
 #include <iostream>
 #include <vector>
 #include <stdint.h>
-
-using namespace std;
 
 static const std::string base64_chars = 
              "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
@@ -94,7 +92,7 @@ vector<uint8_t> base64_decode(std::string & encoded_string) {
   int j = 0;
   int in_ = 0;
   unsigned char char_array_4[4], char_array_3[3];
-  vector<uint8_t> ret;
+  std::vector<uint8_t> ret;
 
   while (in_len-- && ( encoded_string[in_] != '=') && is_base64(encoded_string[in_])) {
     char_array_4[i++] = encoded_string[in_]; in_++;
