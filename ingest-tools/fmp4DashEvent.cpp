@@ -45,7 +45,7 @@ int main(int argc, char *argv[])
 		}
 
 		// cmfv, cmfa files containing emsg boxes 
-		ingest_stream.load_from_file(&input);
+		ingest_stream.load_from_file(input);
 		input.close();
 
 	    // output a sparse fragmented emsg track file 

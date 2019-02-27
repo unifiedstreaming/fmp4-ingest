@@ -263,7 +263,7 @@ int push_thread(string file_name, push_options_t opt)
 			// read all and then start sending
 			cout << "---- reading fmp4 input file " << file_name <<  endl;
 			ingest_stream ingest_stream;
-			ingest_stream.load_from_file(&input);
+			ingest_stream.load_from_file(input);
 			input.close();
 
 			// get the timescale

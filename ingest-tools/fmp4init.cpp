@@ -37,7 +37,7 @@ int main(int argc, char *argv[])
 		}
 
 		cout << " reading fmp4 input file " << endl;
-		ingest_stream.load_from_file(&input, true);
+		ingest_stream.load_from_file(input, true);
 		input.close();
 
 		string out_file = "init_" + in_file;

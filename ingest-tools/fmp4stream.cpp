@@ -1,5 +1,7 @@
 /*******************************************************************************
-Supplementary software media ingest specification: https://github.com/unifiedstreaming/fmp4-ingest
+Supplementary software media ingest specification: 
+
+https://github.com/unifiedstreaming/fmp4-ingest
 
 Copyright (C) 2009-2018 CodeShop B.V.
 http://www.code-shop.com
@@ -14,6 +16,13 @@ http://www.code-shop.com
 #include <base64.h>
 
 namespace /* anonymous */ {
+
+//const uint16_t highest_byte_set = 0x0100;
+//const bool is_big_endian = reinterpret_cast<const unsigned char*>(&highest_byte_set) != 0;
+
+inline bool is_big_endian() {
+	return  (*(uint16_t *)"\0\xff" < 0x100);
+}
 
 //------------------ helpers for processing the bitstream ------------------------
 uint16_t fmp4_endian_swap16(uint16_t in) {
@@ -38,50 +47,50 @@ uint64_t fmp4_endian_swap64(uint64_t in) {
 		((in & 0xFF00000000000000) >> 56);
 	};
 
-uint16_t fmp4_read_uint16(char *pt)
+uint16_t fmp4_read_uint16(char const*pt)
 {
-	return IS_BIG_ENDIAN ? *((uint16_t *)pt) : fmp4_endian_swap16(*((uint16_t *)pt));
+	return is_big_endian() ? *((uint16_t *)pt) : fmp4_endian_swap16(*((uint16_t *)pt));
 }
 
-uint32_t fmp4_read_uint32(char *pt)
+uint32_t fmp4_read_uint32(char const *pt)
 {
-	return IS_BIG_ENDIAN ? *((uint32_t *)pt) : fmp4_endian_swap32(*((uint32_t *)pt));
+	return is_big_endian() ? *((uint32_t *)pt) : fmp4_endian_swap32(*((uint32_t *)pt));
 }
 
-uint64_t fmp4_read_uint64(char *pt)
+uint64_t fmp4_read_uint64(char const *pt)
 {
-	return IS_BIG_ENDIAN ? *((uint64_t *)pt) : fmp4_endian_swap64(*((uint64_t *)pt));
+	return is_big_endian() ? *((uint64_t *)pt) : fmp4_endian_swap64(*((uint64_t *)pt));
 }
 
-uint32_t fmp4_write_uint32(uint32_t in, char *pt)
+uint32_t fmp4_write_uint32(uint32_t in, char const *pt)
 {
-	return IS_BIG_ENDIAN ? ((uint32_t *)pt)[0] = in : ((uint32_t *)pt)[0] = fmp4_endian_swap32(in);
+	return is_big_endian() ? ((uint32_t *)pt)[0] = in : ((uint32_t *)pt)[0] = fmp4_endian_swap32(in);
 }
 
-uint64_t fmp4_write_uint64(uint64_t in,char *pt)
+uint64_t fmp4_write_uint64(uint64_t in,char const *pt)
 {
-	return IS_BIG_ENDIAN ? ((uint64_t *)pt)[0] = in : ((uint64_t *)pt)[0] = fmp4_endian_swap64(in);
+	return is_big_endian() ? ((uint64_t *)pt)[0] = in : ((uint64_t *)pt)[0] = fmp4_endian_swap64(in);
 }
 
 } // anonymous
 
-using namespace fMP4Stream;
+namespace fMP4Stream 
+{
 
 // base 64 sparse movie header
 std::string moov_64_enc("AAACNG1vb3YAAABsbXZoZAAAAAAAAAAAAAAAAAAAAAEAAAAAAAEAAAEAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAAAGYdHJhawAAAFx0a2hkAAAABwAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAABNG1kaWEAAAAgbWRoZAAAAAAAAAAAAAAAAAAAAAEAAAAAVcQAAAAAADFoZGxyAAAAAAAAAABtZXRhAAAAAAAAAAAAAAAAVVNQIE1ldGEgSGFuZGxlcgAAAADbbWluZgAAAAxubWhkAAAAAAAAACRkaW5mAAAAHGRyZWYAAAAAAAAAAQAAAAx1cmwgAAAAAQAAAKNzdGJsAAAAV3N0c2QAAAAAAAAAAQAAAEd1cmltAAAAAAAAAAEAAAA3dXJpIAAAAABodHRwOi8vd3d3LnVuaWZpZWQtc3RyZWFtaW5nLmNvbS9kYXNoL2Vtc2cAAAAAEHN0dHMAAAAAAAAAAAAAABBzdHNjAAAAAAAAAAAAAAAUc3RzegAAAAAAAAAAAAAAAAAAABBzdGNvAAAAAAAAAAAAAAAobXZleAAAACB0cmV4AAAAAAAAAAEAAAABAAAAAAAAAAAAAAAA");
 
 
-void box::parse(char * ptr)
+void box::parse(char const* ptr)
 {
 	size_ = fmp4_read_uint32(ptr);
-	char name[5] = { ptr[4],ptr[5],ptr[6],ptr[7],'\0' };
-	box_type_ = std::string(name);
+	box_type_ = std::string(ptr + 4, ptr + 8);
 	if (size_ == 1) {
 		large_size_ = fmp4_read_uint64(ptr + 8);
 	}
 }
 
-uint64_t box::size() {
+uint64_t box::size()  const{
 	uint64_t l_size = 8;
 	if (is_large_)
 		l_size += 8;
@@ -90,13 +99,13 @@ uint64_t box::size() {
 	return l_size;
 };
 
-void box::print()
+void box::print() const
 {
 	std::cout << "=================" << box_type_ << "==================" << std::endl;
 	std::cout << std::setw(33) << std::left << " box size: " << size_ << std::endl;
 }
 
-void mvhd::parse(char *ptr)
+void mvhd::parse(char const *ptr)
 {
 	this->version_ = (unsigned int) ptr[8];
 	if (version_ == 1)
@@ -107,12 +116,12 @@ void mvhd::parse(char *ptr)
 	return;
 }
 
-bool box::read(std::istream *istr)
+bool box::read(std::istream &istr)
 {
 	box_data_.resize(9);
 	large_size_ = 0;
 
-	istr->read((char*)&box_data_[0], 8);
+	istr.read((char*)&box_data_[0], 8);
 	size_ = fmp4_read_uint32((char *)&box_data_[0]);
 	box_data_[8] = (uint8_t) '\0';
 	box_type_ = std::string((char *)&box_data_[4]);
@@ -124,7 +133,7 @@ bool box::read(std::istream *istr)
 	{
 		is_large_ = true;
 		box_data_.resize(16);
-		istr->read((char *)&box_data_[8], 8);
+		istr.read((char *)&box_data_[8], 8);
 		large_size_ = fmp4_read_uint64((char *)&box_data_[8]);
 	}
 	else {
@@ -137,44 +146,46 @@ bool box::read(std::istream *istr)
 		// write the offset bytes of the box
 		uint8_t offset = (uint8_t)box_data_.size();
 		box_data_.resize(large_size_);
-		istr->read((char*)&box_data_[offset], large_size_ - offset);
+		if(( large_size_ - offset) > 0)
+		   istr.read((char*)&box_data_[offset], large_size_ - offset);
 		return true;
 	}
 
 	return false;
 };
 
-void full_box::parse(char *ptr)
+void full_box::parse(char const *ptr)
 {
 	box::parse(ptr);
 	// read the version and flags
 	uint64_t offset = box::size();
-	magic_conf_ = fmp4_read_uint32((char *)(ptr + offset));
-	this->version_ = *((uint8_t *)((ptr + offset)));
-	this->flags_ = 0x00FFFFFF & fmp4_read_uint32((char *)(ptr + offset));
+	magic_conf_ = fmp4_read_uint32(ptr + offset);
+	this->version_ = *((const uint8_t *)((ptr + offset)));
+	this->flags_ = 0x00FFFFFF & fmp4_read_uint32(ptr + offset);
 }
 
-void full_box::print()
+void full_box::print() const
 {
 	box::print();
 	std::cout << std::setw(33) << std::left << "version: " << this->version_ << std::endl;
 	std::cout << std::setw(33) << std::left << "flags: " << flags_ << std::endl;
 }
 
-void mfhd::parse(char * ptr)
+void mfhd::parse(char const * ptr)
 {
 	seq_nr_ = fmp4_read_uint32(ptr + 12);
 }
 
-void mfhd::print() {
+void mfhd::print() const
+{
 	std::cout << "=================mfhd==================" << std::endl;
 	std::cout << std::setw(33) << std::left << " sequence number is: " << seq_nr_ << std::endl;
 };
 
-void tfhd::parse(char * ptr)
+void tfhd::parse(const char * ptr)
 {
 	full_box::parse(ptr);
-	track_id_ = fmp4_read_uint32((char *)(ptr + 12));
+	track_id_ = fmp4_read_uint32(ptr + 12);
 	//cout << "track_id " << track_id << endl;
 	base_data_offset_present_ = !!(0x00000001 & flags_);
 	//cout << "base_data_offset_present " << base_data_offset_present << endl;
@@ -193,22 +204,22 @@ void tfhd::parse(char * ptr)
 
 	if (base_data_offset_present_)
 	{
-		base_data_offset_ = fmp4_read_uint32((char *)(ptr + offset));
+		base_data_offset_ = fmp4_read_uint32(ptr + offset);
 		offset += 4;
 	}
 	if (sample_description_index_present_)
 	{
-		sample_description_index_ = fmp4_read_uint32((char *)(ptr + offset));
+		sample_description_index_ = fmp4_read_uint32(ptr + offset);
 		offset += 4;
 	}
 	if (default_sample_duration_present_)
 	{
-		default_sample_duration_ = fmp4_read_uint32((char *)(ptr + offset));
+		default_sample_duration_ = fmp4_read_uint32(ptr + offset);
 		offset += 4;
 	}
 	if (default_sample_size_present_)
 	{
-		default_sample_size_ = fmp4_read_uint32((char *)(ptr + offset));
+		default_sample_size_ = fmp4_read_uint32(ptr + offset);
 		offset += 4;
 	}
 	if (default_sample_flags_present_)
@@ -218,7 +229,7 @@ void tfhd::parse(char * ptr)
 	}
 }
 
-uint64_t tfhd::size()
+uint64_t tfhd::size() const
 {
 	uint64_t l_size = full_box::size() + 4;
 	if (base_data_offset_present_)
@@ -235,7 +246,7 @@ uint64_t tfhd::size()
 	return l_size;
 };
 
-void tfhd::print() {
+void tfhd::print() const {
 	std::cout << "=================tfhd==================" << std::endl;
 	//cout << setw(33) << left << " magic conf                 " << m_magic_conf << endl;
 	std::cout << std::setw(33) << std::left << " vflags                  " << flags_ << std::endl;
@@ -255,17 +266,17 @@ void tfhd::print() {
 	//cout << "............." << std::endl;
 };
 
-uint64_t tfdt::size()
+uint64_t tfdt::size() const
 {
 	return version_ ? full_box::size() + 8 : full_box::size() + 4;
 };
 
-void tfdt::print() {
+void tfdt::print() const {
 	std::cout << "=================tfdt==================" << std::endl;
 	std::cout << std::setw(33) << std::left << " basemediadecodetime: " << base_media_decode_time_ << std::endl;
 };
 
-void tfdt::parse(char* ptr)
+void tfdt::parse(const char* ptr)
 {
 	full_box::parse(ptr);
 	base_media_decode_time_ = version_ ? \
@@ -274,7 +285,7 @@ void tfdt::parse(char* ptr)
 
 };
 
-uint64_t trun::size()
+uint64_t trun::size() const
 {
 	uint64_t l_size = full_box::size() + 4;
 	if (data_offset_present_)
@@ -292,7 +303,7 @@ uint64_t trun::size()
 	return l_size;
 };
 
-void trun::print()
+void trun::print() const
 {
 	std::cout << "==================trun=================" << std::endl;
 	std::cout << std::setw(33) << std::left << " magic conf                 " << magic_conf_ << std::endl;
@@ -323,11 +334,11 @@ void trun::print()
 		m_sentry[i].print();
 };
 
-void trun::parse(char * ptr)
+void trun::parse(const char * ptr)
 {
 	full_box::parse(ptr);
 
-	sample_count_ = fmp4_read_uint32((char *)(ptr + 12));
+	sample_count_ = fmp4_read_uint32(ptr + 12);
 
 	data_offset_present_ = !!(0x00000001 & flags_);
 	//cout << "data_offset_present " << data_offset_present << endl;
@@ -344,10 +355,10 @@ void trun::parse(char * ptr)
 	unsigned int offset = 16;
 	if (data_offset_present_)
 	{
-		this->data_offset_ = fmp4_read_uint32((char *)(ptr + offset));
+		this->data_offset_ = fmp4_read_uint32(ptr + offset);
 		offset += 4;
 	}if (first_sample_flags_present_) {
-		this->first_sample_flags_ = fmp4_read_uint32((char *)(ptr + offset));
+		this->first_sample_flags_ = fmp4_read_uint32(ptr + offset);
 		offset += 4;
 	}
 	// write all the entries to the trun box
@@ -356,25 +367,25 @@ void trun::parse(char * ptr)
 		sample_entry ent = {};
 		if (sample_duration_present_)
 		{
-			ent.sample_duration_ = fmp4_read_uint32((char *)(ptr + offset));
+			ent.sample_duration_ = fmp4_read_uint32(ptr + offset);
 			offset += 4;
 		}
 		if (sample_size_present_)
 		{
-			ent.sample_size_ = fmp4_read_uint32((char *)(ptr + offset));
+			ent.sample_size_ = fmp4_read_uint32(ptr + offset);
 			offset += 4;
 		}
 		if (sample_flags_present_)
 		{
-			ent.sample_flags_ = fmp4_read_uint32((char *)(ptr + offset));
+			ent.sample_flags_ = fmp4_read_uint32(ptr + offset);
 			offset += 4;
 		}
 		if (sample_composition_time_offsets_present_)
 		{
-			if (version_ == 0)
-				ent.sample_composition_time_offset_v0_ = fmp4_read_uint32((char *)(ptr + offset));
+			if (version_ == 0) 	
+				ent.sample_composition_time_offset_v0_ = fmp4_read_uint32(ptr + offset);
 			else
-				ent.sample_composition_time_offset_v1_ = fmp4_read_uint32((char *)(ptr + offset));
+				ent.sample_composition_time_offset_v1_ = fmp4_read_uint32(ptr + offset);
 			offset += 4;
 		}
 		m_sentry.push_back(ent);
@@ -385,7 +396,7 @@ void trun::parse(char * ptr)
 uint64_t media_fragment::get_duration()
 {
 	uint64_t duration = 0;
-
+	
 	for (unsigned int i = 0; i != trun_.sample_count_; ++i)
 	{
 		uint32_t sample_duration = tfhd_.default_sample_duration_;
@@ -399,7 +410,7 @@ uint64_t media_fragment::get_duration()
 	return duration;
 }
 
-void sc35_splice_info::print(bool verbose )
+void sc35_splice_info::print(bool verbose ) const
 {
 	if (verbose) {
 		std::cout << std::setw(33) << std::left << " table id: " << (unsigned int)table_id_ << std::endl;
@@ -441,7 +452,7 @@ void sc35_splice_info::print(bool verbose )
 	}
 }
 
-void sc35_splice_info::parse(uint8_t *ptr, unsigned int size)
+void sc35_splice_info::parse(const uint8_t *ptr, unsigned int size)
 {
 	table_id_ = *ptr++;
 
@@ -496,7 +507,7 @@ void sc35_splice_info::parse(uint8_t *ptr, unsigned int size)
 	// we don't support the cancel indicator yet (it should be added)
 }
 
-uint64_t emsg::size()
+uint64_t emsg::size() const
 {
 	uint64_t l_size = full_box::size();
 	if (version_ == 1)
@@ -509,16 +520,16 @@ uint64_t emsg::size()
 }
 
 //! reads the entire file
-void emsg::parse(char * ptr, unsigned int data_size)
+void emsg::parse(const char *ptr, unsigned int data_size)
 {
 	full_box::parse(ptr);
 	uint64_t offset = full_box::size();
 	if (version_ == 0)
 	{
-		scheme_id_uri_ = std::string((ptr + offset));
+		scheme_id_uri_ =  std::string(ptr + offset);
 		//cout << "scheme_id_uri: " << scheme_id_uri << endl;
 		offset = offset + scheme_id_uri_.size() + 1;
-		value_ = std::string((ptr + offset));
+		value_ = std::string(ptr + offset);
 		//cout << "value: " << value << endl;
 		offset = offset + value_.size() + 1;
 		timescale_ = fmp4_read_uint32(ptr + offset);
@@ -548,10 +559,10 @@ void emsg::parse(char * ptr, unsigned int data_size)
 		id_ = fmp4_read_uint32(ptr + offset);
 		offset += 4;
 		//cout << "id: " << id << endl;
-		scheme_id_uri_ = std::string((ptr + offset));
+		scheme_id_uri_ = std::string(ptr + offset);
 		offset = offset + scheme_id_uri_.size() + 1;
 		//cout << "scheme_id_uri: " << scheme_id_uri << endl;
-		value_ = std::string((ptr + offset));
+		value_ = std::string(ptr + offset);
 		//cout << "value: " << value << endl;
 		offset = offset + value_.size() + 1;
 	}
@@ -566,18 +577,18 @@ void emsg::parse(char * ptr, unsigned int data_size)
 }
 
 //! emsg to mpd event
-void emsg::write_emsg_as_mpd_event(std::ostream *ostr, uint64_t base_time)
+void emsg::write_emsg_as_mpd_event(std::ostream &ostr, uint64_t base_time) const
 {
-	*ostr << "<Event" << std::endl \
-		<< "presentationTime=" << '"' << (this->version_ ? presentation_time_ : base_time + presentation_time_delta_) << '"' << std::endl \
-		<< "duration=" << '"' << event_duration_ << '"' << std::endl \
-		<< "id=" << '"' << id_ << "'" << '>' << std::endl \
-		<< base64_encode( this->message_data_.data(), (unsigned int) this->message_data_.size()) << std::endl
-		<< "</Event>" << std::endl;
+	ostr << "<Event " 
+		  << "presentationTime=" << '"' << (this->version_ ? presentation_time_ : base_time + presentation_time_delta_) << '"' << " "  \
+		  << "duration=" << '"' << event_duration_ << '"' << " "  \
+		  << "id=" << '"' << id_ << '"' << '>' << " "  << std::endl
+		  << base64_encode( this->message_data_.data(), (unsigned int) this->message_data_.size()) << std::endl
+		  << "</Event>" << std::endl;
 }
 
 //!
-void emsg::print()
+void emsg::print() const
 {
 	std::cout << "=================emsg==================" << std::endl;
 	std::cout << std::setw(33) << std::left << " e-msg box version: " << (unsigned int)version_ << std::endl;
@@ -606,70 +617,71 @@ void emsg::print()
 }
 
 //! write an emsg box to a stream
-uint32_t emsg::write(std::ostream *ostr)
+uint32_t emsg::write(std::ostream &ostr) const
 {
 	uint32_t bytes_written = 0;
 	uint32_t size = (uint32_t)this->size();
-	ostr->write((char *)&size, 4);
+	ostr.write((char *)&size, 4);
 	bytes_written += 4;
-	ostr->put('e');
-	ostr->put('m');
-	ostr->put('s');
-	ostr->put('g');
+	ostr.put('e');
+	ostr.put('m');
+	ostr.put('s');
+	ostr.put('g');
 	bytes_written += 4;
-	ostr->put((uint8_t)version_);
-	ostr->put(0u);
-	ostr->put(0u);
-	ostr->put(0u);
+	ostr.put((uint8_t)version_);
+	ostr.put(0u);
+	ostr.put(0u);
+	ostr.put(0u);
 	bytes_written += 4;
 	char int_buf[4];
 	char long_buf[8];
 	if (version_ == 1)
 	{
 		fmp4_write_uint32(timescale_, int_buf);
-		ostr->write(int_buf, 4);
+		ostr.write(int_buf, 4);
 		bytes_written += 4;
 		fmp4_write_uint64(presentation_time_, long_buf);
-		ostr->write(long_buf, 8);
+		ostr.write(long_buf, 8);
 		bytes_written += 8;
 		fmp4_write_uint32(event_duration_, int_buf);
-		ostr->write(int_buf, 4);
+		ostr.write(int_buf, 4);
 		bytes_written += 4;
 		fmp4_write_uint32(id_, int_buf);
-		ostr->write(int_buf, 4);
+		ostr.write(int_buf, 4);
 		bytes_written += 4;
-		ostr->write(scheme_id_uri_.c_str(), scheme_id_uri_.size() + 1);
+		ostr.write(scheme_id_uri_.c_str(), scheme_id_uri_.size() + 1);
 		bytes_written += (uint32_t) scheme_id_uri_.size() + 1;
-		ostr->write(value_.c_str(), value_.size() + 1);
+		ostr.write(value_.c_str(), value_.size() + 1);
 		bytes_written += (uint32_t)value_.size() + 1;
 	}
 	else
 	{
-		ostr->write(scheme_id_uri_.c_str(), scheme_id_uri_.size() + 1);
+		ostr.write(scheme_id_uri_.c_str(), scheme_id_uri_.size() + 1);
 		bytes_written += (uint32_t) scheme_id_uri_.size() + 1;
-		ostr->write(value_.c_str(), value_.size() + 1);
+		ostr.write(value_.c_str(), value_.size() + 1);
 		bytes_written += (uint32_t) value_.size() + 1;
 		fmp4_write_uint32(timescale_, int_buf);
-		ostr->write(int_buf, 4);
+		ostr.write(int_buf, 4);
 		bytes_written += 4;
 		fmp4_write_uint32(presentation_time_delta_, int_buf);
-		ostr->write(int_buf, 4);
+		ostr.write(int_buf, 4);
 		bytes_written += 4;
 		fmp4_write_uint32(event_duration_, int_buf);
-		ostr->write(int_buf, 4);
+		ostr.write(int_buf, 4);
 		bytes_written += 4;
 		fmp4_write_uint32(id_, int_buf);
-		ostr->write(int_buf, 4);
+		ostr.write(int_buf, 4);
 		bytes_written += 4;
 	}
-	ostr->write((char *)&message_data_[0], message_data_.size());
+	if(message_data_.size())
+	  ostr.write((char *)&message_data_[0], message_data_.size());
 	bytes_written += (uint32_t) message_data_.size();
 	return bytes_written;
 }
 
 //! write an emsg message as a sparse fragment with advertisement time timestamp announce second before the application time
-void emsg::write_emsg_as_fmp4_fragment(std::ostream *ostr, uint64_t timestamp_tdft, uint32_t track_id = 1,
-	uint64_t next_tdft=0 /* announce n seconds in advance*/)
+void emsg::write_emsg_as_fmp4_fragment(std::ostream &ostr, uint64_t timestamp_tfdt, uint32_t track_id,
+	uint64_t next_tfdt /* announce n seconds in advance*/) const
 {
 	if (scheme_id_uri_.size())
 	{
@@ -701,7 +713,7 @@ void emsg::write_emsg_as_fmp4_fragment(std::ostream *ostr, uint64_t timestamp_td
 		// --- init tfdt
 		tfdt l_tfdt = {};
 		l_tfdt.version_ = 1;
-		l_tfdt.base_media_decode_time_ = timestamp_tdft;
+		l_tfdt.base_media_decode_time_ = timestamp_tfdt;
 		uint64_t l_tfdt_size = l_tfdt.size(); // size should be 12 + 8 = 20
 
 		// --- init trun
@@ -722,11 +734,11 @@ void emsg::write_emsg_as_fmp4_fragment(std::ostream *ostr, uint64_t timestamp_td
 		l_trun.m_sentry[1].sample_size_ = (uint32_t)size();
 		l_trun.m_sentry[1].sample_duration_ = this->event_duration_;       // duration is 1 
 		l_trun.m_sentry[2].sample_size_ = 0;
-		// calculate the gap that needs to be filled up to the next tdft
-		int32_t gap_duration = (int32_t) (next_tdft - timestamp_tdft - event_duration_ - presentation_time_delta_);
+		// calculate the gap that needs to be filled up to the next tfdt
+		int32_t gap_duration = (int32_t) (next_tfdt - timestamp_tfdt - event_duration_ - presentation_time_delta_);
 		std::cout << "gap_dur" << gap_duration << std::endl;
-		std::cout << "next_tdft" << next_tdft << std::endl;
-		l_trun.m_sentry[2].sample_duration_ = next_tdft ? (gap_duration > 0 ? gap_duration :  0) : 0; // if unknown set the gap duration to zero
+		std::cout << "next_tfdt" << next_tfdt << std::endl;
+		l_trun.m_sentry[2].sample_duration_ = next_tfdt ? (gap_duration > 0 ? gap_duration :  0) : 0; // if unknown set the gap duration to zero
 
 
 		//--- initialize the box sizes
@@ -743,108 +755,109 @@ void emsg::write_emsg_as_fmp4_fragment(std::ostream *ostr, uint64_t timestamp_td
 		//--- write the sparse fragment to a file stream
 		// write 4 bytes
 		fmp4_write_uint32((uint32_t)l_moof_size, int_buf);
-		ostr->write(int_buf, 4);
+		ostr.write(int_buf, 4);
 		// write 4 bytes, total 8 bytes
-		ostr->put('m');
-		ostr->put('o');
-		ostr->put('o');
-		ostr->put('f');
+		ostr.put('m');
+		ostr.put('o');
+		ostr.put('o');
+		ostr.put('f');
 		// write 16 bytes total 24 bytes
 		fmp4_write_uint32((uint32_t)l_mfhd_size, int_buf);
-		ostr->write(int_buf, 4);
+		ostr.write(int_buf, 4);
 		//ostr->write("mfhd", 4);
-		ostr->put('m');
-		ostr->put('f');
-		ostr->put('h');
-		ostr->put('d');
+		ostr.put('m');
+		ostr.put('f');
+		ostr.put('h');
+		ostr.put('d');
 		fmp4_write_uint32((uint32_t)0u, int_buf);
-		ostr->write(int_buf, 4);
+		ostr.write(int_buf, 4);
 		fmp4_write_uint32((uint32_t)l_mfhd.seq_nr_, int_buf);
-		ostr->write(int_buf, 4);
+		ostr.write(int_buf, 4);
 
 		// write traf 8 bytes total 32 bytes
 		fmp4_write_uint32((uint32_t)l_traf_size, int_buf);
-		ostr->write(int_buf, 4);
+		ostr.write(int_buf, 4);
 		//ostr->write("traf", 4);
-		ostr->put('t');
-		ostr->put('r');
-		ostr->put('a');
-		ostr->put('f');
+		ostr.put('t');
+		ostr.put('r');
+		ostr.put('a');
+		ostr.put('f');
 
 		// write tfhd 24 bytes total 56 bytes
 		fmp4_write_uint32((uint32_t)l_tfhd_size, int_buf);
-		ostr->write(int_buf, 4);
+		ostr.write(int_buf, 4);
 		//ostr->write("tfhd", 4);
-		ostr->put('t');
-		ostr->put('f');
-		ostr->put('h');
-		ostr->put('d');
+		ostr.put('t');
+		ostr.put('f');
+		ostr.put('h');
+		ostr.put('d');
 
 		fmp4_write_uint32((uint32_t)l_tfhd.magic_conf_, int_buf);
-		ostr->write(int_buf, 4);
+		ostr.write(int_buf, 4);
 		fmp4_write_uint32((uint32_t)l_tfhd.track_id_, int_buf);
-		ostr->write(int_buf, 4);
+		ostr.write(int_buf, 4);
 		fmp4_write_uint32((uint32_t)l_tfhd.sample_description_index_, int_buf);
-		ostr->write(int_buf, 4);
+		ostr.write(int_buf, 4);
 		fmp4_write_uint32((uint32_t)l_tfhd.default_sample_flags_, int_buf);
-		ostr->write(int_buf, 4);
+		ostr.write(int_buf, 4);
 
 		// write tfdt 20 bytes total 76 bytes
 		fmp4_write_uint32((uint32_t)l_tfdt_size, int_buf);
-		ostr->write(int_buf, 4);
-		ostr->put('t');
-		ostr->put('f');
-		ostr->put('d');
-		ostr->put('t');
-		ostr->put(255u);
-		ostr->put(255u);
-		ostr->put(255u);
-		ostr->put(255u);
+		ostr.write(int_buf, 4);
+		ostr.put('t');
+		ostr.put('f');
+		ostr.put('d');
+		ostr.put('t');
+		ostr.put(255u);
+		ostr.put(255u);
+		ostr.put(255u);
+		ostr.put(255u);
 		fmp4_write_uint64((uint64_t)l_tfdt.base_media_decode_time_, long_buf);
-		ostr->write(long_buf, 8);
+		ostr.write(long_buf, 8);
 
 
 		// write the trun box, 44 bytes total 120 bytes
 		std::cout << "trun size release: " << l_trun_size << std::endl;
 		fmp4_write_uint32((uint32_t)l_trun_size, int_buf);
-		ostr->write(int_buf, 4);
+		ostr.write(int_buf, 4);
 		//ostr->write("trun", 4);
-		ostr->put('t');
-		ostr->put('r');
-		ostr->put('u');
-		ostr->put('n');
+		ostr.put('t');
+		ostr.put('r');
+		ostr.put('u');
+		ostr.put('n');
 		fmp4_write_uint32((uint32_t)l_trun.magic_conf_, int_buf);
-		ostr->write(int_buf, 4);
+		ostr.write(int_buf, 4);
 		fmp4_write_uint32((uint32_t)l_trun.sample_count_, int_buf);
-		ostr->write(int_buf, 4);
+		ostr.write(int_buf, 4);
 		fmp4_write_uint32((uint32_t)l_trun.data_offset_, int_buf);
-		ostr->write(int_buf, 4);
+		ostr.write(int_buf, 4);
 
 		// write the duration and the sample size
 		fmp4_write_uint32((uint32_t)l_trun.m_sentry[0].sample_duration_, int_buf);
-		ostr->write(int_buf, 4);
+		ostr.write(int_buf, 4);
 		fmp4_write_uint32((uint32_t)l_trun.m_sentry[0].sample_size_, int_buf);
-		ostr->write(int_buf, 4);
+		ostr.write(int_buf, 4);
 		fmp4_write_uint32((uint32_t)l_trun.m_sentry[1].sample_duration_, int_buf);
-		ostr->write(int_buf, 4);
+		ostr.write(int_buf, 4);
 		fmp4_write_uint32((uint32_t)l_trun.m_sentry[1].sample_size_, int_buf);
-		ostr->write(int_buf, 4);
+		ostr.write(int_buf, 4);
 		fmp4_write_uint32((uint32_t)l_trun.m_sentry[2].sample_duration_, int_buf);
-		ostr->write(int_buf, 4);
+		ostr.write(int_buf, 4);
 		fmp4_write_uint32((uint32_t)l_trun.m_sentry[2].sample_size_, int_buf);
-		ostr->write(int_buf, 4);
+		ostr.write(int_buf, 4);
 
 		uint32_t mdat_size = (uint32_t)size() + 8;
 		fmp4_write_uint32(mdat_size, int_buf);
-		ostr->write(int_buf, 4);
-		ostr->put('m');
-		ostr->put('d');
-		ostr->put('a');
-		ostr->put('t');
+		ostr.write(int_buf, 4);
+		ostr.put('m');
+		ostr.put('d');
+		ostr.put('a');
+		ostr.put('t');
 
 		// write the emsg as an mdat box
-		write(ostr);
+		this->write(ostr);
 	
+	    // 
 		// we are done writing the emsg message as a sparse fragment
 	}
 	return;
@@ -962,7 +975,7 @@ uint64_t ingest_stream::get_media_segment_data(std::size_t index, std::vector<ui
 };
 
 //!
-void media_fragment::print()
+void media_fragment::print() const
 {
 	if (emsg_.scheme_id_uri_.size() && !this->e_msg_is_in_mdat_) {
 		emsg_.print();
@@ -980,7 +993,7 @@ void media_fragment::print()
 }
 
 //! parse an fmp4 file for media ingest
-int ingest_stream::load_from_file(std::istream *infile, bool init_only)
+int ingest_stream::load_from_file(std::istream &infile, bool init_only)
 {
 	try
 	{
@@ -988,7 +1001,7 @@ int ingest_stream::load_from_file(std::istream *infile, bool init_only)
 		{
 			std::vector<box> ingest_boxes;
 
-			while (infile->good()) // read box by box in a vector
+			while (infile.good()) // read box by box in a vector
 			{
 				box b = {};
 				if (b.read(infile))
@@ -1139,7 +1152,7 @@ void setTrackID(std::vector<uint8_t> &moov_in, uint32_t track_id)
 }
 
 //! carefull only use with the tested pre-encoded moov boxes to write streams
-void setSchemeURN(std::vector<uint8_t> &moov_in, std::string &urn)
+void setSchemeURN(std::vector<uint8_t> &moov_in, const std::string& urn)
 {
 	uint16_t size_diff=0;
 	std::vector<uint8_t> l_first;
@@ -1238,7 +1251,7 @@ void setSchemeURN(std::vector<uint8_t> &moov_in, std::string &urn)
 };
 
 //! writes sparse emsg file, set the track, the scheme
-int ingest_stream::write_to_sparse_emsg_file(std::string &out_file, uint32_t track_id, uint32_t announce, std::string &urn)
+int ingest_stream::write_to_sparse_emsg_file(const std::string& out_file, uint32_t track_id, uint32_t announce, const std::string& urn)
 {
 	//ifstream moov_s_in("sparse_moov.inc", ios::binary);
 	
@@ -1253,7 +1266,6 @@ int ingest_stream::write_to_sparse_emsg_file(std::string &out_file, uint32_t tra
 	{
 		// write the ftyp header
 		ot.write( (char *) &sparse_ftyp[0], 20);
-
 		ot.write((const char *)&sparse_moov[0], sparse_moov.size() );
 
 		// write each of the event messages as moof mdat combinations in sparse track 
@@ -1262,19 +1274,16 @@ int ingest_stream::write_to_sparse_emsg_file(std::string &out_file, uint32_t tra
 			//it->print();
 			if (it->emsg_.scheme_id_uri_.size())
 			{
-
-				uint64_t next_tdft = 0;
+				uint64_t next_tfdt = 0;
 				//find the next tdft 
 				if ( (it + 1) != this->media_fragment_.end())
-					next_tdft = (it+1)->tfdt_.base_media_decode_time_;
+					next_tfdt = (it+1)->tfdt_.base_media_decode_time_;
 				//cout << " writing emsg fragment " << endl;
-				it->emsg_.write_emsg_as_fmp4_fragment(&ot, it->tfdt_.base_media_decode_time_, track_id, next_tdft);
-
+				it->emsg_.write_emsg_as_fmp4_fragment(ot, it->tfdt_.base_media_decode_time_, track_id, next_tfdt);
 			}
 		}
 
-		ot.write((char *)empty_mfra, 8);
-
+		ot.write((const char *)empty_mfra, 8);
 		ot.close();
 		std::cout << "*** wrote sparse track file: " <<  out_file << "  ***" << std::endl;
 	}
@@ -1309,7 +1318,7 @@ void ingest_stream::write_to_dash_event_stream(std::string &out_file)
 			{
 				
 				//cout << " writing emsg fragment " << endl;
-				it->emsg_.write_emsg_as_mpd_event(&ot, it->tfdt_.base_media_decode_time_);
+				it->emsg_.write_emsg_as_mpd_event(ot, it->tfdt_.base_media_decode_time_);
 
 			}
 		}
@@ -1320,10 +1329,11 @@ void ingest_stream::write_to_dash_event_stream(std::string &out_file)
 }
 
 //! dump the contents of the sparse track to screen
-void ingest_stream::print()
+void ingest_stream::print() const
 {
 	for (auto it = media_fragment_.begin(); it != media_fragment_.end(); ++it)
 	{
 		it->print();
 	}
+}
 }

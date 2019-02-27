@@ -23,8 +23,6 @@ http://www.code-shop.com
 #include <memory>
 #include <iomanip>
 
-#define IS_BIG_ENDIAN (*(uint16_t *)"\0\xff" < 0x100)
-
 namespace fMP4Stream {
 
 	//----------------- structures for storing an fmp4 stream defined in ISOBMMF fMP4 ----------------------
@@ -39,10 +37,11 @@ namespace fMP4Stream {
 		bool has_uuid_;
 
 		box() : size_(0), large_size_(0), box_type_(""),is_large_(false), has_uuid_(false) {};
-		virtual uint64_t size();
-		virtual void print();
-		virtual bool read(std::istream *istr);
-		virtual void parse(char * ptr);
+
+		virtual uint64_t size() const;
+		virtual void print() const;
+		virtual bool read(std::istream& istr);
+		virtual void parse(char const *ptr);
 	
 	};
 
@@ -53,9 +52,9 @@ namespace fMP4Stream {
 		uint32_t magic_conf_;
 		
 		//
-		virtual void parse(char *ptr);
-		virtual void print();
-		virtual uint64_t size() { return box::size() + 4; };
+		virtual void parse(char const *ptr);
+		virtual void print() const;
+		virtual uint64_t size() const { return box::size() + 4; };
 	};
 
 
@@ -72,8 +71,7 @@ namespace fMP4Stream {
 
 		std::vector<uint32_t>  matrix_;
 		uint32_t next_track_id_;
-
-		void parse(char *ptr);
+		void parse(char const *ptr);
 	};
 
 	struct tkhd : public full_box
@@ -93,10 +91,10 @@ namespace fMP4Stream {
 	struct mfhd : public full_box
 	{
 		uint32_t seq_nr_;
-		void parse(char * ptr);
+		void parse(char const * ptr);
 		mfhd() : full_box() { box_type_ = std::string("mfhd"); };
-		void print(); 
-		uint64_t size() { return full_box::size() + 4; };
+		void print() const; 
+		uint64_t size() const { return full_box::size() + 4; };
 	};
 
 
@@ -124,9 +122,9 @@ namespace fMP4Stream {
 
 		tfhd() { box_type_ = std::string("tfhd"); };
 
-		virtual void parse(char * ptr);
-		virtual uint64_t size();
-		virtual void print();
+		virtual void parse(char const * ptr);
+		virtual uint64_t size() const;
+		virtual void print() const;
 		//uint32_t size(return )
 	};
 
@@ -135,9 +133,9 @@ namespace fMP4Stream {
 		uint64_t base_media_decode_time_;
 		tfdt() { box_type_ = std::string("tfdt"); };
 
-		virtual uint64_t size();
-		virtual void parse(char * ptr);
-		virtual void print();
+		virtual uint64_t size() const;
+		virtual void parse(const char * ptr);
+		virtual void print() const;
 
 		//static void update_tfdt(uint64_t new_base_media_decode_time, char * box_Data, size_t box_size);
 	};
@@ -151,7 +149,7 @@ namespace fMP4Stream {
 			uint32_t sample_flags_;
 			uint32_t sample_composition_time_offset_v0_;
 			int32_t  sample_composition_time_offset_v1_;
-			virtual void print()
+			virtual void print() const
 			{
 				//cout << "trun sample entry: "; 
 				std::cout << std::setw(33) << std::left << " sample duration: " << sample_duration_ << std::endl;
@@ -163,6 +161,7 @@ namespace fMP4Stream {
 		};
 
 		uint32_t sample_count_;
+		
 		// optional fields
 		int32_t data_offset_;
 		uint32_t first_sample_flags_;
@@ -174,13 +173,14 @@ namespace fMP4Stream {
 		bool sample_size_present_;
 		bool sample_flags_present_;
 		bool sample_composition_time_offsets_present_;
+		
 		//entries
 		std::vector<sample_entry> m_sentry;
 		
 		//trun methods
-		virtual uint64_t size();
-		virtual void parse(char * ptr);
-		virtual void print();
+		virtual uint64_t size() const;
+		virtual void parse(char const * ptr);
+		virtual void print() const;
 		
 		trun() { this->box_type_ = "trun"; }
 	};
@@ -225,15 +225,16 @@ namespace fMP4Stream {
 		uint32_t event_duration_;
 		uint32_t id_;
 		std::vector<uint8_t> message_data_;
-
+		
 		// emsg methods
-		emsg() { this->box_type_ = std::string("emsg"); }
-		virtual uint64_t size();
-		virtual void parse(char * ptr, unsigned int data_size);
-		virtual void print();
-		uint32_t write(std::ostream *ostr);
-		void write_emsg_as_fmp4_fragment(std::ostream *ostr, uint64_t timestamp, uint32_t track_id, uint64_t next_tdft);
-		void write_emsg_as_mpd_event(std::ostream *ostr, uint64_t base_time);
+		emsg() : presentation_time_delta_(0){ this->box_type_ = std::string("emsg"); }
+		virtual uint64_t size() const;
+		virtual void parse(char const * ptr, unsigned int data_size);
+		virtual void print() const;
+		uint32_t write(std::ostream &ostr) const;
+
+		void write_emsg_as_fmp4_fragment(std::ostream &ostr, uint64_t tfdt, uint32_t track_id, uint64_t next_tfdt) const;
+		void write_emsg_as_mpd_event(std::ostream &ostr, uint64_t base_time) const;
 	};	
 
 	const uint8_t empty_mfra[8] = {
@@ -267,8 +268,8 @@ namespace fMP4Stream {
 		uint32_t splice_insert_event_id_;
 		bool splice_event_cancel_indicator_;
 
-		void print(bool verbose = false);
-		void parse(uint8_t *ptr, unsigned int size);
+		void print(bool verbose = false) const;
+		void parse(uint8_t const *ptr, unsigned int size);
 
 	};
 
@@ -299,7 +300,7 @@ namespace fMP4Stream {
 
 		// see what is in the fragment and store the sub boxes
 		void parse_moof();
-		void print();
+		void print() const;
 		uint64_t get_duration();
 	};
 
@@ -308,15 +309,13 @@ namespace fMP4Stream {
 		init_fragment init_fragment_;
 		std::vector<media_fragment> media_fragment_;
 		box sidx_box_, meta_box_, mfra_box_;
-		int load_from_file(std::istream *input_file, bool init_only=false);
+		int load_from_file(std::istream &input_file, bool init_only=false);
 		int write_init_to_file(std::string &out_file);
-		int write_to_sparse_emsg_file(std::string &out_file, uint32_t track_id, uint32_t announce, std::string &urn);
+		int write_to_sparse_emsg_file(const std::string& out_file, uint32_t track_id, uint32_t announce, const std::string& urn);
 		uint64_t get_init_segment_data(std::vector<uint8_t> &init_seg_dat);
 		uint64_t get_media_segment_data(std::size_t index, std::vector<uint8_t> &media_seg_dat);
 		void write_to_dash_event_stream(std::string &out_file);
-		void print();
+		void print() const;
 	};
-
-	
 }
 #endif

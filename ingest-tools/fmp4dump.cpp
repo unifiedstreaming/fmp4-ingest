@@ -33,7 +33,7 @@ int main(int argc, char *argv[])
 		cout << " reading fmp4 input file " << std::endl;
 
 		try {
-			ingest_stream.load_from_file(&input);
+			ingest_stream.load_from_file(input);
 			input.close();
 			ingest_stream.print();
 		}
