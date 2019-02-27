@@ -1,9 +1,12 @@
 /*******************************************************************************
+
 Supplementary software media ingest specification:
 https://github.com/unifiedstreaming/fmp4-ingest
 
 Copyright (C) 2009-2018 CodeShop B.V.
 http://www.code-shop.com
+
+convert DASH Events in an XML file to a timed metadata track
 
 ******************************************************************************/
 
@@ -23,13 +26,13 @@ extern string moov_64_enc;
 struct event_t 
 {
 	int64_t presentation_time_;   // presentation time of event
-	unsigned int duration_;       // duration of event
+	uint32_t duration_;           // duration of event
 	bool base64_;                 // codes if the payload is base64 coded
 	string message_data_;         // message data (attribute or value)
 	string scheme_id_uri_;        // scheme if uri
 	string value_;                // string of the subscheme
-	uint32_t id_;                      // id value of the event
-	uint32_t time_scale_;              // timescale, inherited from eventstream
+	uint32_t id_;                 // id value of the event
+	uint32_t time_scale_;         // timescale, inherited from eventstream
 	int64_t pto_;                 //  pto in eventstream
 
 	event_t()
@@ -72,7 +75,7 @@ struct event_parser_t : public tinyxml2::XMLVisitor
 		string el_name = el.Value();
 
 		if ((el_name.compare("dash:EventStream") == 0) || (el_name.compare("EventStream") == 0))
-			cout << "eventstream found" << endl;
+			cout << "*** eventstream found ***" << endl;
 		else
 			return true;
 		
@@ -91,6 +94,7 @@ struct event_parser_t : public tinyxml2::XMLVisitor
 		if (el.QueryStringAttribute("schemeIdUri", ids) != tinyxml2::XMLError::XML_SUCCESS)
 		{
 			cout << "error parsing schemeIdUri, it is mandatory for each eventStream to have a URI" << endl;
+			return false;
 		}
 		else
 		{
@@ -107,12 +111,12 @@ struct event_parser_t : public tinyxml2::XMLVisitor
 			l_root_event.pto_ = 0;
 		}
 
-		// parse the children ach of 
+		// parse the children of the EventStream
 		auto child = el.FirstChildElement();
 		
 		while (child != nullptr) 
 		{
-			event_t l_new_event = l_root_event; // copy information from the eventstre,a;
+			event_t l_new_event = l_root_event; // copy information from the eventstream
 
 			char messageData[500000] = {};
 			char value_c[100] = {};
@@ -141,6 +145,14 @@ struct event_parser_t : public tinyxml2::XMLVisitor
 			{
 				l_new_event.message_data_ = string(md[0]);
 				attr_md = true;
+			}
+			if (child->QueryStringAttribute("contentEncoding", md) == tinyxml2::XML_SUCCESS)
+			{
+				string contentEncoding(md[0]);
+				if(contentEncoding.compare("Base64") == 0)
+					l_new_event.base64_ = true;
+				if (contentEncoding.compare("base64") == 0)
+					l_new_event.base64_ = true;;
 			}
 			if (!attr_md)
 			{
@@ -185,8 +197,6 @@ int main(int argc, char *argv[])
 		event_parser_t evt;
 		doc.Accept(&evt);
 
-		cout << "done printing events: " << evt.events_.size()<< endl;
-
 		ingest_stream l_ingest_stream;
 		
 		for (int i = 0; i < evt.events_.size(); i++)
@@ -197,7 +207,7 @@ int main(int argc, char *argv[])
 			l_ingest_stream.media_fragment_.push_back(m);
 		}
 
-		string event_urn = "urn:mpeg:dash:event";
+		string event_urn = "urn:mpeg:dash:event:2012";
 		l_ingest_stream.write_to_sparse_emsg_file(out_file, 1, 0, event_urn);
 
 		return 1;

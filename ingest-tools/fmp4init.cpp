@@ -5,6 +5,8 @@ https://github.com/unifiedstreaming/fmp4-ingest
 Copyright (C) 2009-2018 CodeShop B.V.
 http://www.code-shop.com
 
+retrieve init fragment or CMAF header from fmp4 file
+
 ******************************************************************************/
 
 #include "fmp4stream.h"

@@ -5,6 +5,8 @@ https://github.com/unifiedstreaming/fmp4-ingest
 Copyright (C) 2009-2019 CodeShop B.V.
 http://www.code-shop.com
 
+CMAF ingest from stored CMAF files, emulates a live encoder posting CMAF content
+
 ******************************************************************************/
 
 #include "fmp4stream.h"

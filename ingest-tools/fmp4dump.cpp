@@ -5,6 +5,8 @@ https://github.com/unifiedstreaming/fmp4-ingest
 Copyright (C) 2009-2018 CodeShop B.V.
 http://www.code-shop.com
 
+Dump the contents of CMAF metadata including emsg content to cout
+
 ******************************************************************************/
 
 #include "fmp4stream.h"
@@ -18,7 +20,9 @@ using namespace std;
 
 int main(int argc, char *argv[])
 {
+
 	ingest_stream ingest_stream;
+
 	if (argc > 1)
 	{
 

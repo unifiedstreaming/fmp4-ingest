@@ -5,7 +5,7 @@ https://github.com/unifiedstreaming/fmp4-ingest
 Copyright (C) 2009-2018 CodeShop B.V.
 http://www.code-shop.com
 
-simple program for creating sparse metadatatracks
+convert CMAF with inband emsg to sparse metatrack with emsg in samples
 
 ******************************************************************************/
 
