@@ -241,7 +241,7 @@ namespace fMP4Stream {
 		0x00, 0x00, 0x00, 0x08, 'm', 'f', 'r', 'a'
 	};
 
-	const uint8_t sparse_ftyp[20]
+	const uint8_t sparse_ftyp[20] =
 	{
 		0x00, 0x00, 0x00, 0x14, 'f', 't', 'y', 'p','c','m','f','m', 0x00,0x00,0x00,0x00,'c','m','f','c'
 	};
