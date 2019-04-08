@@ -55,7 +55,7 @@ struct push_options_t
 			" [--chunked]                    Use chunked Transfer-Encoding for POST (long running post) \n otherwise short running posts"
 			" [--auth]                       Basic Auth Password \n"
 			" [--sslcert]                    TLS 1.2 client certificate \n"
-			" [--sslkey]                     SSL Key \n"
+			" [--sslkey]                     TLS private Key \n"
 			" [--sslkeypass]                 SSL Password \n"
 			" <input_files>                  CMAF files to ingest (.cmf[atvm])\n"
 
@@ -387,8 +387,11 @@ int push_thread(string file_name, push_options_t opt)
 			}
 
 			// client side TLS certificates
-			if (opt.ssl_cert_.size())
+			if (opt.ssl_cert_.size()) {
 				curl_easy_setopt(curl, CURLOPT_SSLCERT, opt.ssl_cert_.c_str());
+				// use TLS 1.2
+				curl_easy_setopt(curl, CURLOPT_SSLVERSION, CURL_SSLVERSION_TLSv1_2);
+			}
 			if (opt.ssl_key_.size())
 				curl_easy_setopt(curl, CURLOPT_SSLKEY, opt.ssl_key_.c_str());
 			if (opt.ssl_key_pass_.size())
