@@ -54,9 +54,10 @@ struct push_options_t
 			" [--close_pp]                   Close the publishing point at the end of stream or termination \n"
 			" [--chunked]                    Use chunked Transfer-Encoding for POST (long running post) \n otherwise short running posts"
 			" [--auth]                       Basic Auth Password \n"
+			" [--aname]                      Basic Auth User Name \n"
 			" [--sslcert]                    TLS 1.2 client certificate \n"
 			" [--sslkey]                     TLS private Key \n"
-			" [--sslkeypass]                 SSL Password \n"
+			" [--sslkeypass]                 passphrase \n"
 			" <input_files>                  CMAF files to ingest (.cmf[atvm])\n"
 
 			"\n");
@@ -77,6 +78,8 @@ struct push_options_t
 				if (t.compare("--close_pp") == 0) { dont_close_ = false; continue; }
 				if (t.compare("--daemon") == 0) { daemon_ = true; continue; }
 				if (t.compare("--chunked") == 0) { chunked_ = true; continue; }
+				if (t.compare("--auth") == 0) { basic_auth_ = string(argv[++i]); continue; }
+				if (t.compare("--aname") == 0) { basic_auth_name_ = string(argv[++i]); continue; }
 				if (t.compare("--sslcert") == 0) { ssl_cert_ = string(argv[++i]); continue; }
 				if (t.compare("--sslkey") == 0) { ssl_key_ = string(argv[++i]); continue; }
 				if (t.compare("--keypass") == 0) {ssl_key_pass_= string(argv[++i]); continue;}
@@ -106,6 +109,8 @@ struct push_options_t
 	string ssl_cert_;
 	string ssl_key_;
 	string ssl_key_pass_;
+
+	string basic_auth_name_; // user name with basic auth
 	string basic_auth_; // password with basic auth
 
 	vector<string> input_files_;
@@ -312,6 +317,7 @@ int push_thread(string file_name, push_options_t opt)
 			if (opt.basic_auth_.size())
 			{
 				curl_easy_setopt(curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+				curl_easy_setopt(curl, CURLOPT_USERNAME, opt.basic_auth_name_.c_str());
 				curl_easy_setopt(curl, CURLOPT_USERPWD, opt.basic_auth_.c_str());
 			}
 
