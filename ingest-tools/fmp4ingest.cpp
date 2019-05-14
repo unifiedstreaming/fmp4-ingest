@@ -52,7 +52,8 @@ struct push_options_t
 			" [--start_at offset]            Input timestamp offset in seconds (fragment accuracy only, relative to start of file) \n"
 			" [--stop_at offset]             Stop at timestamp in seconds (fragment accuracy only, relative to start of file) \n"
 			" [--close_pp]                   Close the publishing point at the end of stream or termination \n"
-			" [--chunked]                    Use chunked Transfer-Encoding for POST (long running post) \n otherwise short running posts"
+			" [--chunked]                    Use chunked Transfer-Encoding for POST (long running post) \n \
+			                                 otherwise short running posts n\"
 			" [--auth]                       Basic Auth Password \n"
 			" [--aname]                      Basic Auth User Name \n"
 			" [--sslcert]                    TLS 1.2 client certificate \n"

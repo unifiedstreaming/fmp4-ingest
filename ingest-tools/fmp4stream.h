@@ -36,7 +36,7 @@ namespace fMP4Stream {
 		bool is_large_;
 		bool has_uuid_;
 
-		box() : size_(0), large_size_(0), box_type_(""),is_large_(false), has_uuid_(false) {};
+		box() : size_(0), large_size_(0), box_type_(""), is_large_(false), has_uuid_(false) {  };
 
 		virtual uint64_t size() const;
 		virtual void print() const;
@@ -55,6 +55,7 @@ namespace fMP4Stream {
 		virtual void parse(char const *ptr);
 		virtual void print() const;
 		virtual uint64_t size() const { return box::size() + 4; };
+		full_box() : version_(0), flags_(0), magic_conf_(0) {};
 	};
 
 
@@ -72,6 +73,8 @@ namespace fMP4Stream {
 		std::vector<uint32_t>  matrix_;
 		uint32_t next_track_id_;
 		void parse(char const *ptr);
+
+		mvhd() : creation_time_(0), modification_time_(0), time_scale_(0), duration_(0), rate_(0), volume_(0), next_track_id_(0) {};
 	};
 
 	struct tkhd : public full_box
@@ -86,15 +89,17 @@ namespace fMP4Stream {
 		uint32_t height_;
 
 		uint32_t box_size_; // use the box size we want to skip
+		tkhd() : full_box() { *this = {}; };
 	};
 
 	struct mfhd : public full_box
 	{
 		uint32_t seq_nr_;
 		void parse(char const * ptr);
-		mfhd() : full_box() { box_type_ = std::string("mfhd"); };
+		mfhd() : full_box(), seq_nr_(0) { box_type_ = std::string("mfhd"); };
 		void print() const; 
 		uint64_t size() const { return full_box::size() + 4; };
+	
 	};
 
 
@@ -120,7 +125,25 @@ namespace fMP4Stream {
 		uint32_t default_sample_size_;
 		uint32_t default_sample_flags_;
 
-		tfhd() { box_type_ = std::string("tfhd"); };
+		tfhd() { set_zero();  box_type_ = std::string("tfhd"); };
+
+		void set_zero() 
+		{
+			base_data_offset_present_=false;
+			sample_description_index_present_=false;
+			default_sample_duration_present_=false;
+			default_sample_size_present_=false;
+			default_sample_flags_present_=false;
+			duration_is_empty_=false;
+			default_base_is_moof_=false;
+
+			track_id_=0;
+			base_data_offset_=0;
+			sample_description_index_=0;
+			default_sample_duration_=0;
+			default_sample_size_=0;
+			default_sample_flags_=0;
+		};
 
 		virtual void parse(char const * ptr);
 		virtual uint64_t size() const;
@@ -131,7 +154,7 @@ namespace fMP4Stream {
 	struct tfdt : public full_box
 	{
 		uint64_t base_media_decode_time_;
-		tfdt() { box_type_ = std::string("tfdt"); };
+		tfdt() :base_media_decode_time_(0){ box_type_ = std::string("tfdt"); };
 
 		virtual uint64_t size() const;
 		virtual void parse(const char * ptr);
@@ -158,6 +181,10 @@ namespace fMP4Stream {
 				//cout << "" << sample_composition_time_offset_v0 <<endl;
 				//cout << "" << sample_composition_time_offset_v1 << endl;
 			};
+			sample_entry() :sample_duration_(0), 
+				sample_size_(0), sample_flags_(0), 
+				sample_composition_time_offset_v0_(0), 
+				sample_composition_time_offset_v1_(0) {};
 		};
 
 		uint32_t sample_count_;
@@ -182,7 +209,28 @@ namespace fMP4Stream {
 		virtual void parse(char const * ptr);
 		virtual void print() const;
 		
-		trun() { this->box_type_ = "trun"; }
+		trun() : full_box() 
+		{
+			zero_set();
+			this->box_type_ = "trun"; 
+		}
+
+		void zero_set() 
+		{
+			sample_count_=0;
+
+			// optional fields
+			data_offset_=0;
+			first_sample_flags_=0;
+
+			//flags
+			data_offset_present_=false;
+			first_sample_flags_present_=false;
+			sample_duration_present_=false;
+			sample_size_present_=false;
+			sample_flags_present_=false;
+			sample_composition_time_offsets_present_=false;
+		}
 	};
 
 	// other boxes in the moof box
@@ -209,7 +257,7 @@ namespace fMP4Stream {
 
 	struct mdat : public box
 	{
-		mdat() { this->box_type_ = std::string("mdat"); };
+		mdat() : box() {  this->box_type_ = std::string("mdat"); };
 		std::vector<uint8_t> m_bytes;
 	};
 
@@ -227,7 +275,23 @@ namespace fMP4Stream {
 		std::vector<uint8_t> message_data_;
 		
 		// emsg methods
-		emsg() : presentation_time_delta_(0){ this->box_type_ = std::string("emsg"); }
+		emsg() : presentation_time_delta_(0)
+		{ 
+			zero_set();
+			this->box_type_ = std::string("emsg"); 
+		}
+
+		void zero_set()
+		{
+			scheme_id_uri_ = {};
+			value_ = {};
+			timescale_=0;
+			presentation_time_delta_=0;
+			presentation_time_=0;
+			event_duration_=0;
+			id_=0;
+		};
+
 		virtual uint64_t size() const;
 		virtual void parse(char const * ptr, unsigned int data_size);
 		virtual void print() const;
@@ -270,6 +334,24 @@ namespace fMP4Stream {
 
 		void print(bool verbose = false) const;
 		void parse(uint8_t const *ptr, unsigned int size);
+
+		void zero_set() 
+		{
+			// scte 35 splice info fields
+			table_id_=0;
+			section_syntax_indicator_ = 0;;
+			private_indicator_ = 0;
+			section_length_=0;
+			protocol_version_=0;
+			encrypted_packet_=0;
+			encryption_algorithm_=0;
+			pts_adjustment_=0;
+			cw_index_=0;
+			tier_=0;
+			splice_command_length_=0;
+			splice_command_type_=0;
+			descriptor_loop_length_=0;
+		}
 
 	};
 
