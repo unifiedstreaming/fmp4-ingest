@@ -118,7 +118,7 @@ struct event_parser_t : public tinyxml2::XMLVisitor
 		{
 			event_t l_new_event = l_root_event; // copy information from the eventstream
 
-			char messageData[500000] = {};
+			char messageData[50000] = {};
 			char value_c[100] = {};
 			const char* md[1] = { messageData };
 			const char* val[1] = { value_c };

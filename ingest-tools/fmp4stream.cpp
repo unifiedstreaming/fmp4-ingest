@@ -712,7 +712,7 @@ void emsg::write_emsg_as_fmp4_fragment(std::ostream &ostr, uint64_t timestamp_tf
 
 		// --- init tfdt
 		tfdt l_tfdt = {};
-		l_tfdt.version_ = 1;
+		l_tfdt.version_ = 1u;
 		l_tfdt.base_media_decode_time_ = timestamp_tfdt;
 		uint64_t l_tfdt_size = l_tfdt.size(); // size should be 12 + 8 = 20
 
@@ -808,7 +808,7 @@ void emsg::write_emsg_as_fmp4_fragment(std::ostream &ostr, uint64_t timestamp_tf
 		ostr.put('f');
 		ostr.put('d');
 		ostr.put('t');
-		ostr.put(255u);
+		ostr.put(1u); // version
 		ostr.put(255u);
 		ostr.put(255u);
 		ostr.put(255u);

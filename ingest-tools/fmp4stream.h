@@ -154,7 +154,7 @@ namespace fMP4Stream {
 	struct tfdt : public full_box
 	{
 		uint64_t base_media_decode_time_;
-		tfdt() :base_media_decode_time_(0){ box_type_ = std::string("tfdt"); };
+		tfdt() : full_box() , base_media_decode_time_(0){ box_type_ = std::string("tfdt"); };
 
 		virtual uint64_t size() const;
 		virtual void parse(const char * ptr);
