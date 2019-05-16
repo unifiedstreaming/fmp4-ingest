@@ -1283,7 +1283,7 @@ int ingest_stream::write_to_sparse_emsg_file(const std::string& out_file, uint32
 			}
 		}
 
-		ot.write((const char *)empty_mfra, 8);
+		//ot.write((const char *)empty_mfra, 8);
 		ot.close();
 		std::cout << "*** wrote sparse track file: " <<  out_file << "  ***" << std::endl;
 	}
@@ -1331,7 +1331,7 @@ void ingest_stream::write_to_dash_event_stream(std::string &out_file)
 //! dump the contents of the sparse track to screen
 void ingest_stream::print() const
 {
-	for (auto it = media_fragment_.begin(); it != media_fragment_.end(); ++it)
+	for (auto it = media_fragment_.begin(); it != media_fragment_.end(); it++)
 	{
 		it->print();
 	}

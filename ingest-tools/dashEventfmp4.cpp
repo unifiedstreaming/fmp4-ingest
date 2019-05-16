@@ -167,9 +167,25 @@ struct event_parser_t : public tinyxml2::XMLVisitor
 						l_new_event.scheme_id_uri_ = "urn:scte:scte35:2013:bin"; // use the 2013 binary scheme with base64 encoding
 					}
 				}
+				else if (l_new_event.scheme_id_uri_.compare("urn:scte:scte35:2013:xml") == 0)
+				{
+					auto p = child->FirstChildElement();
+					cout << "warning: xml based formatting not suitable for ingest " << endl;
+					if (p) 
+					{
+						tinyxml2::XMLPrinter printer;
+						p->Accept(&printer);
+						stringstream ss;
+						ss << printer.CStr();
+
+						l_new_event.message_data_ = ss.str();
+						l_new_event.base64_ = false;  
+					}	
+				}
 				else 
 					l_new_event.message_data_ = string();
 			}
+
 			events_.push_back(l_new_event);
 			child = child->NextSiblingElement();
 		}
