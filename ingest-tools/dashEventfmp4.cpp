@@ -215,7 +215,7 @@ int main(int argc, char *argv[])
 
 		ingest_stream l_ingest_stream;
 		
-if (evt.events_.size() < 1)
+                if (evt.events_.size() < 1)
 		{
 			cout << "no events found in the manifest" << endl;
 			return 0;
