@@ -343,6 +343,13 @@ int push_thread(string file_name, push_options_t opt)
 			cout << "---- reading fmp4 input file " << file_name << endl;
 			ingest_stream l_ingest_stream;
 			l_ingest_stream.load_from_file(input);
+
+			// patch the tfdt values with an offset time
+			if (opt.wc_off_)
+			{
+				l_ingest_stream.patch_tfdt(opt.wc_time_start_);
+			}
+
 			input.close();
 
 			// get the timescale

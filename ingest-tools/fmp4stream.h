@@ -382,6 +382,7 @@ namespace fMP4Stream {
 
 		// see what is in the fragment and store the sub boxes
 		void parse_moof();
+		void patch_tfdt(uint64_t patch);
 		void print() const;
 		uint64_t get_duration();
 	};
@@ -398,6 +399,8 @@ namespace fMP4Stream {
 		uint64_t get_media_segment_data(std::size_t index, std::vector<uint8_t> &media_seg_dat);
 		void write_to_dash_event_stream(std::string &out_file);
 		void print() const;
+
+		void patch_tfdt(uint64_t epoch);
 	};
 }
 #endif

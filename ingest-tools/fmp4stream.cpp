@@ -941,6 +941,74 @@ void media_fragment::parse_moof()
 	}
 };
 
+void media_fragment::patch_tfdt(uint64_t patch)
+{
+	if (!moof_box_.size_)
+		return;
+
+	uint64_t box_size = 0;
+	uint64_t offset = 8;
+
+	// find the tfdt box and overwrite it
+	while (moof_box_.box_data_.size() > offset)
+	{
+		unsigned int temp_off = 0;
+		box_size = (uint64_t)fmp4_read_uint32((char *)&moof_box_.box_data_[offset]);
+		uint8_t * ptr = &moof_box_.box_data_[0];
+		char name[5] = { (char)ptr[offset + 4],(char)ptr[offset + 5],(char)ptr[offset + 6],(char)ptr[offset + 7],'\0' };
+
+		if (box_size == 1) // the box_size is a large size (should not happen in fmp4)
+		{
+			temp_off = 8;
+			box_size = fmp4_read_uint64((char *)& ptr[offset + temp_off]);
+		}
+
+		if (std::string(name).compare("mfhd") == 0)
+		{
+			//mfhd_.parse((char *)& ptr[offset + temp_off]);
+			offset += (uint64_t)box_size;
+			//cout << "mfhd size" << box_size << endl;
+			continue;
+		}
+
+		if (std::string(name).compare("trun") == 0)
+		{
+			//trun_.parse((char *)& ptr[offset + temp_off]);
+			offset += (uint64_t)box_size;
+			continue;
+		}
+
+		if (std::string(name).compare("tfdt") == 0)
+		{
+			//tfdt_.parse((char *)& ptr[offset + temp_off] + 12);
+			
+			this->tfdt_.base_media_decode_time_ = this->tfdt_.base_media_decode_time_ + patch;
+
+			this->tfdt_.version_ ? \
+				fmp4_write_uint64(this->tfdt_.base_media_decode_time_,(char *) &ptr[offset + temp_off  + 12]) : \
+				fmp4_write_uint32((uint32_t)this->tfdt_.base_media_decode_time_, (char *) &ptr[offset + temp_off + 12]);
+
+			offset += (uint64_t)box_size;
+			continue;
+		}
+
+		if (std::string(name).compare("tfhd") == 0)
+		{
+			//tfhd_.parse((char *)& ptr[offset + temp_off]);
+			offset += (uint64_t)box_size;
+			continue;
+		}
+
+		// cmaf style only one traf box per moof so we skip it
+		if (std::string(name).compare("traf") == 0)
+		{
+			offset += 8;
+		}
+		else
+			offset += (unsigned int)box_size;
+	}
+};
+
 //! function to support the ingest, gets the init fragment data
 uint64_t ingest_stream::get_init_segment_data(std::vector<uint8_t> &init_seg_dat)
 {
@@ -1334,6 +1402,20 @@ void ingest_stream::print() const
 	for (auto it = media_fragment_.begin(); it != media_fragment_.end(); it++)
 	{
 		it->print();
+	}
+}
+
+// method to patch all timestamps from a VoD (0) base to live (epoch based)
+void ingest_stream::patch_tfdt(uint64_t time_anchor)
+{
+	uint32_t timescale = 0; 
+	timescale = this->init_fragment_.get_time_scale();
+	if (timescale) {
+		time_anchor = time_anchor * timescale; // offset to add to the timestamps
+		for (int i = 0; i < this->media_fragment_.size(); i++)
+		{
+			this->media_fragment_[i].patch_tfdt(time_anchor);
+		}
 	}
 }
 }
