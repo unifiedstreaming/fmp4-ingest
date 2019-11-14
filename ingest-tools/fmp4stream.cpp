@@ -1255,7 +1255,7 @@ void setSchemeURN(std::vector<uint8_t> &moov_in, const std::string& urn)
 };
 
 //! writes sparse emsg file, set the track, the scheme
-int ingest_stream::write_to_sparse_emsg_file(const std::string& out_file, uint32_t track_id, uint32_t announce, const std::string& urn)
+int ingest_stream::write_to_sparse_emsg_file(const std::string& out_file, uint32_t track_id, uint32_t announce, const std::string& urn, uint32_t timescale)
 {
 	//ifstream moov_s_in("sparse_moov.inc", ios::binary);
 	
@@ -1263,6 +1263,10 @@ int ingest_stream::write_to_sparse_emsg_file(const std::string& out_file, uint32
 	setTrackID(sparse_moov, track_id);
 	if(urn.size())
 	    setSchemeURN(sparse_moov, urn );
+	
+	// write back the timescale
+	fmp4_write_uint32(time_scale , (char *) &sparse_moov[28]);
+	
 	std::ofstream ot(out_file, std::ios::binary);
 	//cout << sparse_moov.size() << endl;
 
