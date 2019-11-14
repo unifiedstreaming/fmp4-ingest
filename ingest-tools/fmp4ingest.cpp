@@ -24,6 +24,49 @@ using namespace fMP4Stream;
 using namespace std;
 bool stop_all = false;
 
+///////////////////// experimental code for fetching remote time code ///////////////////////////
+// helper to read the time remote timecode
+size_t write_function(void *ptr, size_t size, size_t nmemb, std::string* data)
+{
+	data->append((char*)ptr, size * nmemb);
+	return size * nmemb;
+}
+
+// do a request to get a synced network epoch, default is time.akamai.com
+int get_remote_sync_epoch(uint64_t *res_time, string &wc_uri_)
+{
+	CURL *curl;
+	CURLcode res;
+	std::string response_string;
+
+	curl = curl_easy_init();
+	if (curl)
+	{
+
+		curl_easy_setopt(curl, CURLOPT_URL, wc_uri_.c_str());
+
+		/* example.com is redirected, so we tell libcurl to follow redirection */
+		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_function);
+		curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response_string);
+
+		/* Perform the request, res will get the return code */
+		res = curl_easy_perform(curl);
+
+		/* Check for errors */
+		if (res != CURLE_OK)
+			fprintf(stderr, "network time lookup failed: %s\n",
+				curl_easy_strerror(res));
+
+		unsigned long ul = std::stoul(response_string, nullptr, 0);
+		cout << ul << endl;
+		*res_time = ul;
+		/* always cleanup */
+		curl_easy_cleanup(curl);
+	}
+	return 0;
+}
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 // options for the ingest
 struct push_options_t
 {
@@ -34,6 +77,8 @@ struct push_options_t
 		, loop_(false)
 		, tsoffset_(0)
 		, stop_at_(0)
+		, wc_off_(true)
+		, wc_uri_("http://time.akamai.com")
 		, dont_close_(true)
 		, chunked_(false)
 		, drop_every_(0)
@@ -51,6 +96,8 @@ struct push_options_t
 			" [-r, --realtime]               Enable realtime mode\n"
 			" [--start_at offset]            Input timestamp offset in seconds (fragment accuracy only, relative to start of file) \n"
 			" [--stop_at offset]             Stop at timestamp in seconds (fragment accuracy only, relative to start of file) \n"
+			" [--wc_offset]                  (boolean )Add a wallclock time offset for converting VoD (0) asset to Live \n"
+			" [--wc_uri]                     uri for fetching wall clock time default time.akamai.com \n"
 			" [--close_pp]                   Close the publishing point at the end of stream or termination \n"
 			" [--chunked]                    Use chunked Transfer-Encoding for POST (long running post) otherwise short running posts \n"
 			" [--auth]                       Basic Auth Password \n"
@@ -65,7 +112,7 @@ struct push_options_t
 	
 	void parse_options(int argc, char * argv[]) 
 	{
-		if (argc > 2) 
+		if (argc > 2)
 		{
 			for (int i = 1; i < argc; i++)
 			{
@@ -78,26 +125,35 @@ struct push_options_t
 				if (t.compare("--close_pp") == 0) { dont_close_ = false; continue; }
 				if (t.compare("--daemon") == 0) { daemon_ = true; continue; }
 				if (t.compare("--chunked") == 0) { chunked_ = true; continue; }
+				if (t.compare("--wc_offset") == 0) { wc_off_ = true; continue; }
+				if (t.compare("--wc_uri") == 0) { wc_uri_ = string(argv[++i]); continue; }
 				if (t.compare("--auth") == 0) { basic_auth_ = string(argv[++i]); continue; }
 				if (t.compare("--aname") == 0) { basic_auth_name_ = string(argv[++i]); continue; }
 				if (t.compare("--sslcert") == 0) { ssl_cert_ = string(argv[++i]); continue; }
 				if (t.compare("--sslkey") == 0) { ssl_key_ = string(argv[++i]); continue; }
-				if (t.compare("--keypass") == 0) {ssl_key_pass_= string(argv[++i]); continue;}
+				if (t.compare("--keypass") == 0) { ssl_key_pass_ = string(argv[++i]); continue; }
 				if (t.compare("--keypass") == 0) { basic_auth_ = string(argv[++i]); continue; }
 				input_files_.push_back(argv[i]);
 			}
-				
+
+			// get the wallclock offset 
+			if (wc_off_)
+				get_remote_sync_epoch(&wc_time_start_, wc_uri_);
 		}
 		else
 			print_options();
 	}
+	
 
 	string url_;
 	bool realtime_;
 	bool daemon_;
 	bool loop_;
+	bool wc_off_;
+
 	uint64_t tsoffset_;
 	uint64_t stop_at_;
+	uint64_t wc_time_start_;
 	bool dont_close_;
 	bool chunked_;
 
@@ -109,6 +165,7 @@ struct push_options_t
 	string ssl_cert_;
 	string ssl_key_;
 	string ssl_key_pass_;
+	string wc_uri_; // uri for fetching wallclock time in seconds default is time.akamai.com
 
 	string basic_auth_name_; // user name with basic auth
 	string basic_auth_; // password with basic auth
