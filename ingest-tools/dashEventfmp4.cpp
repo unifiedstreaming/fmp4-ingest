@@ -215,6 +215,23 @@ int main(int argc, char *argv[])
 
 		ingest_stream l_ingest_stream;
 		
+if (evt.events_.size() < 1)
+		{
+			cout << "no events found in the manifest" << endl;
+			return 0;
+		}
+
+		uint32_t time_scale = evt.events_[0].time_scale_;
+
+		for (int i = 0; i < evt.events_.size(); i++)
+		{
+			if (time_scale != evt.events_[i].time_scale_)
+			{
+				cout << "only events with same timescale are supported" << endl;
+				return 0;
+			}
+		}
+
 		for (int i = 0; i < evt.events_.size(); i++)
 		{
 			media_fragment m;
@@ -224,7 +241,7 @@ int main(int argc, char *argv[])
 		}
 
 		string event_urn = "urn:mpeg:dash:event:2012";
-		l_ingest_stream.write_to_sparse_emsg_file(out_file, 1, 0, event_urn);
+		l_ingest_stream.write_to_sparse_emsg_file(out_file, 1, 0, event_urn, time_scale);
 
 		return 1;
 	}
