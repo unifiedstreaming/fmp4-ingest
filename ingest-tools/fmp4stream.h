@@ -393,7 +393,7 @@ namespace fMP4Stream {
 		box sidx_box_, meta_box_, mfra_box_;
 		int load_from_file(std::istream &input_file, bool init_only=false);
 		int write_init_to_file(std::string &out_file);
-		int write_to_sparse_emsg_file(const std::string& out_file, uint32_t track_id, uint32_t announce, const std::string& urn);
+		int write_to_sparse_emsg_file(const std::string& out_file, uint32_t track_id, uint32_t announce, const std::string& urn, uint32_t timescale=1);
 		uint64_t get_init_segment_data(std::vector<uint8_t> &init_seg_dat);
 		uint64_t get_media_segment_data(std::size_t index, std::vector<uint8_t> &media_seg_dat);
 		void write_to_dash_event_stream(std::string &out_file);
