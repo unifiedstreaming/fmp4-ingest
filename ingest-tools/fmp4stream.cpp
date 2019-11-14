@@ -1265,7 +1265,7 @@ int ingest_stream::write_to_sparse_emsg_file(const std::string& out_file, uint32
 	    setSchemeURN(sparse_moov, urn );
 	
 	// write back the timescale
-	fmp4_write_uint32(time_scale , (char *) &sparse_moov[28]);
+	fmp4_write_uint32(timescale , (char *) &sparse_moov[28]);
 	
 	std::ofstream ot(out_file, std::ios::binary);
 	//cout << sparse_moov.size() << endl;
