@@ -77,7 +77,7 @@ struct push_options_t
 		, loop_(false)
 		, tsoffset_(0)
 		, stop_at_(0)
-		, wc_off_(true)
+		, wc_off_(false)
 		, wc_uri_("http://time.akamai.com")
 		, dont_close_(true)
 		, chunked_(false)
