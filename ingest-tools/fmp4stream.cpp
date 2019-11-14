@@ -619,10 +619,15 @@ void emsg::print() const
 //! write an emsg box to a stream
 uint32_t emsg::write(std::ostream &ostr) const
 {
+	char int_buf[4];
+	char long_buf[8];
 	uint32_t bytes_written = 0;
-	uint32_t size = (uint32_t)this->size();
-	ostr.write((char *)&size, 4);
+	
+	uint32_t sz = (uint32_t)this->size();
+	fmp4_write_uint32(sz,int_buf);
+	ostr.write((char *)int_buf, 4);       
 	bytes_written += 4;
+	
 	ostr.put('e');
 	ostr.put('m');
 	ostr.put('s');
@@ -633,8 +638,7 @@ uint32_t emsg::write(std::ostream &ostr) const
 	ostr.put(0u);
 	ostr.put(0u);
 	bytes_written += 4;
-	char int_buf[4];
-	char long_buf[8];
+	
 	if (version_ == 1)
 	{
 		fmp4_write_uint32(timescale_, int_buf);
