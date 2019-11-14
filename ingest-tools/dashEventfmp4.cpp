@@ -232,11 +232,15 @@ int main(int argc, char *argv[])
 			}
 		}
 
+		// assume zero as the first presentation time
+		uint64_t last_event_time =0;
+		// in this case we have events
 		for (int i = 0; i < evt.events_.size(); i++)
 		{
 			media_fragment m;
 			evt.events_[i].to_emsg(m.emsg_);
-			m.tfdt_.base_media_decode_time_ = evt.events_[i].presentation_time_;
+			m.tfdt_.base_media_decode_time_ = last_event_time; 
+			last_event_time = evt.events_[i].presentation_time_ + evt.events_[i].duration_;
 			l_ingest_stream.media_fragment_.push_back(m);
 		}
 
