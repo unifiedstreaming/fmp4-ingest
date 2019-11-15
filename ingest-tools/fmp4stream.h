@@ -297,12 +297,17 @@ namespace fMP4Stream {
 		virtual void print() const;
 		uint32_t write(std::ostream &ostr) const;
 
-		void write_emsg_as_fmp4_fragment(std::ostream &ostr, uint64_t tfdt, uint32_t track_id, uint64_t next_tfdt) const;
+		void write_emsg_as_fmp4_fragment(std::ostream &ostr, uint64_t tfdt, uint32_t track_id, uint64_t next_tfdt, uint8_t target_version); // warning may change the version
 		void write_emsg_as_mpd_event(std::ostream &ostr, uint64_t base_time) const;
 	};	
 
 	const uint8_t empty_mfra[8] = {
 		0x00, 0x00, 0x00, 0x08, 'm', 'f', 'r', 'a'
+	};
+
+	// empty message cue
+	const uint8_t embe[8] = {
+		0x00, 0x00, 0x00, 0x08, 'e', 'm', 'b', 'e'
 	};
 
 	const uint8_t sparse_ftyp[20] =
@@ -394,7 +399,7 @@ namespace fMP4Stream {
 		box sidx_box_, meta_box_, mfra_box_;
 		int load_from_file(std::istream &input_file, bool init_only=false);
 		int write_init_to_file(std::string &out_file);
-		int write_to_sparse_emsg_file(const std::string& out_file, uint32_t track_id, uint32_t announce, const std::string& urn, uint32_t timescale=1);
+		int write_to_sparse_emsg_file(const std::string& out_file, uint32_t track_id, uint32_t announce, const std::string& urn, uint32_t timescale=1, uint8_t target_emsg_version=2);
 		uint64_t get_init_segment_data(std::vector<uint8_t> &init_seg_dat);
 		uint64_t get_media_segment_data(std::size_t index, std::vector<uint8_t> &media_seg_dat);
 		void write_to_dash_event_stream(std::string &out_file);

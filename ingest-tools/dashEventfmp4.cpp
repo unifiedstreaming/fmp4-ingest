@@ -245,7 +245,7 @@ int main(int argc, char *argv[])
 		}
 
 		string event_urn = "urn:mpeg:dash:event:2012";
-		l_ingest_stream.write_to_sparse_emsg_file(out_file, 1, 0, event_urn, time_scale);
+		l_ingest_stream.write_to_sparse_emsg_file(out_file, 1, 0, event_urn, time_scale,2);
 
 		return 1;
 	}

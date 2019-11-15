@@ -685,13 +685,20 @@ uint32_t emsg::write(std::ostream &ostr) const
 
 //! write an emsg message as a sparse fragment with advertisement time timestamp announce second before the application time
 void emsg::write_emsg_as_fmp4_fragment(std::ostream &ostr, uint64_t timestamp_tfdt, uint32_t track_id,
-	uint64_t next_tfdt /* announce n seconds in advance*/) const
+	uint64_t next_tfdt /* announce n seconds in advance*/, uint8_t target_version /* set to two (2) to not change the target version of the emsg */) 
 {
 	if (scheme_id_uri_.size())
 	{
 		std::cout << "*** writing emsg fragment scheme: " << scheme_id_uri_ << "***" << std::endl;
 
-
+		if ((version_ == 0) && (target_version == 1)) {
+			this->presentation_time_delta_ = presentation_time_ - timestamp_tfdt;
+			this->version_ = target_version;
+		}
+		if (version_ == 1 && target_version == 0) {
+			this->presentation_time_ = timestamp_tfdt + presentation_time_delta_;
+			this->version_ = target_version;
+		}
 
 		// --- init mfhd
 		mfhd l_mfhd = {};
@@ -733,10 +740,10 @@ void emsg::write_emsg_as_fmp4_fragment(std::ostream &ostr, uint64_t timestamp_tf
 
 		//-- init sentry in trun write 2 samples
 		l_trun.m_sentry.resize(2);
-		l_trun.m_sentry[0].sample_size_ = 0;
+		l_trun.m_sentry[0].sample_size_ = 8;
 		l_trun.m_sentry[0].sample_duration_ = presentation_time_delta_ ? this->presentation_time_delta_ :  (presentation_time_- timestamp_tfdt);
 		l_trun.m_sentry[1].sample_size_ = (uint32_t)size();
-		l_trun.m_sentry[1].sample_duration_ = this->event_duration_;       // duration is 1 
+		l_trun.m_sentry[1].sample_duration_ = this->event_duration_;    
 
 
 		//--- initialize the box sizes
@@ -844,13 +851,23 @@ void emsg::write_emsg_as_fmp4_fragment(std::ostream &ostr, uint64_t timestamp_tf
 		//fmp4_write_uint32((uint32_t)l_trun.m_sentry[2].sample_size_, int_buf);
 		//ostr.write(int_buf, 4);
 
-		uint32_t mdat_size = (uint32_t)size() + 8;
+		uint32_t mdat_size = (uint32_t)size() + 16; // mdat box + embe box + this event message box
 		fmp4_write_uint32(mdat_size, int_buf);
 		ostr.write(int_buf, 4);
 		ostr.put('m');
 		ostr.put('d');
 		ostr.put('a');
 		ostr.put('t');
+
+
+		ostr.put(0u);
+		ostr.put(0u);
+		ostr.put(0u);
+		ostr.put(8);
+		ostr.put('e');
+		ostr.put('m');
+		ostr.put('b');
+		ostr.put('e');
 
 		// write the emsg as an mdat box
 		this->write(ostr);
@@ -1113,29 +1130,48 @@ int ingest_stream::load_from_file(std::istream &infile, bool init_only)
 					while (!mdat_found)
 					{
 						it++;
+
 						if (it->box_type_.compare("mdat") == 0)
 						{
+							// find event messages embedded in 
+							
 							m.mdat_box_ = *it;
 							mdat_found = true;
 							m.parse_moof();
 
+							uint32_t index = 8;
 
-							if (m.mdat_box_.size_ > 8) {
+							while (index < m.mdat_box_.box_data_.size() ) 
+							{
+								// seek to next box in 
 								uint8_t name[9] = {};
-								for (int i = 0; i < 8; i++)
-									name[i] = m.mdat_box_.box_data_[i + 8];
+								for (uint32_t i = 0; i < 8; i++)
+									name[i] = m.mdat_box_.box_data_[index+i];
 								name[8] = '\0';
+								uint32_t l_size = fmp4_read_uint32((char *)name);
+
+								if (l_size > m.mdat_box_.box_data_.size())
+									break;
+
 								std::string enc_box_name((char *)&name[4]);
-								if (enc_box_name.compare("emsg") == 0)
+
+								if (enc_box_name.compare("emsg") == 0) // right now we can only parse a single emsg, todo update to parse multiple emsg
 								{
-									m.emsg_.parse((char *)&m.mdat_box_.box_data_[8], (unsigned int) m.mdat_box_.box_data_.size() - 8);
+									m.emsg_.parse((char *)&m.mdat_box_.box_data_[index], (unsigned int) l_size);
 									m.e_msg_is_in_mdat_ = true;
+									index += l_size;
+									continue;
 								}
+								if (enc_box_name.compare("embe") == 0)
+								{
+									index += l_size;
+									continue;
+								}
+								break; // skip on all other mdat content only embe and emsg allowed
 							}
 
-							//cout << "mdat size is " << it->m_size << std::endl;
 							media_fragment_.push_back(m);
-							//cout << "|mdat|";
+
 							break;
 						}
 					}
@@ -1315,7 +1351,7 @@ void setSchemeURN(std::vector<uint8_t> &moov_in, const std::string& urn)
 };
 
 //! writes sparse emsg file, set the track, the scheme
-int ingest_stream::write_to_sparse_emsg_file(const std::string& out_file, uint32_t track_id, uint32_t announce, const std::string& urn, uint32_t timescale)
+int ingest_stream::write_to_sparse_emsg_file(const std::string& out_file, uint32_t track_id, uint32_t announce, const std::string& urn, uint32_t timescale, uint8_t target_emsg_version)
 {
 	//ifstream moov_s_in("sparse_moov.inc", ios::binary);
 	
@@ -1347,7 +1383,7 @@ int ingest_stream::write_to_sparse_emsg_file(const std::string& out_file, uint32
 				if ( (it + 1) != this->media_fragment_.end())
 					next_tfdt = (it+1)->tfdt_.base_media_decode_time_;
 				//cout << " writing emsg fragment " << endl;
-				it->emsg_.write_emsg_as_fmp4_fragment(ot, it->tfdt_.base_media_decode_time_, track_id, next_tfdt);
+				it->emsg_.write_emsg_as_fmp4_fragment(ot, it->tfdt_.base_media_decode_time_, track_id, next_tfdt, target_emsg_version);
 			}
 		}
 
