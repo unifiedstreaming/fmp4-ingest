@@ -600,7 +600,7 @@ void emsg::print() const
 	else
 		std::cout << std::setw(33) << std::left << " presentation_time_delta: " << presentation_time_delta_ << std::endl;
 	std::cout << std::setw(33) << std::left << " event duration:    " << event_duration_ << std::endl;
-	std::cout << std::setw(33) << std::left << " event id           " << event_duration_ << std::endl;
+	std::cout << std::setw(33) << std::left << " event id           " << id_ << std::endl;
 	std::cout << std::setw(33) << std::left << " message data size  " << message_data_.size() << std::endl;
 
 	//print_payload
@@ -692,10 +692,11 @@ void emsg::write_emsg_as_fmp4_fragment(std::ostream &ostr, uint64_t timestamp_tf
 		std::cout << "*** writing emsg fragment scheme: " << scheme_id_uri_ << "***" << std::endl;
 
 		if ((version_ == 1) && (target_version == 0)) {
-			this->presentation_time_delta_ = presentation_time_ - timestamp_tfdt;
+			this->presentation_time_delta_ = 0; /* should be: presentation_time_ - timestamp_tfdt; */
 			this->version_ = target_version;
 		}
-		if (version_ == 0 && target_version == 1) {
+		else if ((version_ == 0) && (target_version == 1)) 
+		{
 			this->presentation_time_ = timestamp_tfdt + presentation_time_delta_;
 			this->version_ = target_version;
 		}
@@ -705,6 +706,8 @@ void emsg::write_emsg_as_fmp4_fragment(std::ostream &ostr, uint64_t timestamp_tf
 		l_mfhd.seq_nr_ = 0;
 		uint64_t l_mfhd_size = l_mfhd.size();
 		
+		//uint32_t l_announce = 8 * this->timescale_; // following the method of push input stream (i do not think this is correct)
+
 		// --- init tfhd
 		tfhd l_tfhd = {};
 		l_tfhd.magic_conf_ = 131106u;
@@ -724,13 +727,13 @@ void emsg::write_emsg_as_fmp4_fragment(std::ostream &ostr, uint64_t timestamp_tf
 		// --- init tfdt
 		tfdt l_tfdt = {};
 		l_tfdt.version_ = 1u;
-		l_tfdt.base_media_decode_time_ = timestamp_tfdt;
+		l_tfdt.base_media_decode_time_ =  this->presentation_time_ ;
 		uint64_t l_tfdt_size = l_tfdt.size(); //
 
 		// --- init trun
 		trun l_trun = {};
 		l_trun.magic_conf_ = 769u;
-		l_trun.sample_count_ = 2;
+		l_trun.sample_count_ = 1;
 		l_trun.data_offset_present_ = true;
 		l_trun.first_sample_flags_present_ =false;
 		l_trun.sample_duration_present_ = true;
@@ -739,17 +742,16 @@ void emsg::write_emsg_as_fmp4_fragment(std::ostream &ostr, uint64_t timestamp_tf
 		l_trun.sample_composition_time_offsets_present_ = false;
 
 		//-- init sentry in trun write 2 samples
-		l_trun.m_sentry.resize(2);
-		l_trun.m_sentry[0].sample_size_ = 8;
-		l_trun.m_sentry[0].sample_duration_ = presentation_time_delta_ ? this->presentation_time_delta_ :  (presentation_time_- timestamp_tfdt);
-		l_trun.m_sentry[1].sample_size_ = (uint32_t)size();
-		l_trun.m_sentry[1].sample_duration_ = this->event_duration_;    
+		l_trun.m_sentry.resize(1);
+		//l_trun.m_sentry[0].sample_size_ = 0;
+		//l_trun.m_sentry[0].sample_duration_ = 0; // presentation_time_delta_ ? this->presentation_time_delta_ : (presentation_time_ - timestamp_tfdt);
+		l_trun.m_sentry[0].sample_size_ = (uint32_t)size();
+		l_trun.m_sentry[0].sample_duration_ = this->event_duration_;    
 
 
 		//--- initialize the box sizes
 		uint64_t l_trun_size = l_trun.size();
 		uint64_t l_traf_size = 8 + l_trun_size + l_tfdt_size + l_tfhd_size;
-		// warning computing the moof size not always accurate (don't know why), hardcoded the value
 		uint64_t l_moof_size = 8 + l_traf_size + l_mfhd_size; // l_traf_size + 8 + l_mfhd_size;
 		l_trun.data_offset_ = (int32_t) l_moof_size + 8;
 
@@ -814,9 +816,9 @@ void emsg::write_emsg_as_fmp4_fragment(std::ostream &ostr, uint64_t timestamp_tf
 		ostr.put('d');
 		ostr.put('t');
 		ostr.put(1u); // version
-		ostr.put(255u);
-		ostr.put(255u);
-		ostr.put(255u);
+		ostr.put(0u);
+		ostr.put(0u);
+		ostr.put(0u);
 		fmp4_write_uint64((uint64_t)l_tfdt.base_media_decode_time_, long_buf);
 		ostr.write(long_buf, 8);
 
@@ -842,16 +844,16 @@ void emsg::write_emsg_as_fmp4_fragment(std::ostream &ostr, uint64_t timestamp_tf
 		ostr.write(int_buf, 4);
 		fmp4_write_uint32((uint32_t)l_trun.m_sentry[0].sample_size_, int_buf);
 		ostr.write(int_buf, 4);
-		fmp4_write_uint32((uint32_t)l_trun.m_sentry[1].sample_duration_, int_buf);
-		ostr.write(int_buf, 4);
-		fmp4_write_uint32((uint32_t)l_trun.m_sentry[1].sample_size_, int_buf);
-		ostr.write(int_buf, 4);
+		//fmp4_write_uint32((uint32_t)l_trun.m_sentry[1].sample_duration_, int_buf);
+		//ostr.write(int_buf, 4);
+		//fmp4_write_uint32((uint32_t)l_trun.m_sentry[1].sample_size_, int_buf);
+		//ostr.write(int_buf, 4);
 		//fmp4_write_uint32((uint32_t)l_trun.m_sentry[2].sample_duration_, int_buf);
 		//ostr.write(int_buf, 4);
 		//fmp4_write_uint32((uint32_t)l_trun.m_sentry[2].sample_size_, int_buf);
 		//ostr.write(int_buf, 4);
 
-		uint32_t mdat_size = (uint32_t)size() + 16; // mdat box + embe box + this event message box
+		uint32_t mdat_size = (uint32_t)size() + 8; // mdat box + embe box + this event message box
 		fmp4_write_uint32(mdat_size, int_buf);
 		ostr.write(int_buf, 4);
 		ostr.put('m');
@@ -859,15 +861,7 @@ void emsg::write_emsg_as_fmp4_fragment(std::ostream &ostr, uint64_t timestamp_tf
 		ostr.put('a');
 		ostr.put('t');
 
-
-		ostr.put(0u);
-		ostr.put(0u);
-		ostr.put(0u);
-		ostr.put(8);
-		ostr.put('e');
-		ostr.put('m');
-		ostr.put('b');
-		ostr.put('e');
+		//ostr.write((char *)embe, 8);
 
 		// write the emsg as an mdat box
 		this->write(ostr);
@@ -1360,9 +1354,12 @@ int ingest_stream::write_to_sparse_emsg_file(const std::string& out_file, uint32
 	if(urn.size())
 	    setSchemeURN(sparse_moov, urn );
 	
-	// write back the timescale
+	// write back the timescale mvhd
 	fmp4_write_uint32(timescale , (char *) &sparse_moov[28]);
 	
+	// mdhd 
+	fmp4_write_uint32(timescale, (char *)&sparse_moov[244]);
+
 	std::ofstream ot(out_file, std::ios::binary);
 	//cout << sparse_moov.size() << endl;
 

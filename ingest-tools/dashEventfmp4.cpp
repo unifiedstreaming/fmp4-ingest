@@ -17,6 +17,7 @@ convert DASH Events in an XML file to a timed metadata track
 #include <fstream>
 #include <memory>
 #include <sstream>
+#include <algorithm>
 
 using namespace fMP4Stream;
 using namespace std;
@@ -124,6 +125,12 @@ struct event_parser_t : public tinyxml2::XMLVisitor
 			const char* val[1] = { value_c };
 			bool attr_md = false;
 
+			// default to base64 for binary scte
+			if (l_new_event.scheme_id_uri_.compare("urn:scte:scte35:2014:xml+bin") == 0)
+			{
+				l_new_event.base64_ = true;
+			}
+
 			// query the event attributes
 			if (child->QueryInt64Attribute("presentationTime", &l_new_event.presentation_time_) != tinyxml2::XML_SUCCESS)
 			{
@@ -156,8 +163,21 @@ struct event_parser_t : public tinyxml2::XMLVisitor
 			}
 			if (!attr_md)
 			{
-				if(child->GetText() != nullptr)
-				    l_new_event.message_data_ = string(child->GetText());
+				if (child->GetText() != nullptr) {
+					string temp = child->GetText();
+					if (l_new_event.base64_)
+					{
+						// todo make function to remove all line breaks and spaces to base 64 decode will fail
+						temp.erase(std::remove(temp.begin(), temp.end(), '\n'), temp.end());  // remove line breaks for base64
+						temp.erase(std::remove(temp.begin(), temp.end(), '\r'), temp.end());
+						temp.erase(std::remove(temp.begin(), temp.end(), '\n'), temp.end());  // remove line breaks for base64
+						temp.erase(std::remove(temp.begin(), temp.end(), '\r'), temp.end());
+						temp.erase(std::remove(temp.begin(), temp.end(), ' '), temp.end());
+						temp.erase(std::remove(temp.begin(), temp.end(), ' '), temp.end());
+						temp.erase(std::remove(temp.begin(), temp.end(), ' '), temp.end());
+					}
+					l_new_event.message_data_ = temp;
+				}
 				else if (l_new_event.scheme_id_uri_.compare("urn:scte:scte35:2014:xml+bin") == 0)
 				{
 					auto bin_dat = child->FirstChildElement()->FirstChildElement()->GetText();
@@ -201,7 +221,7 @@ int main(int argc, char *argv[])
 	string out_file = "out_sparse_fmp4.cmfm";
 	string scheme_prefix;
 
-	uint32_t target_emsg_version=2;
+	uint32_t target_emsg_version=0;
 
 	if (argc > 3)
 		target_emsg_version = atoi(argv[3]);
