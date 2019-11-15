@@ -691,11 +691,11 @@ void emsg::write_emsg_as_fmp4_fragment(std::ostream &ostr, uint64_t timestamp_tf
 	{
 		std::cout << "*** writing emsg fragment scheme: " << scheme_id_uri_ << "***" << std::endl;
 
-		if ((version_ == 0) && (target_version == 1)) {
+		if ((version_ == 1) && (target_version == 0)) {
 			this->presentation_time_delta_ = presentation_time_ - timestamp_tfdt;
 			this->version_ = target_version;
 		}
-		if (version_ == 1 && target_version == 0) {
+		if (version_ == 0 && target_version == 1) {
 			this->presentation_time_ = timestamp_tfdt + presentation_time_delta_;
 			this->version_ = target_version;
 		}
@@ -1420,8 +1420,11 @@ void ingest_stream::write_to_dash_event_stream(std::string &out_file)
 			//it->print();
 			if (it->emsg_.scheme_id_uri_.size())
 			{
-				
+				uint64_t l_presentation_time = it->emsg_.version_ ? it->emsg_.presentation_time_ : it->tfdt_.base_media_decode_time_ + it->emsg_.presentation_time_delta_;
 				//cout << " writing emsg fragment " << endl;
+				if (it->emsg_.version_ == 0)
+					std::cout << it->emsg_.presentation_time_delta_ << std::endl;
+
 				it->emsg_.write_emsg_as_mpd_event(ot, it->tfdt_.base_media_decode_time_);
 
 			}

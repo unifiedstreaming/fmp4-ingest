@@ -201,6 +201,11 @@ int main(int argc, char *argv[])
 	string out_file = "out_sparse_fmp4.cmfm";
 	string scheme_prefix;
 
+	uint32_t target_emsg_version=2;
+
+	if (argc > 3)
+		target_emsg_version = atoi(argv[3]);
+
 	if (argc > 2)
 		out_file = string(argv[2]);
 
@@ -245,12 +250,12 @@ int main(int argc, char *argv[])
 		}
 
 		string event_urn = "urn:mpeg:dash:event:2012";
-		l_ingest_stream.write_to_sparse_emsg_file(out_file, 1, 0, event_urn, time_scale,2);
+		l_ingest_stream.write_to_sparse_emsg_file(out_file, 1, 0, event_urn, time_scale, target_emsg_version);
 
 		return 1;
 	}
 	else
 	{
-		cout << "usage: fmp4meta infile(dash event xml) outfile(sparse_meta_emsg, cmfc)" << endl;
+		cout << "usage: fmp4meta infile(dash event xml) outfile(sparse_meta_emsg, cmfc)  [target_emsg_version (int)]" << endl;
 	}
 }
