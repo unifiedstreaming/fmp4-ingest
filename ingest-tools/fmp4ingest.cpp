@@ -576,6 +576,10 @@ int push_thread(string file_name, push_options_t opt)
 
 					// check if we need to stop at a timestamp offset
 					uint64_t t_diff = l_ingest_stream.media_fragment_[i].tfdt_.base_media_decode_time_  - l_ingest_stream.media_fragment_[0].tfdt_.base_media_decode_time_;
+<<<<<<< HEAD
+=======
+					
+>>>>>>> 8ab4c1e1bf4388cf0c5f9d3931a8df0c0cbaddb5
 					bool stop_at = opt.stop_at_ && (t_diff >= (opt.stop_at_ * post_state.timescale_));
 					
 					cout << " pushed media fragment: " << i << " file_name: " << post_state.file_name_ << " fragment duration: " << \
