@@ -3,7 +3,7 @@
 Supplementary software media ingest specification:
 https://github.com/unifiedstreaming/fmp4-ingest
 
-Copyright (C) 2009-2018 CodeShop B.V.
+Copyright (C) 2009-2019 CodeShop B.V.
 http://www.code-shop.com
 
 convert DASH Events in an XML file to a timed metadata track
@@ -20,8 +20,8 @@ convert DASH Events in an XML file to a timed metadata track
 #include <algorithm>
 
 using namespace fMP4Stream;
-using namespace std;
-extern string moov_64_enc;
+
+extern std::string moov_64_enc;
 
 // struct to hold mpd events, encapsulate event and eventstream information
 struct event_t 
@@ -29,9 +29,9 @@ struct event_t
 	int64_t presentation_time_;   // presentation time of event
 	uint32_t duration_;           // duration of event
 	bool base64_;                 // codes if the payload is base64 coded
-	string message_data_;         // message data (attribute or value)
-	string scheme_id_uri_;        // scheme if uri
-	string value_;                // string of the subscheme
+	std::string message_data_;    // message data (attribute or value)
+	std::string scheme_id_uri_;   // scheme if uri
+	std::string value_;           // string of the subscheme
 	uint32_t id_;                 // id value of the event
 	uint32_t time_scale_;         // timescale, inherited from eventstream
 	int64_t pto_;                 //  pto in eventstream
@@ -73,10 +73,10 @@ struct event_parser_t : public tinyxml2::XMLVisitor
 {
 	virtual bool VisitEnter(const tinyxml2::XMLElement &el, const tinyxml2::XMLAttribute *at) 
 	{
-		string el_name = el.Value();
+		std::string el_name = el.Value();
 
 		if ((el_name.compare("dash:EventStream") == 0) || (el_name.compare("EventStream") == 0))
-			cout << "*** eventstream found ***" << endl;
+			std::cout << "*** eventstream found ***" << std::endl;
 		else
 			return true;
 		
@@ -85,7 +85,7 @@ struct event_parser_t : public tinyxml2::XMLVisitor
 		// parse attributes for the eventstream
 		if (el.QueryUnsignedAttribute ("timescale", &l_root_event.time_scale_) != tinyxml2::XMLError::XML_SUCCESS)
 		{
-			l_root_event.time_scale_ = 1; // no timescale defined
+			l_root_event.time_scale_ = 1; // no timescale defined use default
 		}
 
 		l_root_event.scheme_id_uri_.resize(50000);
@@ -94,18 +94,18 @@ struct event_parser_t : public tinyxml2::XMLVisitor
 
 		if (el.QueryStringAttribute("schemeIdUri", ids) != tinyxml2::XMLError::XML_SUCCESS)
 		{
-			cout << "error parsing schemeIdUri, it is mandatory for each eventStream to have a URI" << endl;
+			std::cout << "error parsing schemeIdUri, it is mandatory for each eventStream to have a URI" << std::endl;
 			return false;
 		}
 		else
 		{
-			l_root_event.scheme_id_uri_ = string(ids[0]);
-			cout << l_root_event.scheme_id_uri_ << endl;
+			l_root_event.scheme_id_uri_ = std::string(ids[0]);
+			std::cout << l_root_event.scheme_id_uri_ << std::endl;
 		}
 		if (el.QueryStringAttribute("value", ids) == tinyxml2::XMLError::XML_SUCCESS)
 		{
-			l_root_event.value_ = string(ids[0]);
-			cout << l_root_event.value_ << endl;
+			l_root_event.value_ = std::string(ids[0]);
+			std::cout << l_root_event.value_ << std::endl;
 		}
 		if (el.QueryInt64Attribute("presentationTimeOffset", &l_root_event.pto_) != tinyxml2::XMLError::XML_SUCCESS)
 		{
@@ -119,7 +119,7 @@ struct event_parser_t : public tinyxml2::XMLVisitor
 		{
 			event_t l_new_event = l_root_event; // copy information from the eventstream
 
-			char messageData[50000] = {};
+			char messageData[50000] = {}; // only up to 50k message data supported in mpd events
 			char value_c[100] = {};
 			const char* md[1] = { messageData };
 			const char* val[1] = { value_c };
@@ -142,7 +142,7 @@ struct event_parser_t : public tinyxml2::XMLVisitor
 			}
 			if (child->QueryStringAttribute("value", val) == tinyxml2::XML_SUCCESS)
 			{
-				l_new_event.value_ = string(val[0]);
+				l_new_event.value_ = std::string(val[0]);
 			}
 			if (child->QueryUnsignedAttribute("id", &l_new_event.id_) != tinyxml2::XML_SUCCESS)
 			{
@@ -150,12 +150,12 @@ struct event_parser_t : public tinyxml2::XMLVisitor
 			}
 			if (child->QueryStringAttribute("messageData", md) == tinyxml2::XML_SUCCESS)
 			{
-				l_new_event.message_data_ = string(md[0]);
+				l_new_event.message_data_ = std::string(md[0]);
 				attr_md = true;
 			}
 			if (child->QueryStringAttribute("contentEncoding", md) == tinyxml2::XML_SUCCESS)
 			{
-				string contentEncoding(md[0]);
+				std::string contentEncoding(md[0]);
 				if(contentEncoding.compare("Base64") == 0)
 					l_new_event.base64_ = true;
 				if (contentEncoding.compare("base64") == 0)
@@ -164,25 +164,13 @@ struct event_parser_t : public tinyxml2::XMLVisitor
 			if (!attr_md)
 			{
 				if (child->GetText() != nullptr) {
-					string temp = child->GetText();
-					if (l_new_event.base64_)
-					{
-						// todo make function to remove all line breaks and spaces to base 64 decode will fail
-						temp.erase(std::remove(temp.begin(), temp.end(), '\n'), temp.end());  // remove line breaks for base64
-						temp.erase(std::remove(temp.begin(), temp.end(), '\r'), temp.end());
-						temp.erase(std::remove(temp.begin(), temp.end(), '\n'), temp.end());  // remove line breaks for base64
-						temp.erase(std::remove(temp.begin(), temp.end(), '\r'), temp.end());
-						temp.erase(std::remove(temp.begin(), temp.end(), ' '), temp.end());
-						temp.erase(std::remove(temp.begin(), temp.end(), ' '), temp.end());
-						temp.erase(std::remove(temp.begin(), temp.end(), ' '), temp.end());
-					}
-					l_new_event.message_data_ = temp;
+					l_new_event.message_data_ = std::string(child->GetText());
 				}
 				else if (l_new_event.scheme_id_uri_.compare("urn:scte:scte35:2014:xml+bin") == 0)
 				{
 					auto bin_dat = child->FirstChildElement()->FirstChildElement()->GetText();
 					if (bin_dat != nullptr) {
-						l_new_event.message_data_ = string(bin_dat);
+						l_new_event.message_data_ = std::string(bin_dat);
 						l_new_event.base64_ = true;
 						l_new_event.scheme_id_uri_ = "urn:scte:scte35:2013:bin"; // use the 2013 binary scheme with base64 encoding
 					}
@@ -190,12 +178,12 @@ struct event_parser_t : public tinyxml2::XMLVisitor
 				else if (l_new_event.scheme_id_uri_.compare("urn:scte:scte35:2013:xml") == 0)
 				{
 					auto p = child->FirstChildElement();
-					cout << "warning: xml based formatting not suitable for ingest " << endl;
+					std::cout << "warning: xml based formatting not suitable for ingest " << std::endl;
 					if (p) 
 					{
 						tinyxml2::XMLPrinter printer;
 						p->Accept(&printer);
-						stringstream ss;
+						std::stringstream ss;
 						ss << printer.CStr();
 
 						l_new_event.message_data_ = ss.str();
@@ -203,7 +191,10 @@ struct event_parser_t : public tinyxml2::XMLVisitor
 					}	
 				}
 				else 
-					l_new_event.message_data_ = string();
+				{
+					std::cout << "warning could not interpet event payload, xml payload not supported except for scte-214" << std::endl;
+					l_new_event.message_data_ = std::string();
+				}
 			}
 
 			events_.push_back(l_new_event);
@@ -212,27 +203,33 @@ struct event_parser_t : public tinyxml2::XMLVisitor
 		return true;
 	}
     
-	vector<event_t> events_;
+	std::vector<event_t> events_;
 };
 
 // program for convering dash event to fmp4 metatrack
 int main(int argc, char *argv[])
 {
-	string out_file = "out_sparse_fmp4.cmfm";
-	string scheme_prefix;
+	// default output
+	std::string out_file = "out_sparse_fmp4.cmfm";
+	uint32_t target_emsg_version = 0; // write v0 emsg to sparse track
+	uint32_t track_id = 99; // default track_id
 
-	uint32_t target_emsg_version=0;
+	std::string scheme_prefix;
+
+	if (argc > 4) 
+		target_emsg_version = atoi(argv[4]);
 
 	if (argc > 3)
-		target_emsg_version = atoi(argv[3]);
+		track_id = atoi(argv[3]);
 
 	if (argc > 2)
-		out_file = string(argv[2]);
+		out_file = std::string(argv[2]);
 
 	if (argc > 1)
 	{
-		string in_file_name(argv[1]);
-		tinyxml2::XMLDocument doc;
+		std::string in_file_name(argv[1]);
+		
+		tinyxml2::XMLDocument doc(true, tinyxml2::Whitespace::COLLAPSE_WHITESPACE);
 		doc.LoadFile(in_file_name.c_str());
 
 		event_parser_t evt;
@@ -240,9 +237,9 @@ int main(int argc, char *argv[])
 
 		ingest_stream l_ingest_stream;
 		
-                if (evt.events_.size() < 1)
+        if (evt.events_.size() < 1)
 		{
-			cout << "no events found in the manifest" << endl;
+		    std::cout << "no events found in the manifest, no track written" << std::endl;
 			return 0;
 		}
 
@@ -252,14 +249,15 @@ int main(int argc, char *argv[])
 		{
 			if (time_scale != evt.events_[i].time_scale_)
 			{
-				cout << "only events with same timescale are supported" << endl;
+				std::cout << "only events with same timescale are supported, no track written" << std::endl;
 				return 0;
 			}
 		}
 
 		// assume zero as the first presentation time
 		uint64_t last_event_time =0;
-		// in this case we have events
+
+		// in this case we have events, only non overlapping events are supported
 		for (int i = 0; i < evt.events_.size(); i++)
 		{
 			media_fragment m;
@@ -269,13 +267,24 @@ int main(int argc, char *argv[])
 			l_ingest_stream.media_fragment_.push_back(m);
 		}
 
-		string event_urn = "urn:mpeg:dash:event:2012";
-		l_ingest_stream.write_to_sparse_emsg_file(out_file, 1, 0, event_urn, time_scale, target_emsg_version);
+		std::string event_urn = "urn:mpeg:dash:event:2012"; // update to new urn if defined
+
+		l_ingest_stream.write_to_sparse_emsg_file(out_file, track_id, 0, event_urn, time_scale, target_emsg_version);
 
 		return 0;
 	}
 	else
 	{
-		cout << "usage: fmp4meta infile(dash event xml) outfile(sparse_meta_emsg, cmfc)  [target_emsg_version (int)]" << endl;
+		// open issue how to decide on the fragment size ? 
+		// what about avail time, i.e. having a fragment more before the actual event time (delivered before the media)
+		// how to format empty space ? embe was defined to fill gaps ?
+		// max frag_duration [s]
+		// store inactive fragments
+		std::cout << " Tool for converting XML Dash Events to an event message track " << std::endl;
+		std::cout << " Events are first represented as DashEventMessageBoxes " << std::endl;
+		std::cout << " DashEventMessageBoxes are then stored in mdat as samples " << std::endl;
+		std::cout << " This places events on the media timeline " << std::endl;
+		std::cout << " Format is under consideration for standardisation in MPEG as event message track " << std::endl;
+		std::cout << " Usage: dashEventfmp4 infile(dash/smil event xml) outfile(fmp4 emsg_track) [track_id(id)] [target_emsg_version in track (0 or 1)]" << std::endl;
 	}
 }

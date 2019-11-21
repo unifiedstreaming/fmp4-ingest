@@ -576,15 +576,24 @@ void emsg::parse(const char *ptr, unsigned int data_size)
 	//	cout << "program splice table detected " << endl;
 }
 
-//! emsg to mpd event
+//! emsg to mpd event, always to base64 encoding
 void emsg::write_emsg_as_mpd_event(std::ostream &ostr, uint64_t base_time) const
 {
-	ostr << "<Event " 
-		  << "presentationTime=" << '"' << (this->version_ ? presentation_time_ : base_time + presentation_time_delta_) << '"' << " "  \
-		  << "duration=" << '"' << event_duration_ << '"' << " "  \
-		  << "id=" << '"' << id_ << '"' << '>' << " "  << std::endl
-		  << base64_encode( this->message_data_.data(), (unsigned int) this->message_data_.size()) << std::endl
-		  << "</Event>" << std::endl;
+	ostr << "<Event "
+		<< "presentationTime=" << '"' << (this->version_ ? presentation_time_ : base_time + presentation_time_delta_) << '"' << " "  \
+		<< "duration=" << '"' << event_duration_ << '"' << " "  \
+		<< "id=" << '"' << id_ << '"' ; 
+	    if (this->scheme_id_uri_.compare("urn:scte:scte35:2013:bin") == 0) // write binary scte as xml + bin as defined by scte-35
+	    {
+			ostr << '>' << std::endl<< "  <Signal xmlns=" << '"' << "http://www.scte.org/schemas/35/2016" << '"' << '>' << std::endl \
+				<< "    <Binary>" << base64_encode(this->message_data_.data(), (unsigned int)this->message_data_.size()) << "</Binary>" << std::endl
+				<< "  </Signal>" << std::endl;
+	    }
+		else {
+			ostr << " " << "contentEncoding=" << '"' << "base64" << '"' << '>' << std::endl
+				 << base64_encode(this->message_data_.data(), (unsigned int)this->message_data_.size()) << std::endl;
+		}
+		ostr << "</Event>" << std::endl;
 }
 
 //!
@@ -1020,7 +1029,7 @@ void media_fragment::patch_tfdt(uint64_t patch)
 	}
 };
 
-//! function to support the ingest, gets the init fragment data
+// function to support the ingest, gets the init fragment data
 uint64_t ingest_stream::get_init_segment_data(std::vector<uint8_t> &init_seg_dat)
 {
 	uint64_t ssize = init_fragment_.ftyp_box_.large_size_ + init_fragment_.moov_box_.large_size_;
@@ -1033,7 +1042,7 @@ uint64_t ingest_stream::get_init_segment_data(std::vector<uint8_t> &init_seg_dat
 	return ssize;
 };
 
-//! function to support the ingest of segments 
+// function to support the ingest of segments 
 uint64_t ingest_stream::get_media_segment_data(std::size_t index, std::vector<uint8_t> &media_seg_dat)
 {
 	if (!(media_fragment_.size() > index))
@@ -1049,7 +1058,7 @@ uint64_t ingest_stream::get_media_segment_data(std::size_t index, std::vector<ui
 	return ssize;
 };
 
-//!
+//
 void media_fragment::print() const
 {
 	if (emsg_.scheme_id_uri_.size() && !this->e_msg_is_in_mdat_) {
@@ -1067,7 +1076,7 @@ void media_fragment::print() const
 
 }
 
-//! parse an fmp4 file for media ingest
+// parse an fmp4 file for media ingest
 int ingest_stream::load_from_file(std::istream &infile, bool init_only)
 {
 	try
@@ -1200,7 +1209,7 @@ int ingest_stream::load_from_file(std::istream &infile, bool init_only)
 	}
 }
 
-//! archival function, write init segment to a file
+// archival function, write init segment to a file
 int ingest_stream::write_init_to_file(std::string &ofile)
 {
 	// write the stream to an output file
@@ -1222,7 +1231,7 @@ int ingest_stream::write_init_to_file(std::string &ofile)
 	return 0;
 }
 
-//! carefull only use with the testes=d pre-encoded moov boxes to write streams
+// carefull only use with the testes=d pre-encoded moov boxes to write streams
 void setTrackID(std::vector<uint8_t> &moov_in, uint32_t track_id)
 {
 	for (std::size_t k = 0; k < moov_in.size() - 16; k++)
@@ -1233,22 +1242,21 @@ void setTrackID(std::vector<uint8_t> &moov_in, uint32_t track_id)
 			if ((uint8_t)moov_in[k + 4] == 1)
 			{
 				// version 1 
-				//4+4+8+8 = 20 
 				fmp4_write_uint32(track_id, (char*)&moov_in[k + 24]);
 			}
 			else{
 			   // version 0
-			   //4+4+4+4 = 20 
 			   fmp4_write_uint32(track_id, (char*)&moov_in[k + 16]);
 			}
         }
 	}
 }
 
-//! carefull only use with the tested pre-encoded moov boxes to write streams
+// carefull only use with the tested pre-encoded moov boxes to write streams and update the urn in them
 void setSchemeURN(std::vector<uint8_t> &moov_in, const std::string& urn)
 {
-	uint16_t size_diff=0;
+	int32_t size_diff=0;
+
 	std::vector<uint8_t> l_first;
 	std::vector<uint8_t> l_last;
 
@@ -1259,14 +1267,15 @@ void setSchemeURN(std::vector<uint8_t> &moov_in, const std::string& urn)
 		{
 			//cout << "urim box found" << endl;
 			std::string or_urn = std::string((char *)&moov_in[k + 24]);
-			size_diff = (uint16_t) (or_urn.size() - urn.size());
+			size_diff = (int32_t) (or_urn.size() - urn.size());
 
 			if (size_diff == 0) 
 			{
 				for (std::size_t l = 0; l < urn.size(); l++)
 					moov_in[k + 24 + l] = urn[l];
 			}
-			else {
+			else 
+			{
 			   // first part of the string
 			   l_first = std::vector<uint8_t>(moov_in.begin(), moov_in.begin() + k + 24);
 			   // last part of the string
@@ -1295,57 +1304,58 @@ void setSchemeURN(std::vector<uint8_t> &moov_in, const std::string& urn)
 			if (std::string((char *)&moov_in[i]).compare("stsd") == 0)
 			{
 				uint32_t or_size = fmp4_read_uint32((char *)&moov_in[i - 4]);
-				or_size = or_size - size_diff;
+				or_size = (uint32_t) (or_size - size_diff);
 				fmp4_write_uint32(or_size, (char *)&moov_in[i - 4]);
 			}
 			if (std::string((char *)&moov_in[i]).compare("stbl") == 0)
 			{
 				uint32_t or_size = fmp4_read_uint32((char *)&moov_in[i - 4]);
-				or_size = or_size - size_diff;
+				or_size = (uint32_t)(or_size - size_diff);
 				fmp4_write_uint32(or_size, (char *)&moov_in[i - 4]);
 			}
 			if (std::string((char *)&moov_in[i]).compare("uri ") == 0)
 			{
 				uint32_t or_size = fmp4_read_uint32((char *)&moov_in[i - 4]);
-				or_size = or_size - size_diff;
+				or_size = (uint32_t)(or_size - size_diff);
 				fmp4_write_uint32(or_size, (char *)&moov_in[i - 4]);
 			}
 			if (std::string((char *)&moov_in[i]).compare("urim") == 0)
 			{
 				uint32_t or_size = fmp4_read_uint32((char *)&moov_in[i - 4]);
-				or_size = or_size - size_diff;
+				or_size = (uint32_t)(or_size - size_diff);
 				fmp4_write_uint32(or_size, (char *)&moov_in[i - 4]);
 			}
 			if (std::string((char *)&moov_in[i]).compare("minf") == 0)
 			{
 				uint32_t or_size = fmp4_read_uint32((char *)&moov_in[i - 4]);
-				or_size = or_size - size_diff;
+				or_size = (uint32_t)(or_size - size_diff);
 				fmp4_write_uint32(or_size, (char *)&moov_in[i - 4]);
 			}
 			if (std::string((char *)&moov_in[i]).compare("mdia") == 0)
 			{
 				uint32_t or_size = fmp4_read_uint32((char *)&moov_in[i - 4]);
-				or_size = or_size - size_diff;
+				or_size = (uint32_t)(or_size - size_diff);
 				fmp4_write_uint32(or_size, (char *)&moov_in[i - 4]);
 			}
 			if (std::string((char *)&moov_in[i]).compare("trak") == 0)
 			{
 				uint32_t or_size = fmp4_read_uint32((char *)&moov_in[i - 4]);
-				or_size = or_size - size_diff;
+				or_size = (uint32_t)(or_size - size_diff);
 				fmp4_write_uint32(or_size, (char *)&moov_in[i - 4]);
 			}
 			if (std::string((char *)&moov_in[i]).compare("moov") == 0)
 			{
 				uint32_t or_size = fmp4_read_uint32((char *)&moov_in[i - 4]);
-				or_size = or_size - size_diff;
+				or_size = (uint32_t)(or_size - size_diff);
 				fmp4_write_uint32(or_size, (char *)&moov_in[i - 4]);
 			}
 		}
 	}
 };
 
-//! writes sparse emsg file, set the track, the scheme
-int ingest_stream::write_to_sparse_emsg_file(const std::string& out_file, uint32_t track_id, uint32_t announce, const std::string& urn, uint32_t timescale, uint8_t target_emsg_version)
+// writes sparse emsg file, set the track, the scheme
+int ingest_stream::write_to_sparse_emsg_file(const std::string& out_file, 
+	       uint32_t track_id, uint32_t announce, const std::string& urn, uint32_t timescale, uint8_t target_emsg_version)
 {
 	//ifstream moov_s_in("sparse_moov.inc", ios::binary);
 	
@@ -1393,7 +1403,7 @@ int ingest_stream::write_to_sparse_emsg_file(const std::string& out_file, uint32
 	return 0;
 };
 
-//!  
+//  
 void ingest_stream::write_to_dash_event_stream(std::string &out_file)
 {
 	std::ofstream ot(out_file);
@@ -1407,9 +1417,15 @@ void ingest_stream::write_to_dash_event_stream(std::string &out_file)
 		if (media_fragment_.size() > 0)
 			scheme_id_uri = media_fragment_[0].emsg_.scheme_id_uri_;
 
-		ot << "<EventStream " << std::endl
-			<< "schemeIdUri=" << '"' << scheme_id_uri << '"' << std::endl
-			<< "timescale=" << '"' << time_scale << '"' << ">" << std::endl;
+		ot << "<EventStream " << std::endl;
+		if (scheme_id_uri.compare("urn:scte:scte35:2013:bin") == 0) // convert binary scte 214 to xml + bin
+		{
+			ot << "schemeIdUri=" << '"' << "urn:scte:scte35:2014:xml+bin" << '"' << std::endl;
+		}
+		else {
+			ot << "schemeIdUri=" << '"' << scheme_id_uri << '"' << std::endl;
+		}
+		ot << "timescale=" << '"' << time_scale << '"' << ">" << std::endl;
 
 		// write each of the event messages as moof mdat combinations in sparse track 
 		for (auto it = this->media_fragment_.begin(); it != this->media_fragment_.end(); ++it)
@@ -1418,12 +1434,7 @@ void ingest_stream::write_to_dash_event_stream(std::string &out_file)
 			if (it->emsg_.scheme_id_uri_.size())
 			{
 				uint64_t l_presentation_time = it->emsg_.version_ ? it->emsg_.presentation_time_ : it->tfdt_.base_media_decode_time_ + it->emsg_.presentation_time_delta_;
-				//cout << " writing emsg fragment " << endl;
-				if (it->emsg_.version_ == 0)
-					std::cout << it->emsg_.presentation_time_delta_ << std::endl;
-
 				it->emsg_.write_emsg_as_mpd_event(ot, it->tfdt_.base_media_decode_time_);
-
 			}
 		}
 
@@ -1432,7 +1443,7 @@ void ingest_stream::write_to_dash_event_stream(std::string &out_file)
 	ot.close();
 }
 
-//! dump the contents of the sparse track to screen
+// dump the contents of the sparse track to screen
 void ingest_stream::print() const
 {
 	for (auto it = media_fragment_.begin(); it != media_fragment_.end(); it++)
@@ -1454,4 +1465,4 @@ void ingest_stream::patch_tfdt(uint64_t time_anchor)
 		}
 	}
 }
-}
+} 
