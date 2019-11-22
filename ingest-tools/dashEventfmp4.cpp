@@ -214,8 +214,6 @@ int main(int argc, char *argv[])
 	uint32_t target_emsg_version = 0; // write v0 emsg to sparse track
 	uint32_t track_id = 99; // default track_id
 
-	std::string scheme_prefix;
-
 	if (argc > 4) 
 		target_emsg_version = atoi(argv[4]);
 
@@ -275,16 +273,14 @@ int main(int argc, char *argv[])
 	}
 	else
 	{
-		// open issue how to decide on the fragment size ? 
-		// what about avail time, i.e. having a fragment more before the actual event time (delivered before the media)
-		// how to format empty space ? embe was defined to fill gaps ?
-		// max frag_duration [s]
-		// store inactive fragments
 		std::cout << " Tool for converting XML Dash Events to an event message track " << std::endl;
 		std::cout << " Events are first represented as DashEventMessageBoxes " << std::endl;
-		std::cout << " DashEventMessageBoxes are then stored in mdat as samples " << std::endl;
-		std::cout << " This places events on the media timeline " << std::endl;
+		std::cout << " DashEventMessageBoxes are then stored in mdat in samples " << std::endl;
+		std::cout << " These samples place the events on the media timeline " << std::endl;
+		std::cout << " Only tracks with a common timescale are supported    " << std::endl;
 		std::cout << " Format is under consideration for standardisation in MPEG as event message track " << std::endl;
+		std::cout << std::endl;
+		std::cout << std::endl;
 		std::cout << " Usage: dashEventfmp4 infile(dash/smil event xml) outfile(fmp4 emsg_track) [track_id(id)] [target_emsg_version in track (0 or 1)]" << std::endl;
 	}
 }
