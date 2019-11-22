@@ -42,6 +42,10 @@ ingest_receiver_node.js: simple receiver based on node.js works with short runni
 
 fmp4ingest -r -u http://localhost/pubpoint/channel1.isml 1.cmfv 2.cmfv 3.cmft 
 
+- Receive ingest streams using node.js (https://nodejs.org/en/) 
+
+node ingest_receiver_node.js
+
 - Copy the init fragment to init_in.cmfv:
 
 fmp4init in.cmfv  
