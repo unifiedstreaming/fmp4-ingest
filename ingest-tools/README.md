@@ -8,7 +8,7 @@ implement DASH-IF Event Processing Framework
 
 # Overview 
 
-fmp4ingest: CMAF ingest defined in: 
+fmp4ingest: CMAF ingest source defined in: 
 
 https://dashif-documents.azurewebsites.net/Ingest/master/DASH-IF-Ingest.html
 
@@ -21,6 +21,9 @@ fmp4dump: print the contents of an fmp4 file to the cout, including scte markers
 fmp4DashEvent: convert a sparse track to an XML event stream
 
 dashEventfmp4: convert a DASH mpd or SMIL with events in it to a sparse metadata track
+
+ingest_receiver_node.js: simple receiver based on node.js works with short running posts and using the Streams(), 
+                         stores the ingested content as cmaf track files
 
 
 # Features implemented in fmp4ingest

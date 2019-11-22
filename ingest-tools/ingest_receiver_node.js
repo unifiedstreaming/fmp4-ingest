@@ -2,6 +2,10 @@
 //        media ingest receiver          //
 //         DASH-IF CMAF ingest           //
 //     not completed, input welcome      //
+//                                       //
+//    Only short running pots and        //
+//  usage of Streams() keyword mandatory //
+//                                       //
 ///////////////////////////////////////////
  
 const http = require('http')
@@ -15,26 +19,33 @@ var active_streams = new Map()
 const server = http.createServer(function(request, response) {
   console.dir(request.param)
 
+  request.setEncoding('Binary')
+  let chunks = []
+  
   if (request.method == 'POST') 
   {
 	
 	var url_parts = url.parse(request.url)
-    var path = url_parts.pathname.split("/").join("_")
-    var body = ''
+    var path  = url_parts.pathname.split("/").join("_")
+	//var index = path.search("Streams(");
+	var fn = path 
+	
+	if(fn.length > 10)
+	  fn=path.substring(10, path.length -1)
+	
+	//if(index > 0)
+    //   fn    = path.substring(index, path.length -2)
+   
+    var body  = new Buffer('');
     
 	// 
-    request.on('data', function(data) {
-      
+    request.on('data', function(chunk) 
+	{
 	  if(body == '')
 	  {
 		  console.log('begin of request')  
 	  }
-	  //else
-	  //{
-		  //console.log('continue request')
-	  //}
-	  
-	  body += data 
+	  chunks.push(Buffer.from(chunk, 'binary'));
     });
 	
 	// end the node.js javascript
@@ -43,10 +54,11 @@ const server = http.createServer(function(request, response) {
 	var box = ""
 	var is_frag = new Boolean(false); 
 	var is_init = new Boolean(false);
+	let binary = Buffer.concat(chunks);
 	
-	if(body.length > 8)
+	if(binary.length > 8)
 	{
-	  box = body.slice(4,8)
+	  box = binary.slice(4,8)
 	 
 	  is_frag = new Boolean((box == boxes[2]) ||(box == boxes[3]) || (box == boxes[4]) || (box == boxes[5]) || (box == boxes[6]))
 	  is_init = new Boolean((box == boxes[0]) || (box == boxes[1]) )
@@ -59,7 +71,8 @@ const server = http.createServer(function(request, response) {
 	{
 		active_streams.set(path,"initialized") 
 	    // check that the body is a valid fmp4 fragment
-	    fs.appendFile(path, body, function (err) 
+		// var buf = new Buffer(body, 'base64')
+	    fs.appendFile(fn, binary, null, function (err) 
 	    {
            //if (err) throw err;
            // console.log('Saved!');
@@ -69,12 +82,14 @@ const server = http.createServer(function(request, response) {
 	}
 	else if(active_streams.has(path) && is_frag )
 	{
+	
 	  // check that the body is a valid fmp4 fragment
-	  fs.appendFile(path, body, function (err) 
+	  fs.appendFile(fn, binary, null, function (err) 
 	  {
          //if (err) throw err;
          // console.log('Saved!');
       }); 
+	  
       response.writeHead(200, {'Content-Type': 'text/html'})
       response.end('media fragment received OK')
 	}
@@ -85,7 +100,7 @@ const server = http.createServer(function(request, response) {
 		   response.writeHead(412, {'Content-Type': 'text/html'})
            response.end('need init fragment or CMAF Header')  
 		}
-		else if(active_streams.has(path) && is_init) // duplicate init fragment
+		else if(active_streams.has(path) && is_init) // duplicate init fragment not supported yet
 		{
 			response.writeHead(200, {'Content-Type': 'text/html'})
             response.end('duplicate CMAF Header or init fragment received')	
@@ -96,7 +111,7 @@ const server = http.createServer(function(request, response) {
     });
 
    }  
-		// write the error message
+    // write the error message
 	request.on('error', (err) => {
        // This prints the error message and stack trace to `stderr`.
        console.error(err.stack);
