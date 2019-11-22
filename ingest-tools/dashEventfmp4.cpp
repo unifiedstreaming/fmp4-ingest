@@ -24,7 +24,7 @@ using namespace fMP4Stream;
 extern std::string moov_64_enc;
 
 // struct to hold mpd events, encapsulate event and eventstream information
-struct event_t 
+struct event_t
 {
 	int64_t presentation_time_;   // presentation time of event
 	uint32_t duration_;           // duration of event
@@ -37,27 +37,27 @@ struct event_t
 	int64_t pto_;                 //  pto in eventstream
 
 	event_t()
-		: presentation_time_(0), duration_(0), base64_(false), message_data_(), scheme_id_uri_(), value_(), id_(0) , time_scale_(1)
+		: presentation_time_(0), duration_(0), base64_(false), message_data_(), scheme_id_uri_(), value_(), id_(0), time_scale_(1)
 	{
 	};
 
-	bool to_emsg(emsg &em) 
+	bool to_emsg(emsg &em)
 	{
 		em.scheme_id_uri_ = scheme_id_uri_;
 		em.value_ = value_;
 		em.timescale_ = time_scale_;
-		em.presentation_time_delta_=0;
-		em.presentation_time_=presentation_time_;
-		em.event_duration_= duration_;
+		em.presentation_time_delta_ = 0;
+		em.presentation_time_ = presentation_time_;
+		em.event_duration_ = duration_;
 		em.id_ = id_;
 		em.version_ = 1;
 
 		// copy the message data
-		if (!base64_) 
+		if (!base64_)
 		{
 			em.message_data_.resize(message_data_.size());
 			for (unsigned int k = 0; k < message_data_.size(); k++)
-				em.message_data_[k] = (uint8_t) message_data_[k];
+				em.message_data_[k] = (uint8_t)message_data_[k];
 		}
 		else
 		{
@@ -71,7 +71,7 @@ struct event_t
 // struct to parse the event streams
 struct event_parser_t : public tinyxml2::XMLVisitor
 {
-	virtual bool VisitEnter(const tinyxml2::XMLElement &el, const tinyxml2::XMLAttribute *at) 
+	virtual bool VisitEnter(const tinyxml2::XMLElement &el, const tinyxml2::XMLAttribute *at)
 	{
 		std::string el_name = el.Value();
 
@@ -79,11 +79,11 @@ struct event_parser_t : public tinyxml2::XMLVisitor
 			std::cout << "*** eventstream found ***" << std::endl;
 		else
 			return true;
-		
+
 		event_t l_root_event;
 
 		// parse attributes for the eventstream
-		if (el.QueryUnsignedAttribute ("timescale", &l_root_event.time_scale_) != tinyxml2::XMLError::XML_SUCCESS)
+		if (el.QueryUnsignedAttribute("timescale", &l_root_event.time_scale_) != tinyxml2::XMLError::XML_SUCCESS)
 		{
 			l_root_event.time_scale_ = 1; // no timescale defined use default
 		}
@@ -100,12 +100,12 @@ struct event_parser_t : public tinyxml2::XMLVisitor
 		else
 		{
 			l_root_event.scheme_id_uri_ = std::string(ids[0]);
-			std::cout << l_root_event.scheme_id_uri_ << std::endl;
+			//std::cout << l_root_event.scheme_id_uri_ << std::endl;
 		}
 		if (el.QueryStringAttribute("value", ids) == tinyxml2::XMLError::XML_SUCCESS)
 		{
 			l_root_event.value_ = std::string(ids[0]);
-			std::cout << l_root_event.value_ << std::endl;
+			//std::cout << l_root_event.value_ << std::endl;
 		}
 		if (el.QueryInt64Attribute("presentationTimeOffset", &l_root_event.pto_) != tinyxml2::XMLError::XML_SUCCESS)
 		{
@@ -114,8 +114,8 @@ struct event_parser_t : public tinyxml2::XMLVisitor
 
 		// parse the children of the EventStream
 		auto child = el.FirstChildElement();
-		
-		while (child != nullptr) 
+
+		while (child != nullptr)
 		{
 			event_t l_new_event = l_root_event; // copy information from the eventstream
 
@@ -156,7 +156,7 @@ struct event_parser_t : public tinyxml2::XMLVisitor
 			if (child->QueryStringAttribute("contentEncoding", md) == tinyxml2::XML_SUCCESS)
 			{
 				std::string contentEncoding(md[0]);
-				if(contentEncoding.compare("Base64") == 0)
+				if (contentEncoding.compare("Base64") == 0)
 					l_new_event.base64_ = true;
 				if (contentEncoding.compare("base64") == 0)
 					l_new_event.base64_ = true;;
@@ -179,7 +179,7 @@ struct event_parser_t : public tinyxml2::XMLVisitor
 				{
 					auto p = child->FirstChildElement();
 					std::cout << "warning: xml based formatting not suitable for ingest " << std::endl;
-					if (p) 
+					if (p)
 					{
 						tinyxml2::XMLPrinter printer;
 						p->Accept(&printer);
@@ -187,10 +187,10 @@ struct event_parser_t : public tinyxml2::XMLVisitor
 						ss << printer.CStr();
 
 						l_new_event.message_data_ = ss.str();
-						l_new_event.base64_ = false;  
-					}	
+						l_new_event.base64_ = false;
+					}
 				}
-				else 
+				else
 				{
 					std::cout << "warning could not interpet event payload, xml payload not supported except for scte-214" << std::endl;
 					l_new_event.message_data_ = std::string();
@@ -202,7 +202,7 @@ struct event_parser_t : public tinyxml2::XMLVisitor
 		}
 		return true;
 	}
-    
+
 	std::vector<event_t> events_;
 };
 
@@ -214,7 +214,7 @@ int main(int argc, char *argv[])
 	uint32_t target_emsg_version = 0; // write v0 emsg to sparse track
 	uint32_t track_id = 99; // default track_id
 
-	if (argc > 4) 
+	if (argc > 4)
 		target_emsg_version = atoi(argv[4]);
 
 	if (argc > 3)
@@ -226,7 +226,7 @@ int main(int argc, char *argv[])
 	if (argc > 1)
 	{
 		std::string in_file_name(argv[1]);
-		
+
 		tinyxml2::XMLDocument doc(true, tinyxml2::Whitespace::COLLAPSE_WHITESPACE);
 		doc.LoadFile(in_file_name.c_str());
 
@@ -234,10 +234,10 @@ int main(int argc, char *argv[])
 		doc.Accept(&evt);
 
 		ingest_stream l_ingest_stream;
-		
-        if (evt.events_.size() < 1)
+
+		if (evt.events_.size() < 1)
 		{
-		    std::cout << "no events found in the manifest, no track written" << std::endl;
+			std::cout << "no events found in the manifest, no track written" << std::endl;
 			return 0;
 		}
 
@@ -247,20 +247,20 @@ int main(int argc, char *argv[])
 		{
 			if (time_scale != evt.events_[i].time_scale_)
 			{
-				std::cout << "only events with same timescale are supported, no track written" << std::endl;
+				std::cout << "only events with same timescale are supported, no output track written" << std::endl;
 				return 0;
 			}
 		}
 
 		// assume zero as the first presentation time
-		uint64_t last_event_time =0;
+		uint64_t last_event_time = 0;
 
 		// in this case we have events, only non overlapping events are supported
 		for (int i = 0; i < evt.events_.size(); i++)
 		{
 			media_fragment m;
 			evt.events_[i].to_emsg(m.emsg_);
-			m.tfdt_.base_media_decode_time_ = last_event_time; 
+			m.tfdt_.base_media_decode_time_ = last_event_time;
 			last_event_time = evt.events_[i].presentation_time_ + evt.events_[i].duration_;
 			l_ingest_stream.media_fragment_.push_back(m);
 		}

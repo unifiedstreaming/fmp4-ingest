@@ -5,7 +5,7 @@ https://github.com/unifiedstreaming/fmp4-ingest
 Copyright (C) 2009-2018 CodeShop B.V.
 http://www.code-shop.com
 
-convert metadatatrack to DASH Events in XML format
+convert metadatatrack to DASH Events in XML format SCTE-214
 
 ******************************************************************************/
 
@@ -18,6 +18,17 @@ using namespace fMP4Stream;
 using namespace std;
 
 extern string moov_64_enc;
+
+void print_info()
+{
+	std::cout << "***                 fmp4DashEvent                     ***" << std::endl;
+	std::cout << "***       convert event message track to XML          ***" << std::endl;
+	std::cout << "***       Supports specific SCTE-214 schemes:         ***" << std::endl;
+	std::cout << "***            urn:scte:scte35:2014:xml+bin           ***" << std::endl;
+	std::cout << "***            urn:scte:scte35:2013:bin               ***" << std::endl;
+	std::cout << "**writes all other mpd events usign @base64 attribute ***" << std::endl;
+	std::cout << "usage: fmp4DashEvent in_event.cmfm out.mpd    " << std::endl;
+}
 
 int main(int argc, char *argv[])
 {
@@ -34,12 +45,12 @@ int main(int argc, char *argv[])
 		if (!input.good())
 		{
 			cout << "failed loading input file: " << string(argv[1]) << endl;
-			cout << "usage: fmp4meta infile(sparse_meta_emsg, cmfc) outfile(dash event xml)" << endl;
+			print_info();
 			return 0;
 		}
 
 		cout << " reading input file: " << string(argv[1]) << std::endl;
-		
+
 		if (argc > 2) {
 			out_file = string(argv[2]);
 		}
@@ -48,21 +59,17 @@ int main(int argc, char *argv[])
 		ingest_stream.load_from_file(input);
 		input.close();
 
-	    // output a sparse fragmented emsg track file 
-		cout << " ******* writing " << out_file << "********" <<  endl;
-		
+		// output a sparse fragmented emsg track file 
+		cout << " *** writing " << out_file << "***" << endl;
+
 		ingest_stream.write_to_dash_event_stream(out_file);
 
 		return 1;
 	}
-	else 
-	{ 
-		cout << "usage: fmp4meta infile(sparse_meta_emsg, cmfc) outfile(dash event xml)" << endl;
+	else
+	{
+		print_info();
 	}
-		
+
 	return 0;
 }
-
-
-
-

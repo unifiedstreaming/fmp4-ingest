@@ -392,6 +392,7 @@ namespace fMP4Stream {
 		uint64_t get_duration();
 	};
 
+	// structure to store an entire ingest stream
 	struct ingest_stream
 	{
 		init_fragment init_fragment_;

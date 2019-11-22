@@ -57,7 +57,7 @@ int get_remote_sync_epoch(uint64_t *res_time, string &wc_uri_)
 
 		unsigned long ul = std::stoul(response_string, nullptr, 0);
 		cout << ul << endl;
-		*res_time = ul ? ul :0;
+		*res_time = ul ? ul : 0;
 
 		/* always cleanup */
 		curl_easy_cleanup(curl);
@@ -108,8 +108,8 @@ struct push_options_t
 
 			"\n");
 	}
-	
-	void parse_options(int argc, char * argv[]) 
+
+	void parse_options(int argc, char * argv[])
 	{
 		if (argc > 2)
 		{
@@ -142,7 +142,7 @@ struct push_options_t
 		else
 			print_options();
 	}
-	
+
 
 	string url_;
 	bool realtime_;
@@ -195,7 +195,7 @@ static size_t read_callback(void *dest, size_t size, size_t nmemb, void *userp)
 {
 	ingest_post_state_t *st = (ingest_post_state_t *)userp;
 	size_t buffer_size = size * nmemb;
-	size_t nr_bytes_written=0;
+	size_t nr_bytes_written = 0;
 	if (st->is_done_ || stop_all) // return if we are done
 		return 0;
 
@@ -212,7 +212,7 @@ static size_t read_callback(void *dest, size_t size, size_t nmemb, void *userp)
 			st->error_state_ = false;
 		}
 
-		if ((init_data.size() - st->offset_in_fragment_) <= buffer_size) 
+		if ((init_data.size() - st->offset_in_fragment_) <= buffer_size)
 		{
 			memcpy(dest, init_data.data() + st->offset_in_fragment_, init_data.size());
 			nr_bytes_written = init_data.size();
@@ -221,17 +221,17 @@ static size_t read_callback(void *dest, size_t size, size_t nmemb, void *userp)
 			cout << " pushed init fragment " << endl;
 			return nr_bytes_written;
 		}
-		else 
+		else
 		{
 			memcpy(dest, init_data.data(), buffer_size);
-			st->offset_in_fragment_ += (uint32_t) buffer_size;
+			st->offset_in_fragment_ += (uint32_t)buffer_size;
 			return buffer_size;
 		}
 	}
 	else // read the next fragment or send pause
 	{
 		// stop if all fragments send or stop_at_ timestamp based
-		
+
 		bool frags_finished = st->str_ptr_->media_fragment_.size() <= st->fnumber_;
 		bool stop_at = false;
 		uint64_t c_tfdt = 0;
@@ -241,7 +241,7 @@ static size_t read_callback(void *dest, size_t size, size_t nmemb, void *userp)
 			stop_at = st->opt_.stop_at_ && (t_diff >= (st->opt_.stop_at_ * st->timescale_));
 		}
 
-		if ((frags_finished || stop_at) ) 
+		if ((frags_finished || stop_at))
 		{
 			if (!st->opt_.loop_) {
 				if (!st->opt_.dont_close_) {
@@ -266,11 +266,11 @@ static size_t read_callback(void *dest, size_t size, size_t nmemb, void *userp)
 				st->fnumber_ = 0;
 			}
 		}
-		
+
 		if (st->opt_.realtime_) // if it is to early sleep until tfdt - frag_dur
 		{
 			// calculate elapsed media time
-			c_tfdt = st->str_ptr_->media_fragment_[st->fnumber_ ].tfdt_.base_media_decode_time_;
+			c_tfdt = st->str_ptr_->media_fragment_[st->fnumber_].tfdt_.base_media_decode_time_;
 			const uint64_t start_timestamp = st->str_ptr_->media_fragment_[0].tfdt_.base_media_decode_time_;
 			const double media_time = ((double)c_tfdt - start_timestamp) / st->timescale_;
 			const double frag_delay = 2.0; //((double)st->str_ptr_->media_fragment_[st->fnumber_].get_duration()) / ((double)st->timescale_);
@@ -287,19 +287,19 @@ static size_t read_callback(void *dest, size_t size, size_t nmemb, void *userp)
 				this_thread::sleep_for(chrono::duration<double>((media_time - frag_delay) - diff.count() - start_offset));
 			}
 		}
-		
+
 		vector<uint8_t> frag_data;
-		st->str_ptr_->get_media_segment_data((long)st->fnumber_,frag_data);
-		
+		st->str_ptr_->get_media_segment_data((long)st->fnumber_, frag_data);
+
 		// we can finish the fragment
-		if (frag_data.size() - st->offset_in_fragment_  <= buffer_size) 
+		if (frag_data.size() - st->offset_in_fragment_ <= buffer_size)
 		{
 			memcpy(dest, frag_data.data() + st->offset_in_fragment_, frag_data.size() - st->offset_in_fragment_);
 			nr_bytes_written = frag_data.size() - st->offset_in_fragment_;
 			st->offset_in_fragment_ = 0;
-			
 
-			cout << " pushed media fragment: " << st->fnumber_ << " file_name: " <<  st->file_name_ << " fragment duration: " << \
+
+			cout << " pushed media fragment: " << st->fnumber_ << " file_name: " << st->file_name_ << " fragment duration: " << \
 				((double)st->str_ptr_->media_fragment_[st->fnumber_].get_duration()) / ((double)st->timescale_) << " seconds ";
 
 			// calculate elapsed media time
@@ -307,7 +307,7 @@ static size_t read_callback(void *dest, size_t size, size_t nmemb, void *userp)
 			const uint64_t start_timestamp = st->str_ptr_->media_fragment_[0].tfdt_.base_media_decode_time_;
 			const double media_time = ((double)c_tfdt + st->frag_duration_ - start_timestamp) / st->timescale_;
 
-			cout << " media time elapsed: " << media_time  << endl;
+			cout << " media time elapsed: " << media_time << endl;
 
 			st->fnumber_++;
 
@@ -316,7 +316,7 @@ static size_t read_callback(void *dest, size_t size, size_t nmemb, void *userp)
 		else // we cannot finish the fragment, write the buffer
 		{
 			memcpy(dest, frag_data.data() + st->offset_in_fragment_, buffer_size);
-			(st->offset_in_fragment_)+= (uint32_t) buffer_size;
+			(st->offset_in_fragment_) += (uint32_t)buffer_size;
 			return buffer_size;
 		}
 	}
@@ -432,7 +432,7 @@ int push_thread(string file_name, push_options_t opt)
 			if (opt.tsoffset_ > 0) // frame accurate offset from beginning of file
 			{
 				// find the timestamp offset and update the fnumber, assume constant duration
-				unsigned int offset = (unsigned int)(((opt.tsoffset_) * post_state.timescale_ )/ post_state.frag_duration_);
+				unsigned int offset = (unsigned int)(((opt.tsoffset_) * post_state.timescale_) / post_state.frag_duration_);
 				if (offset < l_ingest_stream.media_fragment_.size())
 					post_state.fnumber_ = offset;
 			}
@@ -512,7 +512,7 @@ int push_thread(string file_name, push_options_t opt)
 				// create databuffer with init segment
 				vector<uint8_t> init_seg_dat;
 				l_ingest_stream.get_init_segment_data(init_seg_dat);
-				
+
 				// 
 				curl_easy_setopt(curl, CURLOPT_POSTFIELDS, (char *)&init_seg_dat[0]);
 				curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, (long)init_seg_dat.size());
@@ -546,15 +546,15 @@ int push_thread(string file_name, push_options_t opt)
 
 					res = curl_easy_perform(curl);
 					chrono::time_point<chrono::system_clock> end_time = chrono::system_clock::now();
-					
-					if (res != CURLE_OK) 
+
+					if (res != CURLE_OK)
 					{
 						fprintf(stderr, "post of media segment failed: %s\n",
 							curl_easy_strerror(res));
 
 						// media segment post failed resend the init segment and the segment
 						int retry_count = 0;
-						while (res != CURLE_OK) 
+						while (res != CURLE_OK)
 						{
 							// resend init segment
 							curl_easy_setopt(curl, CURLOPT_POSTFIELDS, (char *)&init_seg_dat[0]);
@@ -568,34 +568,34 @@ int push_thread(string file_name, push_options_t opt)
 								return 0;
 						}
 					}
-					else 
+					else
 					{
 						fprintf(stderr, "post of media segment ok: %s\n",
 							curl_easy_strerror(res));
 					}
 
 					// check if we need to stop at a timestamp offset
-					uint64_t t_diff = l_ingest_stream.media_fragment_[i].tfdt_.base_media_decode_time_  - l_ingest_stream.media_fragment_[0].tfdt_.base_media_decode_time_;
+					uint64_t t_diff = l_ingest_stream.media_fragment_[i].tfdt_.base_media_decode_time_ - l_ingest_stream.media_fragment_[0].tfdt_.base_media_decode_time_;
 
 					bool stop_at = opt.stop_at_ && (t_diff >= (opt.stop_at_ * post_state.timescale_));
-					
+
 					cout << " pushed media fragment: " << i << " file_name: " << post_state.file_name_ << " fragment duration: " << \
 						(l_ingest_stream.media_fragment_[i].get_duration()) / ((double)post_state.timescale_) << " seconds ";
 					cout << " media time elapsed: " << (t_diff + l_ingest_stream.media_fragment_[i].get_duration()) / post_state.timescale_ << endl;
 
-					if (opt.realtime_) 
+					if (opt.realtime_)
 					{
 						// calculate elapsed media time
 						const uint64_t c_tfdt = l_ingest_stream.media_fragment_[i].tfdt_.base_media_decode_time_;
 						const uint64_t start_timestamp = l_ingest_stream.media_fragment_[0].tfdt_.base_media_decode_time_;
 						const double media_time = ((double)c_tfdt - start_timestamp) / post_state.timescale_;
-						const double frag_delay = 2.0; 
-						
+						const double frag_delay = 2.0;
+
 						// calculate elapsed system time
 						chrono::duration<double> diff = chrono::system_clock::now() - start_time;
 
 						// calculate the start offset
-						double start_offset = (double) opt.tsoffset_; // / ((double)st->timescale_);
+						double start_offset = (double)opt.tsoffset_; // / ((double)st->timescale_);
 
 						// wait untill media time - frag_delay > elapsed time + initial offset
 						if ((diff.count() + start_offset) < (media_time - frag_delay)) // if it is to early sleep until tfdt - frag_dur
@@ -605,11 +605,11 @@ int push_thread(string file_name, push_options_t opt)
 						}
 
 					}
-					else 
+					else
 					{ // non real time just sleep for 500 seconds
 						std::this_thread::sleep_for(std::chrono::milliseconds(500));
 					}
-					
+
 					//std::cout << " --- posting next segment ---- " << i << std::endl;
 					if (post_state.is_done_ || stop_all || stop_at) {
 						i = (uint64_t)l_ingest_stream.media_fragment_.size();
@@ -619,22 +619,22 @@ int push_thread(string file_name, push_options_t opt)
 			}
 
 			// only close with mfra if dont close is not set
-			if (!opt.dont_close_) 
+			if (!opt.dont_close_)
 			{
-					// post the empty mfra segment
-					curl_easy_setopt(curl, CURLOPT_URL, post_url_string.data());
-					curl_easy_setopt(curl, CURLOPT_POSTFIELDS, (char *)empty_mfra);
-					curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, (long)8u);
-					/* Perform the request, res will get the return code */
-					res = curl_easy_perform(curl);
+				// post the empty mfra segment
+				curl_easy_setopt(curl, CURLOPT_URL, post_url_string.data());
+				curl_easy_setopt(curl, CURLOPT_POSTFIELDS, (char *)empty_mfra);
+				curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, (long)8u);
+				/* Perform the request, res will get the return code */
+				res = curl_easy_perform(curl);
 
-					/* Check for errors */
-					if (res != CURLE_OK)
-						fprintf(stderr, "post of mfra signalling segment failed: %s\n",
-							curl_easy_strerror(res));
-					else
-						fprintf(stderr, "post of mfra segment failed: %s\n",
-							curl_easy_strerror(res));
+				/* Check for errors */
+				if (res != CURLE_OK)
+					fprintf(stderr, "post of mfra signalling segment failed: %s\n",
+						curl_easy_strerror(res));
+				else
+					fprintf(stderr, "post of mfra segment failed: %s\n",
+						curl_easy_strerror(res));
 			}
 			/* always cleanup */
 			curl_easy_cleanup(curl);
@@ -665,11 +665,11 @@ int main(int argc, char * argv[])
 		thread_ptr thread_n(new thread(push_thread, *it, opts));
 		threads.push_back(thread_n);
 	}
-	
+
 	// wait for the push threads to finish
 	cout << " fmp4 and CMAF ingest, press q and enter to exit " << endl;
-	char c='0';
-	while((c=cin.get()) != 'q');
+	char c = '0';
+	while ((c = cin.get()) != 'q');
 
 	stop_all = true;
 
