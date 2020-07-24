@@ -952,13 +952,18 @@ namespace fMP4Stream
 		}
 	};
 
-	void media_fragment::patch_tfdt(uint64_t patch)
+	void media_fragment::patch_tfdt(uint64_t patch, uint32_t seq_nr)
 	{
 		if (!moof_box_.size_)
 			return;
 
 		uint64_t box_size = 0;
 		uint64_t offset = 8;
+
+		if (seq_nr)
+			this->mfhd_.seq_nr_ = seq_nr;
+
+		this->tfdt_.base_media_decode_time_ = this->tfdt_.base_media_decode_time_ + patch;
 
 		// find the tfdt box and overwrite it
 		while (moof_box_.box_data_.size() > offset)
@@ -976,6 +981,9 @@ namespace fMP4Stream
 
 			if (std::string(name).compare("mfhd") == 0)
 			{
+				
+				if (seq_nr) 
+					fmp4_write_uint32(seq_nr, (char *)&ptr[offset + temp_off + 12]);
 				//mfhd_.parse((char *)& ptr[offset + temp_off]);
 				offset += (uint64_t)box_size;
 				//cout << "mfhd size" << box_size << endl;
@@ -991,10 +999,7 @@ namespace fMP4Stream
 
 			if (std::string(name).compare("tfdt") == 0)
 			{
-				//tfdt_.parse((char *)& ptr[offset + temp_off] + 12);
-
-				this->tfdt_.base_media_decode_time_ = this->tfdt_.base_media_decode_time_ + patch;
-
+				
 				this->tfdt_.version_ ? \
 					fmp4_write_uint64(this->tfdt_.base_media_decode_time_, (char *)&ptr[offset + temp_off + 12]) : \
 					fmp4_write_uint32((uint32_t)this->tfdt_.base_media_decode_time_, (char *)&ptr[offset + temp_off + 12]);
@@ -1200,7 +1205,7 @@ namespace fMP4Stream
 	}
 
 	// archival function, write init segment to a file
-	int ingest_stream::write_init_to_file(std::string &ofile)
+	int ingest_stream::write_init_to_file(std::string &ofile, unsigned int nfrags)
 	{
 		// write the stream to an output file
 		std::ofstream out_file(ofile, std::ofstream::binary);
@@ -1210,6 +1215,13 @@ namespace fMP4Stream
 			std::vector<uint8_t> init_data;
 			get_init_segment_data(init_data);
 			out_file.write((char *)init_data.data(), init_data.size());
+			for (unsigned int k = 0; k < nfrags; k++) {
+				if (k < media_fragment_.size()) {
+					init_data.clear();
+					get_media_segment_data(k, init_data);
+					out_file.write((char *)init_data.data(), init_data.size());
+				}
+			}
 			out_file.close();
 			std::cout << " done written init segment to file: " << ofile << std::endl;
 		}
@@ -1462,16 +1474,51 @@ namespace fMP4Stream
 	}
 
 	// method to patch all timestamps from a VoD (0) base to live (epoch based)
-	void ingest_stream::patch_tfdt(uint64_t time_anchor)
+	void ingest_stream::patch_tfdt(uint64_t time_anchor, bool applytimescale)
 	{
-		uint32_t timescale = 0;
-		timescale = this->init_fragment_.get_time_scale();
-		if (timescale) {
-			time_anchor = time_anchor * timescale; // offset to add to the timestamps
-			for (int i = 0; i < this->media_fragment_.size(); i++)
-			{
-				this->media_fragment_[i].patch_tfdt(time_anchor);
-			}
+		if (applytimescale) {
+			uint32_t timescale = 0;
+			timescale = this->init_fragment_.get_time_scale();
+			if(timescale)
+			   time_anchor = time_anchor * timescale; // offset to add to the timestamps
 		}
+		uint32_t seq_nr = 0;
+		if (media_fragment_.size())
+			seq_nr = 1 + this->media_fragment_[media_fragment_.size()-1].mfhd_.seq_nr_;
+
+		for (uint32_t i = 0; i < this->media_fragment_.size(); i++)
+		{
+			if (seq_nr)
+				this->media_fragment_[i].patch_tfdt(time_anchor, seq_nr + i);
+			else
+				this->media_fragment_[i].patch_tfdt(time_anchor);
+		}
+		
+	}
+
+	uint64_t ingest_stream::get_duration() 
+	{
+		if (media_fragment_.size() > 2) 
+		{
+			// todo add aditional checks for timing behavior
+			return media_fragment_[media_fragment_.size() - 1].tfdt_.base_media_decode_time_
+				- media_fragment_[0].tfdt_.base_media_decode_time_
+				+ media_fragment_[media_fragment_.size() - 1].get_duration();
+		}
+		if (media_fragment_.size() == 1)
+		{
+			// todo add aditional checks for timing behavior
+			return media_fragment_[media_fragment_.size() - 1].get_duration();
+		}
+		return 0;
+	}
+	uint64_t ingest_stream::get_start_time() 
+	{
+		if (media_fragment_.size() > 1)
+		{
+			// todo add aditional checks for timing behavior
+			return media_fragment_[0].tfdt_.base_media_decode_time_;
+		}
+		return 0;
 	}
 }

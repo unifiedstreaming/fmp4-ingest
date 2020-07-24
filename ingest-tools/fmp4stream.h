@@ -378,7 +378,7 @@ namespace fMP4Stream {
 		//
 		box moof_box_;
 		box mdat_box_;
-		
+
 		// as cmaf only has one traf box we directly store the entries of it
 		mfhd mfhd_;
 		tfhd tfhd_;
@@ -387,9 +387,10 @@ namespace fMP4Stream {
 
 		// see what is in the fragment and store the sub boxes
 		void parse_moof();
-		void patch_tfdt(uint64_t patch);
+		void patch_tfdt(uint64_t patch, uint32_t seq_nr = 0);
 		void print() const;
 		uint64_t get_duration();
+		uint64_t get_bmdt() { return tfdt_.base_media_decode_time_; }
 	};
 
 	// structure to store an entire ingest stream
@@ -399,14 +400,17 @@ namespace fMP4Stream {
 		std::vector<media_fragment> media_fragment_;
 		box sidx_box_, meta_box_, mfra_box_;
 		int load_from_file(std::istream &input_file, bool init_only=false);
-		int write_init_to_file(std::string &out_file);
+		int write_init_to_file(std::string &out_file, unsigned int nfrags=0);
 		int write_to_sparse_emsg_file(const std::string& out_file, uint32_t track_id, uint32_t announce, const std::string& urn, uint32_t timescale=1, uint8_t target_emsg_version=2);
 		uint64_t get_init_segment_data(std::vector<uint8_t> &init_seg_dat);
 		uint64_t get_media_segment_data(std::size_t index, std::vector<uint8_t> &media_seg_dat);
 		void write_to_dash_event_stream(std::string &out_file);
 		void print() const;
 
-		void patch_tfdt(uint64_t epoch);
+		void patch_tfdt(uint64_t patch, bool apply_timescale=true);
+
+		uint64_t get_duration();
+		uint64_t get_start_time();
 	};
 }
 #endif

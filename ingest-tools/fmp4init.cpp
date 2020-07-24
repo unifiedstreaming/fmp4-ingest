@@ -39,14 +39,23 @@ int main(int argc, char *argv[])
 		}
 
 		cout << " reading fmp4 input file " << endl;
-		ingest_stream.load_from_file(input, true);
+		if(argc > 3)
+		    ingest_stream.load_from_file(input, false);
+		else 
+			ingest_stream.load_from_file(input, true);
+
 		input.close();
 
 		string out_file = "init_" + in_file;
 		if (argc > 2)
 			out_file = string(argv[2]);
 		
-		ingest_stream.write_init_to_file(out_file);
+		if (argc > 3) {
+			unsigned int nfrags = atoi(argv[3]);
+			ingest_stream.write_init_to_file(out_file,nfrags);
+		}
+		else
+			ingest_stream.write_init_to_file(out_file,0);
 	}
 	else
 	{
