@@ -279,7 +279,7 @@ static size_t read_callback(void *dest, size_t size, size_t nmemb, void *userp)
 	}
 }
 
-int push_thread(ingest_stream &l_ingest_stream, push_options_t &opt, string post_url_string, std::string file_name)
+int push_thread(ingest_stream l_ingest_stream, push_options_t opt, string post_url_string, std::string file_name)
 {
 	try
 	{		
@@ -524,7 +524,7 @@ int push_thread(ingest_stream &l_ingest_stream, push_options_t &opt, string post
 	return 0;
 }
 
-int push_thread_meta(ingest_stream &l_ingest_stream, push_options_t &opt, std::string post_url_string, std::string file_name)
+int push_thread_meta(ingest_stream l_ingest_stream, push_options_t opt, std::string post_url_string, std::string file_name)
 {
 	try
 	{
