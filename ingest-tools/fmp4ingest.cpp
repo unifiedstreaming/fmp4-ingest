@@ -739,13 +739,13 @@ int main(int argc, char * argv[])
 		if(it->substr(it->find_last_of(".") + 1) == "cmfm")
         {
 			cout << "push thread: " << post_url_string << endl;
-		    thread_ptr thread_n(new thread(push_thread_meta, l_istreams[l_index], opts, post_url_string, *it));
+		    thread_ptr thread_n(new thread(push_thread_meta, l_istreams[l_index], opts, post_url_string, (string) *it));
 		    threads.push_back(thread_n);
         }
 		else 
 		{
 			cout << "push thread: " << post_url_string << endl;
-			thread_ptr thread_n(new thread(push_thread, l_istreams[l_index], opts, post_url_string, *it));
+			thread_ptr thread_n(new thread(push_thread, l_istreams[l_index], opts, post_url_string, (string) *it));
 			threads.push_back(thread_n);
 		}	
 		l_index++;
