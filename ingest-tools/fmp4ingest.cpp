@@ -223,7 +223,7 @@ static size_t read_callback(void *dest, size_t size, size_t nmemb, void *userp)
 
 		if ((frags_finished ))
 		{
-			uint64_t patch_shift = (uint64_t) std::round(st->opt_->cmaf_presentation_duration_ * st->str_ptr_->init_fragment_.get_time_scale());
+			uint64_t patch_shift = (uint64_t) (st->opt_->cmaf_presentation_duration_ * st->str_ptr_->init_fragment_.get_time_scale());
 			if (patch_shift > 0) 
 			{
 				cout << "patching using cmaf presentation duration" << endl;
@@ -487,7 +487,7 @@ int push_thread(ingest_stream &l_ingest_stream, push_options_t &opt, string post
 							break;
 						}
 					}
-					uint64_t patch_shift = (uint64_t) std::round(opt.cmaf_presentation_duration_ * l_ingest_stream.init_fragment_.get_time_scale());
+					uint64_t patch_shift = (uint64_t) (opt.cmaf_presentation_duration_ * l_ingest_stream.init_fragment_.get_time_scale());
 					cout << "patching track " << patch_shift << endl;
 					l_ingest_stream.patch_tfdt(patch_shift,false);
 					start_time = chrono::system_clock::now();
