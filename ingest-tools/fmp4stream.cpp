@@ -382,7 +382,6 @@ namespace fMP4Stream
 		}
 	}
 
-	// duration from the trun box units of the timescale of the fragment
 	uint64_t media_fragment::get_duration()
 	{
 		uint64_t duration = 0;
@@ -509,7 +508,6 @@ namespace fMP4Stream
 		return l_size;
 	}
 
-	//! reads the entire file
 	void emsg::parse(const char *ptr, unsigned int data_size)
 	{
 		full_box::parse(ptr);
@@ -561,9 +559,6 @@ namespace fMP4Stream
 			message_data_.push_back(*(ptr + (size_t)offset));
 			offset++;
 		}
-
-		//if (message_data[0] == 0xFC) {}
-		//	cout << "program splice table detected " << endl;
 	}
 
 	//! emsg to mpd event, always to base64 encoding
@@ -682,7 +677,6 @@ namespace fMP4Stream
 		return bytes_written;
 	}
 
-	//! write an emsg message as a sparse fragment with advertisement time timestamp announce second before the application time
 	void emsg::write_emsg_as_fmp4_fragment(std::ostream &ostr, uint64_t timestamp_tfdt, uint32_t track_id,
 		uint64_t next_tfdt /* announce n seconds in advance*/, uint8_t target_version /* set to two (2) to not change the target version of the emsg */)
 	{
@@ -869,7 +863,6 @@ namespace fMP4Stream
 		return;
 	};
 
-	//! carefull very naive version of parsing the timescale from the mvhd
 	uint32_t init_fragment::get_time_scale()
 	{
 		if (moov_box_.box_data_.size() > 30) {
@@ -890,7 +883,6 @@ namespace fMP4Stream
 		}
 	}
 
-	//! see what is in the fragment
 	void media_fragment::parse_moof()
 	{
 		if (!moof_box_.size_)
@@ -1482,7 +1474,9 @@ namespace fMP4Stream
 			if(timescale)
 			   time_anchor = time_anchor * timescale; // offset to add to the timestamps
 		}
+
 		uint32_t seq_nr = 0;
+		
 		if (media_fragment_.size())
 			seq_nr = 1 + this->media_fragment_[media_fragment_.size()-1].mfhd_.seq_nr_;
 
@@ -1492,8 +1486,7 @@ namespace fMP4Stream
 				this->media_fragment_[i].patch_tfdt(time_anchor, seq_nr + i);
 			else
 				this->media_fragment_[i].patch_tfdt(time_anchor);
-		}
-		
+		}	
 	}
 
 	uint64_t ingest_stream::get_duration() 
