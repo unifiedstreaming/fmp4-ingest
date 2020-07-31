@@ -74,6 +74,7 @@ struct push_options_t
 		, loop_(true)
 		, wc_off_(true)
 		, wc_uri_("http://time.akamai.com")
+		, wc_time_start_(0)
 		, dont_close_(true)
 		, chunked_(false)
 		, drop_every_(0)
@@ -756,14 +757,12 @@ int push_thread_emsg(push_options_t opt, std::string post_url_string, std::strin
 					   if (media_time > opt.cmaf_presentation_duration_) 
 					   {
 						   i = 1;
-						   cmaf_loop_offset += opt.cmaf_presentation_duration_;
+						   cmaf_loop_offset += opt.cmaf_presentation_duration_ * timescale;
 						   media_time = ((double)i * opt.avail_ + cmaf_loop_offset) / timescale;
 					   }
 
 					// calculate elapsed media time
 					chrono::duration<double> diff = chrono::system_clock::now() - start_time;
-					
-
 					double wait_time = media_time - 5.0 - opt.announce_- diff.count();
 
 					if (wait_time > 0) // if it is to early sleep until tfdt - frag_dur
@@ -780,16 +779,17 @@ int push_thread_emsg(push_options_t opt, std::string post_url_string, std::strin
 				// create emsg
 				emsg e = {};
 				e.timescale_ = timescale;
+				e.presentation_time_ = (uint32_t) ((media_time + opt.wc_time_start_) * timescale);
 				e.id_ = (uint32_t) i;
 				e.version_ = 0;
 				e.presentation_time_delta_ = 0;
 				e.event_duration_ = (uint32_t) opt.avail_dur_;
 				e.message_data_ = {'t','e','s','t',' ', 'm','e','s','s','a','g','e'};
-				e.scheme_id_uri_ = "test_scheme_uri";
+				e.scheme_id_uri_ = "urn:scte:scte35:2013:bin";
 				e.value_ = "";
 				
 				vector<uint8_t> sparse_seg_dat;
-				e.convert_emsg_to_sparse_fragment(sparse_seg_dat, (uint32_t) media_time * timescale, track_id, timescale, 0);
+				e.convert_emsg_to_sparse_fragment(sparse_seg_dat, (uint32_t) ((media_time + opt.wc_time_start_) * timescale), track_id, timescale, 0);
 				
 				curl_easy_setopt(curl, CURLOPT_POSTFIELDS, (char *)&sparse_seg_dat[0]);
 				curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, (long)sparse_seg_dat.size());

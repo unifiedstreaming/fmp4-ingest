@@ -771,7 +771,7 @@ namespace fMP4Stream
 			ostr.put('d');
 			fmp4_write_uint32((uint32_t)0u, int_buf);
 			ostr.write(int_buf, 4);
-			fmp4_write_uint32((uint32_t)l_mfhd.seq_nr_, int_buf);
+			fmp4_write_uint32((uint32_t) this->id_, int_buf);
 			ostr.write(int_buf, 4);
 
 			// write traf 8 bytes total 32 bytes
