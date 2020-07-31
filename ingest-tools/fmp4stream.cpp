@@ -1408,7 +1408,7 @@ namespace fMP4Stream
 		// mdhd 
 		fmp4_write_uint32(timescale, (char *)&sparse_moov[244]);
 
-		std::fstream ot(out_file, std::ios::binary);
+		std::ofstream ot(out_file, std::ios::binary);
 		//cout << sparse_moov.size() << endl;
 
 		if (ot.good())
@@ -1436,8 +1436,6 @@ namespace fMP4Stream
 			ot.close();
 			std::cout << "*** wrote sparse track file: " << out_file << "  ***" << std::endl;
 		}
-		else
-			std::cout << "error" << std::endl;
 		return 0;
 	};
 
