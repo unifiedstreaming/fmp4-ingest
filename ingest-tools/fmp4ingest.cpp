@@ -81,6 +81,9 @@ struct push_options_t
 		, dry_run_(false)
 		, verbose_(2)
 		, cmaf_presentation_duration_(0)
+		, avail_(0)
+		, avail_dur_(0)
+		, announce_(20.0)
 	{
 	}
 
@@ -94,6 +97,8 @@ struct push_options_t
 			" [--wc_uri]                     uri for fetching wall clock time default time.akamai.com \n"
 			" [--close_pp]                   Close the publishing point at the end of stream or termination \n"
 			" [--chunked]                    Use chunked Transfer-Encoding for POST (long running post) otherwise short running per fragment post \n"
+			" [--avail]                      signal an advertisment slot every arg1 ms with duration of arg2 ms \n"
+			" [--announce]                   specify the number of seconds in advance to presenation time to send an avail"
 			" [--auth]                       Basic Auth Password \n"
 			" [--aname]                      Basic Auth User Name \n"
 			" [--sslcert]                    TLS 1.2 client certificate \n"
@@ -120,6 +125,8 @@ struct push_options_t
 				if (t.compare("--wc_offset") == 0) { wc_off_ = true; continue; }
 				if (t.compare("--wc_uri") == 0) { wc_uri_ = string(argv[++i]); continue; }
 				if (t.compare("--auth") == 0) { basic_auth_ = string(argv[++i]); continue; }
+				if (t.compare("--avail") == 0) { avail_ = atoi(argv[++i]); avail_dur_= atoi(argv[++i]); continue; }
+				if (t.compare("--announce") == 0) { announce_ = atof(argv[++i]); continue; }
 				if (t.compare("--aname") == 0) { basic_auth_name_ = string(argv[++i]); continue; }
 				if (t.compare("--sslcert") == 0) { ssl_cert_ = string(argv[++i]); continue; }
 				if (t.compare("--sslkey") == 0) { ssl_key_ = string(argv[++i]); continue; }
@@ -160,8 +167,12 @@ struct push_options_t
 	string basic_auth_name_; // user name with basic auth
 	string basic_auth_; // password with basic auth
 
+	double announce_; // number of seconds to send an announce in advance
 	double cmaf_presentation_duration_;
 	vector<string> input_files_;
+
+	uint64_t avail_; // insert an avail every X milli seconds
+	uint64_t avail_dur_; // of duratoin Y milli seconds
 };
 
 struct ingest_post_state_t
@@ -472,7 +483,7 @@ int push_thread(ingest_stream l_ingest_stream, push_options_t opt, string post_u
 								if(fdel < (media_time - diff.count()))
 								    this_thread::sleep_for(chrono::duration<double>(fdel));
 								else
-								   this_thread::sleep_for(chrono::duration<double>((media_time) - diff.count()));
+								    this_thread::sleep_for(chrono::duration<double>((media_time) - diff.count()));
 							}
 
 						}
@@ -575,21 +586,6 @@ int push_thread_meta(ingest_stream l_ingest_stream, push_options_t opt, std::str
 		}
 
 		// setup the post
-		ingest_post_state_t post_state = {};
-		post_state.error_state_ = false;
-		post_state.fnumber_ = 0;
-		post_state.frag_duration_ = l_ingest_stream.media_fragment_[0].get_duration();
-		post_state.init_done_ = true; // the init fragment was already sent
-		post_state.start_time_stamp_ = l_ingest_stream.media_fragment_[0].tfdt_.base_media_decode_time_;
-		post_state.str_ptr_ = &l_ingest_stream;
-		post_state.timescale_ = l_ingest_stream.init_fragment_.get_time_scale();
-		post_state.is_done_ = false;
-		post_state.offset_in_fragment_ = 0;
-		post_state.opt_ = &opt;
-		post_state.file_name_ = file_name;
-		chrono::time_point<chrono::system_clock> tp = chrono::system_clock::now();
-		post_state.start_time_ = &tp; // start time
-
 		chrono::time_point<chrono::system_clock> start_time = chrono::system_clock::now();
 
 		while (!stop_all)
@@ -603,7 +599,7 @@ int push_thread_meta(ingest_stream l_ingest_stream, push_options_t opt, std::str
 					chrono::duration<double> diff = chrono::system_clock::now() - start_time;
 					const double media_time = ((double)(c_tfdt - l_ingest_stream.get_start_time())) / l_ingest_stream.init_fragment_.get_time_scale();
 
-					double wait_time = media_time - 8.0 - diff.count();
+					double wait_time = media_time - opt.announce_ - diff.count();
 
 					if (wait_time > 0) // if it is to early sleep until tfdt - frag_dur
 					{
@@ -648,12 +644,14 @@ int push_thread_meta(ingest_stream l_ingest_stream, push_options_t opt, std::str
 				}
 
 				//std::cout << " --- posting next segment ---- " << i << std::endl;
-				if (post_state.is_done_ || stop_all) {
+				if (stop_all) {
 					i = (uint64_t)l_ingest_stream.media_fragment_.size();
 					break;
 				}
 			}
-			l_ingest_stream.patch_tfdt(l_ingest_stream.get_duration(), false);
+			uint64_t patch_shift = (uint64_t)(opt.cmaf_presentation_duration_ * l_ingest_stream.init_fragment_.get_time_scale());
+			l_ingest_stream.patch_tfdt(patch_shift, false);
+
 			
 			start_time = chrono::system_clock::now();
 		}
@@ -688,9 +686,160 @@ int push_thread_meta(ingest_stream l_ingest_stream, push_options_t opt, std::str
 	return 0;
 }
 
-//
-// entry point 
-// 
+int push_thread_emsg(push_options_t opt, std::string post_url_string, std::string file_name, uint32_t track_id, uint32_t timescale)
+{
+	try
+	{
+		vector<uint8_t> init_seg_dat;
+		string urn = "urn:mpeg:dash:event:2012";
+		get_sparse_moov(urn, timescale, track_id, init_seg_dat);
+		ofstream outf = std::ofstream("emsg.cmfm", std::ios::binary);
+
+		// setup curl
+		CURL * curl;
+		CURLcode res;
+		curl = curl_easy_init();
+
+		curl_easy_setopt(curl, CURLOPT_URL, post_url_string.c_str());
+		curl_easy_setopt(curl, CURLOPT_POSTFIELDS, (char *)&init_seg_dat[0]);
+		curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, (long)init_seg_dat.size());
+		
+		if (outf.good())
+			outf.write((char *)&init_seg_dat[0], init_seg_dat.size());
+
+		curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
+		curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L);
+
+		if (opt.basic_auth_.size())
+		{
+			curl_easy_setopt(curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+			curl_easy_setopt(curl, CURLOPT_USERNAME, opt.basic_auth_name_.c_str());
+			curl_easy_setopt(curl, CURLOPT_USERPWD, opt.basic_auth_.c_str());
+		}
+
+		if (opt.ssl_cert_.size())
+			curl_easy_setopt(curl, CURLOPT_SSLCERT, opt.ssl_cert_.c_str());
+		if (opt.ssl_key_.size())
+			curl_easy_setopt(curl, CURLOPT_SSLKEY, opt.ssl_key_.c_str());
+		if (opt.ssl_key_pass_.size())
+			curl_easy_setopt(curl, CURLOPT_KEYPASSWD, opt.ssl_key_pass_.c_str());
+
+		res = curl_easy_perform(curl);
+
+		/* Check for errors */
+		if (res != CURLE_OK)
+		{
+			fprintf(stderr, "---- connection with server failed  %s\n",
+				curl_easy_strerror(res));
+			curl_easy_cleanup(curl);
+			return 0; // nothing todo when connection fails
+		}
+		else
+		{
+			fprintf(stderr, "---- connection with server sucessfull %s\n",
+				curl_easy_strerror(res));
+		}
+
+		chrono::time_point<chrono::system_clock> start_time = chrono::system_clock::now();
+
+
+		while (!stop_all)
+		{
+			double cmaf_loop_offset = 0;
+			for (uint64_t i = 1;; i++)
+			{
+				double media_time = ((double)i * opt.avail_ + cmaf_loop_offset) / timescale;
+
+				if (opt.realtime_)
+				{    
+					if(opt.cmaf_presentation_duration_)
+					   if (media_time > opt.cmaf_presentation_duration_) 
+					   {
+						   i = 1;
+						   cmaf_loop_offset += opt.cmaf_presentation_duration_;
+						   media_time = ((double)i * opt.avail_ + cmaf_loop_offset) / timescale;
+					   }
+
+					// calculate elapsed media time
+					chrono::duration<double> diff = chrono::system_clock::now() - start_time;
+					
+
+					double wait_time = media_time - 5.0 - opt.announce_- diff.count();
+
+					if (wait_time > 0) // if it is to early sleep until tfdt - frag_dur
+					{
+						this_thread::sleep_for(chrono::duration<double>(wait_time));
+					}
+
+				}
+				else
+				{ 
+					std::this_thread::sleep_for(std::chrono::milliseconds(500));
+				}
+
+				// create emsg
+				emsg e = {};
+				e.timescale_ = timescale;
+				e.id_ = (uint32_t) i;
+				e.version_ = 0;
+				e.presentation_time_delta_ = 0;
+				e.event_duration_ = (uint32_t) opt.avail_dur_;
+				e.message_data_ = {'t','e','s','t',' ', 'm','e','s','s','a','g','e'};
+				e.scheme_id_uri_ = "test_scheme_uri";
+				e.value_ = "";
+				
+				vector<uint8_t> sparse_seg_dat;
+				e.convert_emsg_to_sparse_fragment(sparse_seg_dat, (uint32_t) media_time * timescale, track_id, timescale, 0);
+				
+				curl_easy_setopt(curl, CURLOPT_POSTFIELDS, (char *)&sparse_seg_dat[0]);
+				curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, (long)sparse_seg_dat.size());
+				res = curl_easy_perform(curl);
+
+				if(outf.good())
+				    outf.write((const char *)&sparse_seg_dat[0], sparse_seg_dat.size());
+
+				if (res != CURLE_OK)
+				{
+					fprintf(stderr, "post of media segment failed: %s\n",
+						curl_easy_strerror(res));
+
+					// media segment post failed resend the init segment and the segment
+					int retry_count = 0;
+					while (res != CURLE_OK)
+					{
+						curl_easy_setopt(curl, CURLOPT_POSTFIELDS, (char *)&init_seg_dat[0]);
+						curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, (long)init_seg_dat.size());
+						res = curl_easy_perform(curl);
+						std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+						retry_count++;
+						if (retry_count == 10)
+							return 0;
+					}
+				}
+				else
+				{
+					fprintf(stderr, "post of media segment ok: %s\n",
+						curl_easy_strerror(res));
+				}
+
+				if (stop_all) {
+					break;
+				}
+			}
+			start_time = chrono::system_clock::now();
+		}
+
+		/* always cleanup */
+		curl_easy_cleanup(curl);
+		outf.close();
+	}
+	catch (...)
+	{
+		cout << "Unknown Error" << endl;
+	}
+	return 0;
+}
+
 int main(int argc, char * argv[])
 {
 	push_options_t opts;
@@ -732,6 +881,15 @@ int main(int argc, char * argv[])
 		input.close();
 	}
 	l_index = 0;
+
+	if (opts.avail_)
+	{
+		string post_url_string = opts.url_ + "/Streams(" + "emsg.cmfm" + ")";
+		string file_name = "emsg.cmfm";
+		thread_ptr thread_n(new thread(push_thread_emsg, opts, post_url_string, file_name, 99, 1000));
+		threads.push_back(thread_n);
+	}
+
 	for (auto it = opts.input_files_.begin(); it != opts.input_files_.end(); ++it)
 	{
 		string post_url_string = opts.url_ + "/Streams(" + *it + ")";
@@ -750,6 +908,8 @@ int main(int argc, char * argv[])
 		}	
 		l_index++;
 	}
+
+
 
 	// wait for the push threads to finish
 	cout << " fmp4 and CMAF ingest, press q and enter to exit " << endl;

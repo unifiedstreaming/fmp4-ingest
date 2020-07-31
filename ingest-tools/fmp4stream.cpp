@@ -10,6 +10,7 @@ http://www.code-shop.com
 
 #include "fmp4stream.h"
 #include <iostream>
+#include <sstream>
 #include <stdint.h>
 #include <iomanip> 
 #include <memory>
@@ -70,6 +71,7 @@ namespace /* anonymous */ {
 	}
 
 } // anonymous
+
 
 namespace fMP4Stream
 {
@@ -678,12 +680,10 @@ namespace fMP4Stream
 	}
 
 	void emsg::write_emsg_as_fmp4_fragment(std::ostream &ostr, uint64_t timestamp_tfdt, uint32_t track_id,
-		uint64_t next_tfdt /* announce n seconds in advance*/, uint8_t target_version /* set to two (2) to not change the target version of the emsg */)
+		uint64_t next_tfdt, uint8_t target_version)
 	{
 		if (scheme_id_uri_.size())
 		{
-			std::cout << "*** writing emsg fragment scheme: " << scheme_id_uri_ << "***" << std::endl;
-
 			if ((version_ == 1) && (target_version == 0)) {
 				this->presentation_time_delta_ = 0; /* should be: presentation_time_ - timestamp_tfdt; */
 				this->version_ = target_version;
@@ -815,9 +815,6 @@ namespace fMP4Stream
 			fmp4_write_uint64((uint64_t)l_tfdt.base_media_decode_time_, long_buf);
 			ostr.write(long_buf, 8);
 
-
-			// write the trun box,
-			std::cout << "trun size release: " << l_trun_size << std::endl;
 			fmp4_write_uint32((uint32_t)l_trun_size, int_buf);
 			ostr.write(int_buf, 4);
 			//ostr->write("trun", 4);
@@ -1366,6 +1363,34 @@ namespace fMP4Stream
 		}
 	};
 
+
+	bool get_sparse_moov(const std::string& urn, uint32_t timescale, uint32_t track_id, std::vector<uint8_t> &sparse_moov)
+	{
+		sparse_moov = base64_decode(moov_64_enc);
+		setTrackID(sparse_moov, track_id);
+		if (urn.size())
+			setSchemeURN(sparse_moov, urn);
+
+		// write back the timescale mvhd
+		fmp4_write_uint32(timescale, (char *)&sparse_moov[28]);
+
+		// mdhd 
+		fmp4_write_uint32(timescale, (char *)&sparse_moov[244]);
+
+		return true;
+	};
+
+	void emsg::convert_emsg_to_sparse_fragment(std::vector<uint8_t> &sparse_frag_out, uint32_t tfdt, uint32_t track_id, uint32_t timescale,  uint8_t target_emsg_version)
+	{
+		std::ostringstream res(std::ios::binary);
+		sparse_frag_out.clear();
+		this->write_emsg_as_fmp4_fragment(res, tfdt, track_id, tfdt + 4 * timescale_, 0);
+		std::string r = res.str();
+		for (int i = 0; i < r.size(); i++)
+			sparse_frag_out.push_back(r[i]);
+		return;
+	};
+
 	// writes sparse emsg file, set the track, the scheme
 	int ingest_stream::write_to_sparse_emsg_file(const std::string& out_file,
 		uint32_t track_id, uint32_t announce, const std::string& urn, uint32_t timescale, uint8_t target_emsg_version)
@@ -1383,7 +1408,7 @@ namespace fMP4Stream
 		// mdhd 
 		fmp4_write_uint32(timescale, (char *)&sparse_moov[244]);
 
-		std::ofstream ot(out_file, std::ios::binary);
+		std::fstream ot(out_file, std::ios::binary);
 		//cout << sparse_moov.size() << endl;
 
 		if (ot.good())
