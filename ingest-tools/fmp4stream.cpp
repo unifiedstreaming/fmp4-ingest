@@ -1413,7 +1413,7 @@ namespace fMP4Stream
 		return true;
 	};
 
-	void emsg::convert_emsg_to_sparse_fragment(std::vector<uint8_t> &sparse_frag_out, uint32_t tfdt, uint32_t track_id, uint32_t timescale,  uint8_t target_emsg_version)
+	void emsg::convert_emsg_to_sparse_fragment(std::vector<uint8_t> &sparse_frag_out, uint64_t tfdt, uint32_t track_id, uint32_t timescale,  uint8_t target_emsg_version)
 	{
 		std::ostringstream res(std::ios::binary);
 		sparse_frag_out.clear();

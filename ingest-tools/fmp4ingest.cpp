@@ -782,7 +782,7 @@ int push_thread_emsg(push_options_t opt, std::string post_url_string, std::strin
 				// create emsg
 				emsg e = {};
 				e.timescale_ = timescale; // 1000
-				e.presentation_time_ = (uint32_t) ((media_time + opt.wc_time_start_) * timescale);
+				e.presentation_time_ = uint64_t  ((media_time + opt.wc_time_start_) * timescale);
 				e.id_ = (uint32_t) i;
 				e.version_ = 0;
 				e.presentation_time_delta_ = 0;
@@ -793,7 +793,7 @@ int push_thread_emsg(push_options_t opt, std::string post_url_string, std::strin
 				
 				vector<uint8_t> sparse_seg_dat;
 				e.convert_emsg_to_sparse_fragment(sparse_seg_dat, \
-					(uint32_t) ((media_time + opt.wc_time_start_) * timescale), track_id, timescale, 0);
+					(uint64_t) ((media_time + opt.wc_time_start_) * timescale), track_id, timescale, 0);
 				
 				curl_easy_setopt(curl, CURLOPT_POSTFIELDS, (char *)&sparse_seg_dat[0]);
 				curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, (long)sparse_seg_dat.size());
