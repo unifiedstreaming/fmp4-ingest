@@ -297,6 +297,7 @@ namespace fMP4Stream {
 		virtual void print() const;
 		uint32_t write(std::ostream &ostr) const;
 
+		
 		void write_emsg_as_fmp4_fragment(std::ostream &out, uint64_t tfdt, uint32_t track_id, uint64_t next_tfdt, uint8_t target_version); // warning may change the version
 		void write_emsg_as_mpd_event(std::ostream &ostr, uint64_t base_time) const;
 		void convert_emsg_to_sparse_fragment(std::vector<uint8_t> &sparse_frag_out, uint32_t tfdt, uint32_t track_id, uint32_t timescale, uint8_t target_emsg_version = 0);
@@ -415,5 +416,6 @@ namespace fMP4Stream {
 	};
 
 	bool get_sparse_moov(const std::string& urn, uint32_t timescale, uint32_t track_id, std::vector<uint8_t> &sparse_moov);
+	void gen_splice_insert(std::vector<uint8_t> &out_splice_insert, uint32_t event_id, uint32_t duration);
 }
 #endif

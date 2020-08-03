@@ -498,6 +498,39 @@ namespace fMP4Stream
 		// we don't support the cancel indicator yet (it should be added)
 	}
 
+	const std::string base64splice_insert("/DAhAAAAAAAAAP/wEAUAAAMrf+9//gAaF7DAAAAAAADkYSQC");
+
+	// generate a splice insert command
+	void gen_splice_insert(std::vector<uint8_t> &out_splice_insert, uint32_t event_id, uint32_t duration)
+	{
+		out_splice_insert = base64_decode(base64splice_insert);
+		uint8_t * ptr = &out_splice_insert[0];
+		ptr += 14;
+		fmp4_write_uint32(event_id, (char *)ptr);
+		ptr += 5;
+
+		std::bitset<8> b2(*ptr);
+		bool out_of_network_indicator = b2[7];
+		bool program_splice_flag = b2[6];
+		bool duration_flag = b2[5];
+		bool splice_immediate_flag = b2[4];
+		ptr++;
+
+		if (program_splice_flag && !splice_immediate_flag)
+			ptr++;
+		if (program_splice_flag)
+			ptr++;
+		if (duration_flag)
+		{
+			fmp4_write_uint32(duration, (const char *)ptr);
+			ptr += 4;
+		}
+		
+		// todo calculate the crc32 pointer
+		
+	}
+
+
 	uint64_t emsg::size() const
 	{
 		uint64_t l_size = full_box::size();

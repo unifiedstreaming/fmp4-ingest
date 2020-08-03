@@ -144,7 +144,6 @@ struct push_options_t
 			print_options();
 	}
 
-
 	string url_;
 	bool realtime_;
 	bool daemon_;
@@ -694,6 +693,8 @@ int push_thread_emsg(push_options_t opt, std::string post_url_string, std::strin
 		vector<uint8_t> init_seg_dat;
 		string urn = "urn:mpeg:dash:event:2012";
 		get_sparse_moov(urn, timescale, track_id, init_seg_dat);
+		
+		//write the output
 		ofstream outf = std::ofstream("emsg.cmfm", std::ios::binary);
 
 		// setup curl
@@ -776,20 +777,23 @@ int push_thread_emsg(push_options_t opt, std::string post_url_string, std::strin
 					std::this_thread::sleep_for(std::chrono::milliseconds(500));
 				}
 
+
+				
 				// create emsg
 				emsg e = {};
-				e.timescale_ = timescale;
+				e.timescale_ = timescale; // 1000
 				e.presentation_time_ = (uint32_t) ((media_time + opt.wc_time_start_) * timescale);
 				e.id_ = (uint32_t) i;
 				e.version_ = 0;
 				e.presentation_time_delta_ = 0;
 				e.event_duration_ = (uint32_t) opt.avail_dur_;
-				e.message_data_ = {'t','e','s','t',' ', 'm','e','s','s','a','g','e'};
+				fMP4Stream::gen_splice_insert(e.message_data_, e.id_, e.event_duration_ * 90);
 				e.scheme_id_uri_ = "urn:scte:scte35:2013:bin";
 				e.value_ = "";
 				
 				vector<uint8_t> sparse_seg_dat;
-				e.convert_emsg_to_sparse_fragment(sparse_seg_dat, (uint32_t) ((media_time + opt.wc_time_start_) * timescale), track_id, timescale, 0);
+				e.convert_emsg_to_sparse_fragment(sparse_seg_dat, \
+					(uint32_t) ((media_time + opt.wc_time_start_) * timescale), track_id, timescale, 0);
 				
 				curl_easy_setopt(curl, CURLOPT_POSTFIELDS, (char *)&sparse_seg_dat[0]);
 				curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, (long)sparse_seg_dat.size());
@@ -818,7 +822,7 @@ int push_thread_emsg(push_options_t opt, std::string post_url_string, std::strin
 				}
 				else
 				{
-					fprintf(stderr, "post of media segment ok: %s\n",
+					fprintf(stderr, "post of emsg segment ok: %s\n",
 						curl_easy_strerror(res));
 				}
 
@@ -826,7 +830,6 @@ int push_thread_emsg(push_options_t opt, std::string post_url_string, std::strin
 					break;
 				}
 			}
-			start_time = chrono::system_clock::now();
 		}
 
 		/* always cleanup */
@@ -909,9 +912,6 @@ int main(int argc, char * argv[])
 		l_index++;
 	}
 
-
-
-	// wait for the push threads to finish
 	cout << " fmp4 and CMAF ingest, press q and enter to exit " << endl;
 	char c = '0';
 	while ((c = cin.get()) != 'q');
