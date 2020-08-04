@@ -8,12 +8,15 @@ http://www.code-shop.com
 
 ******************************************************************************/
 
-#include "fmp4stream.h"
+#include <stdint.h>
+
+
 #include <iostream>
 #include <sstream>
-#include <stdint.h>
 #include <iomanip> 
 #include <memory>
+
+#include "fmp4stream.h"
 #include <base64.h>
 
 namespace /* anonymous */ {
@@ -73,7 +76,7 @@ namespace /* anonymous */ {
 } // anonymous
 
 
-namespace fMP4Stream
+namespace fmp4_stream
 {
 
 	// base 64 sparse movie header
@@ -189,17 +192,11 @@ namespace fMP4Stream
 	{
 		full_box::parse(ptr);
 		track_id_ = fmp4_read_uint32(ptr + 12);
-		//cout << "track_id " << track_id << endl;
 		base_data_offset_present_ = !!(0x00000001 & flags_);
-		//cout << "base_data_offset_present " << base_data_offset_present << endl;
 		sample_description_index_present_ = !!(0x00000002 & flags_);
-		//cout << "sample_description_index_present " << sample_description_index_present << endl;
 		default_sample_duration_present_ = !!(0x00000008 & flags_);
-		//cout << "default_sample_duration_present " << default_sample_duration_present << endl;
 		default_sample_size_present_ = !!(0x00000010 & flags_);
-		//cout << "default_sample_size_present " << default_sample_size_present << endl;
 		default_sample_flags_present_ = !!(0x00000020 & flags_);
-		//cout << "default_sample_flags_present " << default_sample_flags_present << endl;
 		duration_is_empty_ = !!(0x00010000 & flags_);
 		default_base_is_moof_ = !!(0x00020000 & flags_);
 
@@ -401,6 +398,7 @@ namespace fMP4Stream
 		return duration;
 	}
 
+	// warning not fully completed
 	void sc35_splice_info::print(bool verbose) const
 	{
 		if (verbose) {
@@ -443,6 +441,7 @@ namespace fMP4Stream
 		}
 	}
 
+	// warning not fully completed
 	void sc35_splice_info::parse(const uint8_t *ptr, unsigned int size)
 	{
 		table_id_ = *ptr++;
@@ -452,8 +451,6 @@ namespace fMP4Stream
 			std::cout << " error parsing table id, tableid != 0xFC " << std::endl;
 			return;
 		}
-		//else
-		//	cout << "table id ok " << endl;
 
 		std::bitset<8> b(*ptr);
 		section_syntax_indicator_ = b[7];
@@ -500,6 +497,23 @@ namespace fMP4Stream
 
 	const std::string base64splice_insert("/DAhAAAAAAAAAP/wEAUAAAMrf+9//gAaF7DAAAAAAADkYSQC");
 
+	// todo test and fix crc 32 calculation/
+	/*
+	uint32_t crc32_for_byte(uint32_t r) {
+		for (int j = 0; j < 8; ++j)
+			r = (r & 1 ? 0 : (uint32_t)0xEDB88320L) ^ r >> 1;
+		return r ^ (uint32_t)0xFF000000L;
+	}
+
+	void crc32_fmp4(const void *data, size_t n_bytes, uint32_t* crc) {
+		static uint32_t table[0x100];
+		if (!*table)
+			for (size_t i = 0; i < 0x100; ++i)
+				table[i] = (uint32_t)crc32_for_byte(i);
+		for (size_t i = 0; i < n_bytes; ++i)
+			*crc = table[(uint8_t)*crc ^ ((uint8_t*)data)[i]] ^ *crc >> 8;
+	}*/
+
 	// generate a splice insert command
 	void gen_splice_insert(std::vector<uint8_t> &out_splice_insert, uint32_t event_id, uint32_t duration)
 	{
@@ -526,8 +540,11 @@ namespace fMP4Stream
 			ptr += 4;
 		}
 		
-		// todo calculate the crc32 pointer
-		
+		//uint32_t crc = 0;
+		//crc32_fmp4(&out_splice_insert[0], out_splice_insert.size() - 4, &crc);
+
+		//ptr = &out_splice_insert[out_splice_insert.size() - 4];
+		//fmp4_write_uint32(crc, (const char*)ptr);
 	}
 
 
@@ -591,8 +608,7 @@ namespace fMP4Stream
 		}
 		for (unsigned int i = (unsigned int)offset; i < data_size; i++)
 		{
-			message_data_.push_back(*(ptr + (size_t)offset));
-			offset++;
+			message_data_.push_back(*(ptr + (size_t)i));
 		}
 	}
 
@@ -893,6 +909,7 @@ namespace fMP4Stream
 		return;
 	};
 
+	// todo fix this code to be more generic
 	uint32_t init_fragment::get_time_scale()
 	{
 		if (moov_box_.box_data_.size() > 30) {
@@ -1069,7 +1086,6 @@ namespace fMP4Stream
 		uint64_t ssize = media_fragment_[index].moof_box_.large_size_ + media_fragment_[index].mdat_box_.large_size_;
 		media_seg_dat.resize(ssize);
 
-		// hard copy the init segment data to the output vector as moviefragmentbox and mdat box need to be combined
 		std::copy(media_fragment_[index].moof_box_.box_data_.begin(), media_fragment_[index].moof_box_.box_data_.end(), media_seg_dat.begin());
 		std::copy(media_fragment_[index].mdat_box_.box_data_.begin(), media_fragment_[index].mdat_box_.box_data_.end(), media_seg_dat.begin() + media_fragment_[index].moof_box_.large_size_);
 
@@ -1256,7 +1272,7 @@ namespace fMP4Stream
 	}
 
 	// carefull only use with the testes=d pre-encoded moov boxes to write streams
-	bool setTrackID(std::vector<uint8_t> &moov_in, uint32_t track_id)
+	bool set_track_id(std::vector<uint8_t> &moov_in, uint32_t track_id)
 	{
 		bool set_tkhd = false;
 		for (std::size_t k = 0; k < moov_in.size() - 16; k++)
@@ -1296,7 +1312,7 @@ namespace fMP4Stream
 	}
 
 	// carefull only use with the tested pre-encoded moov boxes to write streams and update the urn in them
-	void setSchemeURN(std::vector<uint8_t> &moov_in, const std::string& urn)
+	void set_scheme_id_uri(std::vector<uint8_t> &moov_in, const std::string& urn)
 	{
 		int32_t size_diff = 0;
 
@@ -1396,13 +1412,12 @@ namespace fMP4Stream
 		}
 	};
 
-
 	bool get_sparse_moov(const std::string& urn, uint32_t timescale, uint32_t track_id, std::vector<uint8_t> &sparse_moov)
 	{
 		sparse_moov = base64_decode(moov_64_enc);
-		setTrackID(sparse_moov, track_id);
+		set_track_id(sparse_moov, track_id);
 		if (urn.size())
-			setSchemeURN(sparse_moov, urn);
+			set_scheme_id_uri(sparse_moov, urn);
 
 		// write back the timescale mvhd
 		fmp4_write_uint32(timescale, (char *)&sparse_moov[28]);
@@ -1431,9 +1446,9 @@ namespace fMP4Stream
 		//ifstream moov_s_in("sparse_moov.inc", ios::binary);
 
 		std::vector<uint8_t> sparse_moov = base64_decode(moov_64_enc);
-		setTrackID(sparse_moov, track_id);
+		set_track_id(sparse_moov, track_id);
 		if (urn.size())
-			setSchemeURN(sparse_moov, urn);
+			set_scheme_id_uri(sparse_moov, urn);
 
 		// write back the timescale mvhd
 		fmp4_write_uint32(timescale, (char *)&sparse_moov[28]);
@@ -1561,6 +1576,7 @@ namespace fMP4Stream
 		}
 		return 0;
 	}
+	
 	uint64_t ingest_stream::get_start_time() 
 	{
 		if (media_fragment_.size() > 1)

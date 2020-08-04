@@ -19,7 +19,7 @@ convert DASH Events in an XML file to a timed metadata track
 #include <sstream>
 #include <algorithm>
 
-using namespace fMP4Stream;
+using namespace fmp4_stream;
 
 extern std::string moov_64_enc;
 

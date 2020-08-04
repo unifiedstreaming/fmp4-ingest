@@ -19,7 +19,7 @@ retrieve init fragment or CMAF header from fmp4 file
 #include <thread>
 #include <base64.h>
 
-using namespace fMP4Stream;
+using namespace fmp4_stream;
 using namespace std;
 
 int main(int argc, char *argv[])
@@ -60,7 +60,7 @@ int main(int argc, char *argv[])
 	else
 	{
 		cout << "fmp4init: returns init fragment of fmp4 or cmaf file" << endl;
-		cout << "usage fmp4init in_file.cmfv [out_file]" << endl;
+		cout << "usage fmp4init in_file.cmfv [out_file] [number of fragments]" << endl;
 	}
 
 	return 0;

@@ -14,7 +14,7 @@ convert metadatatrack to DASH Events in XML format SCTE-214
 #include <fstream>
 #include <memory>
 
-using namespace fMP4Stream;
+using namespace fmp4_stream;
 using namespace std;
 
 extern string moov_64_enc;

@@ -13,17 +13,16 @@ http://www.code-shop.com
 #ifndef fMP4Stream_H
 #define fMP4Stream_H
 
+#include <stdint.h>
+
 #include <iostream>
 #include <fstream>
 #include <vector>
-#include <stdint.h>
 #include <string>
 #include <bitset>
-#include <limits>
-#include <memory>
 #include <iomanip>
 
-namespace fMP4Stream {
+namespace fmp4_stream {
 
 	//----------------- structures for storing an fmp4 stream defined in ISOBMMF fMP4 ----------------------
 	struct box

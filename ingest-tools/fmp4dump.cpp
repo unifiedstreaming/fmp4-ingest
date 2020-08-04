@@ -15,7 +15,7 @@ Dump the contents of CMAF metadata including emsg content to cout
 #include <exception>
 #include <memory>
 
-using namespace fMP4Stream;
+using namespace fmp4_stream;
 using namespace std;
 
 int main(int argc, char *argv[])

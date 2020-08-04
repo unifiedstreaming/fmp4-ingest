@@ -18,8 +18,11 @@ CMAF ingest from stored CMAF files, emulates a live encoder posting CMAF content
 #include <chrono>
 #include <thread>
 #include <cstring>
+#include <bitset>
+#include <iomanip>
+#include <base64.h>
 
-using namespace fMP4Stream;
+using namespace fmp4_stream;
 using namespace std;
 bool stop_all = false;
 
@@ -787,7 +790,7 @@ int push_thread_emsg(push_options_t opt, std::string post_url_string, std::strin
 				e.version_ = 0;
 				e.presentation_time_delta_ = 0;
 				e.event_duration_ = (uint32_t) opt.avail_dur_;
-				fMP4Stream::gen_splice_insert(e.message_data_, e.id_, e.event_duration_ * 90);
+				fmp4_stream::gen_splice_insert(e.message_data_, e.id_, e.event_duration_ * 90);
 				e.scheme_id_uri_ = "urn:scte:scte35:2013:bin";
 				e.value_ = "";
 				
@@ -822,8 +825,10 @@ int push_thread_emsg(push_options_t opt, std::string post_url_string, std::strin
 				}
 				else
 				{
-					fprintf(stderr, "post of emsg segment ok: %s\n",
+					fprintf(stderr, "post of emsg segment with scte-35 ok: %s\n",
 						curl_easy_strerror(res));
+					//std::cout << "payload: " << base64_encode((unsigned char *) &e.message_data_[0], e.message_data_.size()) << std::endl;
+					
 				}
 
 				if (stop_all) {

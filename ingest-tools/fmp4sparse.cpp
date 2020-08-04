@@ -14,7 +14,7 @@ convert CMAF with inband emsg to sparse metatrack with emsg in samples
 #include <fstream>
 #include <memory>
 
-using namespace fMP4Stream;
+using namespace fmp4_stream;
 using namespace std;
 
 extern string moov_64_enc;
