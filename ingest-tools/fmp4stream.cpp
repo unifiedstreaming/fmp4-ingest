@@ -22,12 +22,14 @@ http://www.code-shop.com
 
 namespace /* anonymous */ {
 
-	inline bool is_big_endian() {
+	inline bool is_big_endian() 
+	{
 		return  (*(uint16_t *)"\0\xff" < 0x100);
 	}
 
 	//------------------ helpers for processing the bitstream ------------------------
-	uint16_t fmp4_endian_swap16(uint16_t in) {
+	uint16_t fmp4_endian_swap16(uint16_t in) 
+	{
 		return ((in & 0x00FF) << 8) | ((in & 0xFF00) >> 8);
 	};
 
@@ -386,7 +388,7 @@ namespace fmp4_stream
 	{
 		uint64_t duration = 0;
 
-		for (unsigned int i = 0; i != trun_.sample_count_; ++i)
+		for (unsigned int i = 0; i != trun_.sample_count_; i++)
 		{
 			uint32_t sample_duration = tfhd_.default_sample_duration_;
 			if (trun_.sample_duration_present_)
