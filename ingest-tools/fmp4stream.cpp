@@ -15,6 +15,7 @@ http://www.code-shop.com
 #include <sstream>
 #include <iomanip> 
 #include <memory>
+#include <limits>
 
 #include "fmp4stream.h"
 #include <base64.h>
