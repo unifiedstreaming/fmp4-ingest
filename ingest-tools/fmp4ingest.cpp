@@ -840,7 +840,7 @@ int push_thread_emsg(push_options_t opt, std::string post_url_string, std::strin
 
 		/* always cleanup */
 		curl_easy_cleanup(curl);
-		outf.close();
+		//outf.close();
 	}
 	catch (...)
 	{
