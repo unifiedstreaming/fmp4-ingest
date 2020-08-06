@@ -752,18 +752,18 @@ int push_thread_emsg(push_options_t opt, std::string post_url_string, std::strin
 		while (!stop_all)
 		{
 			
-			for (uint64_t i = 1;; i++)
+			for (uint64_t i = 1, j =1;; i++,j++)
 			{
-				double media_time = ((double)i * opt.avail_) / timescale;
+				double media_time = ((double)j * opt.avail_) / timescale;
 
 				if (opt.realtime_)
 				{    
 					if(opt.cmaf_presentation_duration_)
 					   if (media_time > opt.cmaf_presentation_duration_) 
 					   {
-						   i = 1;
+						   j = 1;
 						   cmaf_loop_offset += opt.cmaf_presentation_duration_;
-						   media_time = ((double)i * opt.avail_) / timescale;
+						   media_time = ((double)j * opt.avail_) / timescale;
 					   }
 
 					// calculate elapsed media time
