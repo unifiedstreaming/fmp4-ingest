@@ -1551,15 +1551,13 @@ namespace fmp4_stream
 
 		uint32_t seq_nr = 0;
 		
-		if (media_fragment_.size())
+		// only patch sequence number in the case when no timescale is applied 
+		if (media_fragment_.size() && !applytimescale)
 			seq_nr = 1 + this->media_fragment_[media_fragment_.size()-1].mfhd_.seq_nr_;
 
 		for (uint32_t i = 0; i < this->media_fragment_.size(); i++)
 		{
-			if (seq_nr)
 				this->media_fragment_[i].patch_tfdt(time_anchor, seq_nr + i);
-			else
-				this->media_fragment_[i].patch_tfdt(time_anchor);
 		}	
 	}
 
