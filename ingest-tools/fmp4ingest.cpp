@@ -698,7 +698,7 @@ int push_thread_emsg(push_options_t opt, std::string post_url_string, std::strin
 		get_sparse_moov(urn, timescale, track_id, init_seg_dat);
 		
 		//write the output
-		ofstream outf = std::ofstream("emsg.cmfm", std::ios::binary);
+		//ofstream outf = std::ofstream("emsg.cmfm", std::ios::binary);
 
 		// setup curl
 		CURL * curl;
@@ -709,8 +709,8 @@ int push_thread_emsg(push_options_t opt, std::string post_url_string, std::strin
 		curl_easy_setopt(curl, CURLOPT_POSTFIELDS, (char *)&init_seg_dat[0]);
 		curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, (long)init_seg_dat.size());
 		
-		if (outf.good())
-			outf.write((char *)&init_seg_dat[0], init_seg_dat.size());
+		//if (outf.good())
+		//	outf.write((char *)&init_seg_dat[0], init_seg_dat.size());
 
 		curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
 		curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L);
@@ -747,13 +747,14 @@ int push_thread_emsg(push_options_t opt, std::string post_url_string, std::strin
 
 		chrono::time_point<chrono::system_clock> start_time = chrono::system_clock::now();
 
+		double cmaf_loop_offset = 0;
 
 		while (!stop_all)
 		{
-			double cmaf_loop_offset = 0;
+			
 			for (uint64_t i = 1;; i++)
 			{
-				double media_time = ((double)i * opt.avail_ + cmaf_loop_offset) / timescale;
+				double media_time = ((double)i * opt.avail_) / timescale;
 
 				if (opt.realtime_)
 				{    
@@ -761,13 +762,13 @@ int push_thread_emsg(push_options_t opt, std::string post_url_string, std::strin
 					   if (media_time > opt.cmaf_presentation_duration_) 
 					   {
 						   i = 1;
-						   cmaf_loop_offset += opt.cmaf_presentation_duration_ * timescale;
-						   media_time = ((double)i * opt.avail_ + cmaf_loop_offset) / timescale;
+						   cmaf_loop_offset += opt.cmaf_presentation_duration_;
+						   media_time = ((double)i * opt.avail_) / timescale;
 					   }
 
 					// calculate elapsed media time
 					chrono::duration<double> diff = chrono::system_clock::now() - start_time;
-					double wait_time = media_time - 5.0 - opt.announce_- diff.count();
+					double wait_time = media_time + cmaf_loop_offset - 5.0 - opt.announce_- diff.count();
 
 					if (wait_time > 0) // if it is to early sleep until tfdt - frag_dur
 					{
@@ -785,7 +786,7 @@ int push_thread_emsg(push_options_t opt, std::string post_url_string, std::strin
 				// create emsg
 				emsg e = {};
 				e.timescale_ = timescale; // 1000
-				e.presentation_time_ = uint64_t  ((media_time + opt.wc_time_start_) * timescale);
+				e.presentation_time_ = uint64_t  ((media_time + cmaf_loop_offset + opt.wc_time_start_) * timescale);
 				e.id_ = (uint32_t) i;
 				e.version_ = 0;
 				e.presentation_time_delta_ = 0;
@@ -796,14 +797,14 @@ int push_thread_emsg(push_options_t opt, std::string post_url_string, std::strin
 				
 				vector<uint8_t> sparse_seg_dat;
 				e.convert_emsg_to_sparse_fragment(sparse_seg_dat, \
-					(uint64_t) ((media_time + opt.wc_time_start_) * timescale), track_id, timescale, 0);
+					(uint64_t) ((media_time + cmaf_loop_offset + opt.wc_time_start_) * timescale), track_id, timescale, 0);
 				
 				curl_easy_setopt(curl, CURLOPT_POSTFIELDS, (char *)&sparse_seg_dat[0]);
 				curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, (long)sparse_seg_dat.size());
 				res = curl_easy_perform(curl);
 
-				if(outf.good())
-				    outf.write((const char *)&sparse_seg_dat[0], sparse_seg_dat.size());
+				//if(outf.good())
+				//    outf.write((const char *)&sparse_seg_dat[0], sparse_seg_dat.size());
 
 				if (res != CURLE_OK)
 				{
