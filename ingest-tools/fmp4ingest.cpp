@@ -77,6 +77,7 @@ struct push_options_t
 		, loop_(true)
 		, wc_off_(true)
 		, wc_uri_("http://time.akamai.com")
+		, ism_offset_(0)
 		, wc_time_start_(0)
 		, dont_close_(true)
 		, chunked_(false)
@@ -98,6 +99,7 @@ struct push_options_t
 			" [-u url]                       Publishing Point URL\n"
 			" [-r, --realtime]               Enable realtime mode\n"
 			" [--wc_offset]                  (boolean )Add a wallclock time offset for converting VoD (0) asset to Live \n"
+			" [--ism_offset]                insert a fixed value for hte wallclock time offset instead of using a uri"
 			" [--wc_uri]                     uri for fetching wall clock time default time.akamai.com \n"
 			" [--close_pp]                   Close the publishing point at the end of stream or termination \n"
 			" [--chunked]                    Use chunked Transfer-Encoding for POST (long running post) otherwise short running per fragment post \n"
@@ -127,6 +129,7 @@ struct push_options_t
 				if (t.compare("--daemon") == 0) { daemon_ = true; continue; }
 				if (t.compare("--chunked") == 0) { chunked_ = true; continue; }
 				if (t.compare("--wc_offset") == 0) { wc_off_ = true; continue; }
+				if (t.compare("--ism_offset") == 0) { ism_offset_ = atol(argv[++i]); continue; }
 				if (t.compare("--wc_uri") == 0) { wc_uri_ = string(argv[++i]); continue; }
 				if (t.compare("--auth") == 0) { basic_auth_ = string(argv[++i]); continue; }
 				if (t.compare("--avail") == 0) { avail_ = atoi(argv[++i]); avail_dur_= atoi(argv[++i]); continue; }
@@ -142,6 +145,11 @@ struct push_options_t
 			// get the wallclock offset 
 			if (wc_off_)
 				get_remote_sync_epoch(&wc_time_start_, wc_uri_);
+			if (ism_offset_ > 0) 
+			{
+				wc_time_start_ = ism_offset_;
+				wc_off_ = true;
+			}
 		}
 		else
 			print_options();
@@ -176,6 +184,7 @@ struct push_options_t
 
 	uint64_t avail_; // insert an avail every X milli seconds
 	uint64_t avail_dur_; // of duratoin Y milli seconds
+	uint64_t ism_offset_;
 };
 
 struct ingest_post_state_t
