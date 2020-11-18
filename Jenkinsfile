@@ -14,19 +14,13 @@ pipeline {
             steps {
                 container('ubuntu') {
                     sh 'apt-get update'
-                    sh 'apt-get -y --no-install-recommends install \
-                          aptitude \
-                          bash-completion \
+                    sh 'apt-get -yyy --no-install-recommends install \
                           build-essential \
                           cmake \
-                          coreutils \
                           gcc \
                           g++ \
                           gdb \
                           git-core \
-                          ncdu \
-                          unzip \
-                          vim \
                           libcurl4-openssl-dev'
                     sh 'cd ingest-tools && cmake CMakeLists.txt && make'
                 }
