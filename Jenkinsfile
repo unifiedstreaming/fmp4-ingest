@@ -14,7 +14,7 @@ pipeline {
             steps {
                 container('ubuntu') {
                     sh 'apt-get update'
-                    sh 'apt-get apt-get -y --no-install-recommends install \
+                    sh 'apt-get -y --no-install-recommends install \
                           aptitude \
                           bash-completion \
                           build-essential \
@@ -28,7 +28,7 @@ pipeline {
                           unzip \
                           vim \
                           libcurl4-openssl-dev'
-                    sh 'cd fmp4-ingest/ingest-tools && cmake CMakeLists.txt && make'
+                    sh 'cd ingest-tools && cmake CMakeLists.txt && make'
                 }
             }
         }
