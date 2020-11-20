@@ -388,7 +388,7 @@ namespace fmp4_stream
 	{
 		uint64_t duration = 0;
 
-		for (unsigned int i = 0; i != trun_.sample_count_; i++)
+		for (unsigned int i = 0; i < trun_.sample_count_; i++)
 		{
 			uint32_t sample_duration = tfhd_.default_sample_duration_;
 			if (trun_.sample_duration_present_)

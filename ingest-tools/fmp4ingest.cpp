@@ -477,7 +477,8 @@ int push_thread(ingest_stream l_ingest_stream, push_options_t opt, string post_u
 
 						cout << " pushed media fragment: " << i << " file_name: " << post_state.file_name_ << " fragment duration: " << \
 							(l_ingest_stream.media_fragment_[i].get_duration()) / ((double)post_state.timescale_) << " seconds ";
-						cout << " media time elapsed: " << (t_diff + l_ingest_stream.media_fragment_[i].get_duration()) / post_state.timescale_ << endl;
+						if(post_state.timescale_ > 0)
+						    cout << " media time elapsed: " << (t_diff + l_ingest_stream.media_fragment_[i].get_duration()) / post_state.timescale_ << endl;
 						
 						if (opt.realtime_)
 						{
