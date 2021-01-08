@@ -704,8 +704,12 @@ int push_thread_emsg(push_options_t opt, std::string post_url_string, std::strin
 	try
 	{
 		vector<uint8_t> init_seg_dat;
+		vector<uint8_t> moov_sparse;
 		string urn = "urn:mpeg:dash:event:2012";
-		get_sparse_moov(urn, timescale, track_id, init_seg_dat);
+		sparse_ftyp;
+		get_sparse_moov(urn, timescale, track_id, moov_sparse);
+		std::copy(std::begin(sparse_ftyp), std::end(sparse_ftyp), std::back_inserter(init_seg_dat));
+		std::copy(std::begin(moov_sparse), std::end(moov_sparse), std::back_inserter(init_seg_dat));
 		
 		//write the output
 		//ofstream outf = std::ofstream("emsg.cmfm", std::ios::binary);
