@@ -1757,7 +1757,7 @@ namespace fmp4_stream
 
 	uint64_t ingest_stream::get_duration() 
 	{
-		if (media_fragment_.size() > 2) 
+		if (media_fragment_.size() >= 2) 
 		{
 			// todo add aditional checks for timing behavior
 			return media_fragment_[media_fragment_.size() - 1].tfdt_.base_media_decode_time_
@@ -1774,7 +1774,7 @@ namespace fmp4_stream
 	
 	uint64_t ingest_stream::get_start_time() 
 	{
-		if (media_fragment_.size() > 1)
+		if (media_fragment_.size() >= 1)
 		{
 			// todo add aditional checks for timing behavior
 			return media_fragment_[0].tfdt_.base_media_decode_time_;

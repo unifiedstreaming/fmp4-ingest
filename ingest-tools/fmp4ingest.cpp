@@ -511,9 +511,8 @@ int push_thread(ingest_stream l_ingest_stream, push_options_t opt, string post_u
 							break;
 						}
 					}
-					uint64_t patch_shift = (uint64_t) (opt.cmaf_presentation_duration_ * l_ingest_stream.init_fragment_.get_time_scale());
-					cout << "patching track " << patch_shift << endl;
-					l_ingest_stream.patch_tfdt(patch_shift,false);
+
+					l_ingest_stream.patch_tfdt(opt.cmaf_presentation_duration_);
 					start_time = chrono::system_clock::now();
 				}
 			}
@@ -662,8 +661,8 @@ int push_thread_meta(ingest_stream l_ingest_stream, push_options_t opt, std::str
 					break;
 				}
 			}
-			uint64_t patch_shift = (uint64_t)(opt.cmaf_presentation_duration_ * l_ingest_stream.init_fragment_.get_time_scale());
-			l_ingest_stream.patch_tfdt(patch_shift, false);
+			
+			l_ingest_stream.patch_tfdt(opt.cmaf_presentation_duration_);
 
 			
 			start_time = chrono::system_clock::now();
