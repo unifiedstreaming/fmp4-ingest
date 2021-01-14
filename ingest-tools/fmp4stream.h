@@ -298,6 +298,7 @@ namespace fmp4_stream {
 
 		
 		void write_emsg_as_fmp4_fragment(std::ostream &out, uint64_t tfdt, uint32_t track_id, uint64_t next_tfdt, uint8_t target_version); // warning may change the version
+		void write_multiple_emsg_as_fmp4_fragment(std::ostream &out, std::vector<emsg> in_emsg, uint64_t tfdt, uint32_t track_id, uint64_t next_tfdt, uint8_t target_version); // warning may change the version
 		void write_emsg_as_mpd_event(std::ostream &ostr, uint64_t base_time) const;
 		void convert_emsg_to_sparse_fragment(std::vector<uint8_t> &sparse_frag_out, uint64_t tfdt, uint32_t track_id, uint32_t timescale, uint8_t target_emsg_version = 0);
 	};	
@@ -402,7 +403,7 @@ namespace fmp4_stream {
 		box sidx_box_, meta_box_, mfra_box_;
 		int load_from_file(std::istream &input_file, bool init_only=false);
 		int write_init_to_file(std::string &out_file, unsigned int nfrags=0);
-		int write_to_sparse_emsg_file(const std::string& out_file, uint32_t track_id, uint32_t announce, const std::string& urn, uint32_t timescale=1, uint8_t target_emsg_version=2);
+		int write_to_sparse_emsg_file(const std::string& out_file, uint32_t track_id, uint64_t pt_off_start, uint64_t pt_off_end, const std::string& urn, uint32_t timescale=1, uint8_t target_emsg_version=2);
 		uint64_t get_init_segment_data(std::vector<uint8_t> &init_seg_dat);
 		uint64_t get_media_segment_data(std::size_t index, std::vector<uint8_t> &media_seg_dat);
 		void write_to_dash_event_stream(std::string &out_file);
@@ -416,5 +417,6 @@ namespace fmp4_stream {
 
 	bool get_sparse_moov(const std::string& urn, uint32_t timescale, uint32_t track_id, std::vector<uint8_t> &sparse_moov);
 	void gen_splice_insert(std::vector<uint8_t> &out_splice_insert, uint32_t event_id, uint32_t duration);
+	static void write_embe(std::ostream &ostr, uint64_t timestamp_tfdt, uint32_t track_id, uint32_t duration_in);
 }
 #endif

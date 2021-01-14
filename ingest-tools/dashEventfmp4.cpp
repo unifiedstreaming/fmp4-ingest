@@ -77,6 +77,7 @@ struct event_parser_t : public tinyxml2::XMLVisitor
 
 		if ((el_name.compare("dash:EventStream") == 0) || (el_name.compare("EventStream") == 0))
 			std::cout << "*** eventstream found ***" << std::endl;
+		   // query the event attributes
 		else
 			return true;
 
@@ -107,9 +108,22 @@ struct event_parser_t : public tinyxml2::XMLVisitor
 			l_root_event.value_ = std::string(ids[0]);
 			//std::cout << l_root_event.value_ << std::endl;
 		}
-		if (el.QueryInt64Attribute("presentationTimeOffset", &l_root_event.pto_) != tinyxml2::XMLError::XML_SUCCESS)
+		if (el.QueryInt64Attribute("presentationTimeOffset", &l_root_event.pto_) == tinyxml2::XMLError::XML_SUCCESS)
 		{
-			l_root_event.pto_ = 0;
+			pt_start_time_ = (uint64_t) l_root_event.pto_;
+		}
+		else 
+		{
+			pt_start_time_ = 0;
+		}
+		int64_t pt_end=0;
+		if (el.QueryInt64Attribute("endTime", &pt_end) == tinyxml2::XMLError::XML_SUCCESS)
+		{
+			this->pt_end_time_ = (uint64_t) pt_end;
+		}
+		else 
+		{
+			this->pt_end_time_ = 0;
 		}
 
 		// parse the children of the EventStream
@@ -203,6 +217,8 @@ struct event_parser_t : public tinyxml2::XMLVisitor
 		return true;
 	}
 
+	uint64_t pt_start_time_;
+	uint64_t pt_end_time_;
 	std::vector<event_t> events_;
 };
 
@@ -231,6 +247,8 @@ int main(int argc, char *argv[])
 		doc.LoadFile(in_file_name.c_str());
 
 		event_parser_t evt;
+		evt.pt_end_time_ = 0;
+		evt.pt_start_time_ = 0;
 		doc.Accept(&evt);
 
 		ingest_stream l_ingest_stream;
@@ -266,8 +284,8 @@ int main(int argc, char *argv[])
 		}
 
 		std::string event_urn = "urn:mpeg:dash:event:2012"; // update to new urn if defined
-
-		l_ingest_stream.write_to_sparse_emsg_file(out_file, track_id, 0, event_urn, time_scale, target_emsg_version);
+		std::cout << "start timestamp of track " << evt.pt_start_time_ << " end time of track " << evt.pt_end_time_ << std::endl;
+		l_ingest_stream.write_to_sparse_emsg_file(out_file, track_id, evt.pt_start_time_, evt.pt_end_time_, event_urn, time_scale, target_emsg_version);
 
 		return 0;
 	}

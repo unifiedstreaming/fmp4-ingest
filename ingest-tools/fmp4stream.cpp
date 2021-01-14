@@ -912,6 +912,167 @@ namespace fmp4_stream
 		return;
 	};
 
+	void write_embe(std::ostream &ostr, uint64_t timestamp_tfdt, uint32_t track_id, uint32_t duration_in)
+	{
+			// --- init mfhd
+			mfhd l_mfhd = {};
+			l_mfhd.seq_nr_ = 0;
+			uint64_t l_mfhd_size = l_mfhd.size();
+
+			//uint32_t l_announce = 8 * this->timescale_; // following the method of push input stream (i do not think this is correct)
+
+			// --- init tfhd
+			tfhd l_tfhd = {};
+			l_tfhd.magic_conf_ = 131106u;
+			l_tfhd.track_id_ = track_id;
+			l_tfhd.sample_description_index_ = 1u;
+			l_tfhd.default_sample_flags_ = 37748800u;
+			l_tfhd.default_sample_flags_ = 37748800u;
+			l_tfhd.base_data_offset_present_ = false;
+			l_tfhd.default_base_is_moof_ = true;
+			l_tfhd.duration_is_empty_ = false;
+			l_tfhd.sample_description_index_present_ = true;
+			l_tfhd.default_sample_duration_present_ = false;
+			l_tfhd.default_sample_flags_present_ = true;
+			l_tfhd.default_sample_size_present_ = false;
+			uint64_t l_tfhd_size = l_tfhd.size();
+
+			// --- init tfdt
+			tfdt l_tfdt = {};
+			l_tfdt.version_ = 1u;
+			l_tfdt.base_media_decode_time_ = timestamp_tfdt;
+			uint64_t l_tfdt_size = l_tfdt.size(); //
+
+												  // --- init trun
+			trun l_trun = {};
+			l_trun.magic_conf_ = 769u;
+			l_trun.sample_count_ = 1;
+			l_trun.data_offset_present_ = true;
+			l_trun.first_sample_flags_present_ = false;
+			l_trun.sample_duration_present_ = true;
+			l_trun.sample_size_present_ = true;
+			l_trun.sample_flags_present_ = false;
+			l_trun.sample_composition_time_offsets_present_ = false;
+
+			//-- init sentry in trun write 2 samples
+			l_trun.m_sentry.resize(1);
+			//l_trun.m_sentry[0].sample_size_ = 0;
+			//l_trun.m_sentry[0].sample_duration_ = 0; // presentation_time_delta_ ? this->presentation_time_delta_ : (presentation_time_ - timestamp_tfdt);
+			l_trun.m_sentry[0].sample_size_ = (uint32_t)8u;
+			l_trun.m_sentry[0].sample_duration_ = duration_in;
+
+
+			//--- initialize the box sizes
+			uint64_t l_trun_size = l_trun.size();
+			uint64_t l_traf_size = 8 + l_trun_size + l_tfdt_size + l_tfhd_size;
+			uint64_t l_moof_size = 8 + l_traf_size + l_mfhd_size; // l_traf_size + 8 + l_mfhd_size;
+			l_trun.data_offset_ = (int32_t)l_moof_size + 8;
+
+			// write the fragment 
+			char int_buf[4];
+			char long_buf[8];
+
+			//--- write the sparse fragment to a file stream
+			// write 4 bytes
+			fmp4_write_uint32((uint32_t)l_moof_size, int_buf);
+			ostr.write(int_buf, 4);
+			// write 4 bytes, total 8 bytes
+			ostr.put('m');
+			ostr.put('o');
+			ostr.put('o');
+			ostr.put('f');
+			// write 16 bytes total 24 bytes
+			fmp4_write_uint32((uint32_t)l_mfhd_size, int_buf);
+			ostr.write(int_buf, 4);
+			//ostr->write("mfhd", 4);
+			ostr.put('m');
+			ostr.put('f');
+			ostr.put('h');
+			ostr.put('d');
+			fmp4_write_uint32((uint32_t)0u, int_buf);
+			ostr.write(int_buf, 4);
+			fmp4_write_uint32((uint32_t)track_id, int_buf);
+			ostr.write(int_buf, 4);
+
+			// write traf 8 bytes total 32 bytes
+			fmp4_write_uint32((uint32_t)l_traf_size, int_buf);
+			ostr.write(int_buf, 4);
+			//ostr->write("traf", 4);
+			ostr.put('t');
+			ostr.put('r');
+			ostr.put('a');
+			ostr.put('f');
+
+			// write tfhd 24 bytes total 56 bytes
+			fmp4_write_uint32((uint32_t)l_tfhd_size, int_buf);
+			ostr.write(int_buf, 4);
+			//ostr->write("tfhd", 4);
+			ostr.put('t');
+			ostr.put('f');
+			ostr.put('h');
+			ostr.put('d');
+
+			fmp4_write_uint32((uint32_t)l_tfhd.magic_conf_, int_buf);
+			ostr.write(int_buf, 4);
+			fmp4_write_uint32((uint32_t)l_tfhd.track_id_, int_buf);
+			ostr.write(int_buf, 4);
+			fmp4_write_uint32((uint32_t)l_tfhd.sample_description_index_, int_buf);
+			ostr.write(int_buf, 4);
+			fmp4_write_uint32((uint32_t)l_tfhd.default_sample_flags_, int_buf);
+			ostr.write(int_buf, 4);
+
+			// write tfdt 20 bytes total 76 bytes
+			fmp4_write_uint32((uint32_t)l_tfdt_size, int_buf);
+			ostr.write(int_buf, 4);
+			ostr.put('t');
+			ostr.put('f');
+			ostr.put('d');
+			ostr.put('t');
+			ostr.put(1u); // version
+			ostr.put(0u);
+			ostr.put(0u);
+			ostr.put(0u);
+			fmp4_write_uint64((uint64_t)l_tfdt.base_media_decode_time_, long_buf);
+			ostr.write(long_buf, 8);
+
+			fmp4_write_uint32((uint32_t)l_trun_size, int_buf);
+			ostr.write(int_buf, 4);
+			//ostr->write("trun", 4);
+			ostr.put('t');
+			ostr.put('r');
+			ostr.put('u');
+			ostr.put('n');
+			fmp4_write_uint32((uint32_t)l_trun.magic_conf_, int_buf);
+			ostr.write(int_buf, 4);
+			fmp4_write_uint32((uint32_t)l_trun.sample_count_, int_buf);
+			ostr.write(int_buf, 4);
+			fmp4_write_uint32((uint32_t)l_trun.data_offset_, int_buf);
+			ostr.write(int_buf, 4);
+
+			// write the duration and the sample size
+			fmp4_write_uint32((uint32_t)l_trun.m_sentry[0].sample_duration_, int_buf);
+			ostr.write(int_buf, 4);
+			fmp4_write_uint32((uint32_t)l_trun.m_sentry[0].sample_size_, int_buf);
+			ostr.write(int_buf, 4);
+
+			uint32_t mdat_size = 16; // mdat box + embe box + this event message box
+			fmp4_write_uint32(mdat_size, int_buf);
+			ostr.write(int_buf, 4);
+			ostr.put('m');
+			ostr.put('d');
+			ostr.put('a');
+			ostr.put('t');
+
+			ostr.write((char *)embe, 8);
+
+		return;
+	};
+
+	void write_multiple_emsg_as_fmp4_fragment(std::ostream &out, std::vector<emsg> in_emsg, uint64_t tfdt, uint32_t track_id, uint64_t next_tfdt, uint8_t target_version)
+	{
+
+	}
+
 	// todo fix this code to be more generic
 	uint32_t init_fragment::get_time_scale()
 	{
@@ -1444,7 +1605,7 @@ namespace fmp4_stream
 
 	// writes sparse emsg file, set the track, the scheme
 	int ingest_stream::write_to_sparse_emsg_file(const std::string& out_file,
-		uint32_t track_id, uint32_t announce, const std::string& urn, uint32_t timescale, uint8_t target_emsg_version)
+		uint32_t track_id, uint64_t pt_off_start, uint64_t pt_off_end, const std::string& urn, uint32_t timescale, uint8_t target_emsg_version)
 	{
 		//ifstream moov_s_in("sparse_moov.inc", ios::binary);
 
@@ -1467,6 +1628,20 @@ namespace fmp4_stream
 			// write the ftyp header
 			ot.write((char *)&sparse_ftyp[0], 20);
 			ot.write((const char *)&sparse_moov[0], sparse_moov.size());
+			uint64_t current_tfdt = 0;
+			// fill the start of  the track up to first emsg with embe to account for presentation time offset
+			auto it = this->media_fragment_.begin();
+			if ( it != this->media_fragment_.end())
+			{
+				current_tfdt = pt_off_start; 
+				while (current_tfdt + 2 * timescale < it->emsg_.presentation_time_)
+				{
+					write_embe(ot, current_tfdt, track_id, timescale * 2);
+					current_tfdt += timescale * 2;
+				}
+				if (current_tfdt < it->emsg_.presentation_time_)
+					write_embe(ot, current_tfdt, track_id, (uint32_t) (it->emsg_.presentation_time_ - current_tfdt));
+			}
 
 			// write each of the event messages as moof mdat combinations in sparse track 
 			for (auto it = this->media_fragment_.begin(); it != this->media_fragment_.end(); ++it)
@@ -1475,14 +1650,33 @@ namespace fmp4_stream
 				if (it->emsg_.scheme_id_uri_.size())
 				{
 					uint64_t next_tfdt = 0;
-					//find the next tdft 
+					//find the next tfdt 
 					if ((it + 1) != this->media_fragment_.end())
-						next_tfdt = (it + 1)->tfdt_.base_media_decode_time_;
+						next_tfdt = (it + 1)->emsg_.presentation_time_;
 					//cout << " writing emsg fragment " << endl;
-					it->emsg_.write_emsg_as_fmp4_fragment(ot, it->tfdt_.base_media_decode_time_, track_id, next_tfdt, target_emsg_version);
+					it->emsg_.write_emsg_as_fmp4_fragment(ot, it->emsg_.presentation_time_, track_id, next_tfdt, target_emsg_version);
+
+					current_tfdt = it->emsg_.presentation_time_ + it->emsg_.event_duration_;
+					while (current_tfdt + 2 * timescale < next_tfdt)
+					{
+						write_embe(ot, current_tfdt, track_id, timescale * 2);
+						current_tfdt += timescale * 2;
+					}
+					if (current_tfdt < next_tfdt)
+					    write_embe(ot,  current_tfdt, track_id, (uint32_t) (next_tfdt - current_tfdt));
 				}
 			}
-
+			// pad embe at end
+			if (pt_off_end > 0)
+			{
+				while (current_tfdt + 2 * timescale < pt_off_end)
+				{
+					write_embe(ot, current_tfdt, track_id, timescale * 2);
+					current_tfdt += timescale * 2;
+				}
+				if (current_tfdt < pt_off_end)
+					write_embe(ot, current_tfdt, track_id, (uint32_t) (it->emsg_.presentation_time_ - current_tfdt));
+			}
 			//ot.write((const char *)empty_mfra, 8);
 			ot.close();
 			std::cout << "*** wrote sparse track file: " << out_file << "  ***" << std::endl;

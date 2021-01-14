@@ -88,7 +88,7 @@ struct push_options_t
 		, cmaf_presentation_duration_(0)
 		, avail_(0)
 		, avail_dur_(0)
-		, announce_(20.0)
+		, announce_(60.0)
 	{
 	}
 
@@ -704,11 +704,17 @@ int push_thread_emsg(push_options_t opt, std::string post_url_string, std::strin
 	try
 	{
 		vector<uint8_t> init_seg_dat;
+		vector<uint8_t> moov_sparse;
 		string urn = "urn:mpeg:dash:event:2012";
-		get_sparse_moov(urn, timescale, track_id, init_seg_dat);
-		
+		sparse_ftyp;
+		get_sparse_moov(urn, timescale, track_id, moov_sparse);
+		std::copy(std::begin(sparse_ftyp), std::end(sparse_ftyp), std::back_inserter(init_seg_dat));
+		std::copy(std::begin(moov_sparse), std::end(moov_sparse), std::back_inserter(init_seg_dat));
+
+		std::cout << "seg data" << init_seg_dat.size() << std::endl;
+
 		//write the output
-		//ofstream outf = std::ofstream("emsg.cmfm", std::ios::binary);
+		ofstream outf = std::ofstream("emsg2.cmfm", std::ios::binary);
 
 		// setup curl
 		CURL * curl;
@@ -719,8 +725,8 @@ int push_thread_emsg(push_options_t opt, std::string post_url_string, std::strin
 		curl_easy_setopt(curl, CURLOPT_POSTFIELDS, (char *)&init_seg_dat[0]);
 		curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, (long)init_seg_dat.size());
 		
-		//if (outf.good())
-		//	outf.write((char *)&init_seg_dat[0], init_seg_dat.size());
+		if (outf.good())
+			outf.write((char *)&init_seg_dat[0], init_seg_dat.size());
 
 		curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
 		curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L);
@@ -813,8 +819,8 @@ int push_thread_emsg(push_options_t opt, std::string post_url_string, std::strin
 				curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, (long)sparse_seg_dat.size());
 				res = curl_easy_perform(curl);
 
-				//if(outf.good())
-				//    outf.write((const char *)&sparse_seg_dat[0], sparse_seg_dat.size());
+				if(outf.good())
+				    outf.write((const char *)&sparse_seg_dat[0], sparse_seg_dat.size());
 
 				if (res != CURLE_OK)
 				{
@@ -850,7 +856,7 @@ int push_thread_emsg(push_options_t opt, std::string post_url_string, std::strin
 
 		/* always cleanup */
 		curl_easy_cleanup(curl);
-		//outf.close();
+		outf.close();
 	}
 	catch (...)
 	{

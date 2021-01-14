@@ -63,7 +63,7 @@ int main(int argc, char *argv[])
 	    // output a sparse fragmented emsg track file 
 		cout << " ******* writing " << l_out_file << "********" <<  endl;
 		
-		l_ingest_stream.write_to_sparse_emsg_file(l_out_file,l_track_id,l_announce,urn);
+		l_ingest_stream.write_to_sparse_emsg_file(l_out_file,l_track_id,0,0,urn);
 
 		return 1;
 	}
