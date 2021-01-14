@@ -41,7 +41,8 @@
     </AdaptationSet>
   <EventStream
       schemeIdUri="urn:scte:scte35:2014:xml+bin"
-      timescale="12800">
+      timescale="12800"
+	  endTime="9395200">>
       <!-- splice insert, break starts at key frame warning break does not end at key frame -->
       <Event
         presentationTime="2949120"
@@ -60,15 +61,7 @@
           <Binary>/DAhAAAAAAAAAP/wEAUAAAMsf+9//gAaF7DAAAAAAAD+zLky</Binary>
         </Signal>
       </Event>
-       <!-- splice insert, break starts at key frame warning break does not end at key frame -->
-      <Event
-        presentationTime="9216000"
-        duration="233472"
-        id="813">
-        <Signal xmlns="http://www.scte.org/schemas/35/2016">
-          <Binary>/DAhAAAAAAAAAP/wEAUAAAMtf+9//gAaF7DAAAAAAAAjw1hA</Binary>
-        </Signal>
-      </Event>
+ 
 
     </EventStream>
   </Period>
