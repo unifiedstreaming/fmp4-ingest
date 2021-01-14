@@ -709,9 +709,6 @@ int push_thread_emsg(push_options_t opt, std::string post_url_string, std::strin
 		get_sparse_moov(urn, timescale, track_id, moov_sparse);
 		std::copy(std::begin(sparse_ftyp), std::end(sparse_ftyp), std::back_inserter(init_seg_dat));
 		std::copy(std::begin(moov_sparse), std::end(moov_sparse), std::back_inserter(init_seg_dat));
-
-		std::cout << "seg data" << init_seg_dat.size() << std::endl;
-
 		//write the output
 		ofstream outf = std::ofstream("emsg2.cmfm", std::ios::binary);
 
