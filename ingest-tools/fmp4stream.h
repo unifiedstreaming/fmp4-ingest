@@ -2,7 +2,7 @@
 Supplementary software media ingest specification:
 https://github.com/unifiedstreaming/fmp4-ingest
 
-Copyright (C) 2009-2018 CodeShop B.V.
+Copyright (C) 2009-2021 CodeShop B.V.
 http://www.code-shop.com
 
  - parse fmp4/cmaf file for media ingest in init and media fragment
@@ -296,9 +296,8 @@ namespace fmp4_stream {
 		virtual void print() const;
 		uint32_t write(std::ostream &ostr) const;
 
-		
-		void write_emsg_as_fmp4_fragment(std::ostream &out, uint64_t tfdt, uint32_t track_id, uint64_t next_tfdt, uint8_t target_version); // warning may change the version
-		void write_multiple_emsg_as_fmp4_fragment(std::ostream &out, std::vector<emsg> in_emsg, uint64_t tfdt, uint32_t track_id, uint64_t next_tfdt, uint8_t target_version); // warning may change the version
+		static void emsg::write_emsgs_as_fmp4_fragment(std::vector<emsg> emsgs, std::ostream &ostr, uint64_t timestamp_tfdt, uint32_t track_id,
+			uint64_t next_tfdt, uint8_t target_version); // warning may change the version
 		void write_emsg_as_mpd_event(std::ostream &ostr, uint64_t base_time) const;
 		void convert_emsg_to_sparse_fragment(std::vector<uint8_t> &sparse_frag_out, uint64_t tfdt, uint32_t track_id, uint32_t timescale, uint8_t target_emsg_version = 0);
 	};	
@@ -310,6 +309,11 @@ namespace fmp4_stream {
 	// empty message cue
 	const uint8_t embe[8] = {
 		0x00, 0x00, 0x00, 0x08, 'e', 'm', 'b', 'e'
+	};
+
+	// empty message cue
+	const uint8_t emeb[8] = {
+		0x00, 0x00, 0x00, 0x08, 'e', 'm', 'e', 'b'
 	};
 
 	const uint8_t sparse_ftyp[20] =
@@ -375,7 +379,7 @@ namespace fmp4_stream {
 	{
 		box styp_;
 		box prft_;
-		emsg emsg_;
+		std::vector<emsg> emsg_;
 		bool e_msg_is_in_mdat_;
 		//
 		box moof_box_;

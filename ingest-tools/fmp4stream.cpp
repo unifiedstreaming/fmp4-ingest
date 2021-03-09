@@ -731,20 +731,22 @@ namespace fmp4_stream
 		return bytes_written;
 	}
 
-	void emsg::write_emsg_as_fmp4_fragment(std::ostream &ostr, uint64_t timestamp_tfdt, uint32_t track_id,
+	// write multiple emsgs first emsg decides the decode time of the sample and the duration
+	void emsg::write_emsgs_as_fmp4_fragment(std::vector<emsg> emsgs, std::ostream &ostr, uint64_t timestamp_tfdt, uint32_t track_id,
 		uint64_t next_tfdt, uint8_t target_version)
 	{
-		if (scheme_id_uri_.size())
+		if(emsgs.size())
 		{
-			if ((version_ == 1) && (target_version == 0)) {
-				this->presentation_time_delta_ = 0; /* should be: presentation_time_ - timestamp_tfdt; */
-				this->version_ = target_version;
-			}
-			else if ((version_ == 0) && (target_version == 1))
-			{
-				this->presentation_time_ = timestamp_tfdt + presentation_time_delta_;
-				this->version_ = target_version;
-			}
+			for(int i=0;i<emsgs.size();i++)
+				if ((emsgs[i].version_ == 1) && (target_version == 0)) {
+					emsgs[i].presentation_time_delta_ = 0; /* should be: presentation_time_ - timestamp_tfdt; */
+					emsgs[i].version_ = target_version;
+				}
+				else if ((emsgs[i].version_ == 0) && (target_version == 1))
+				{
+					emsgs[i].presentation_time_ = timestamp_tfdt + emsgs[i].presentation_time_delta_;
+					emsgs[i].version_ = target_version;
+				}
 
 			// --- init mfhd
 			mfhd l_mfhd = {};
@@ -772,7 +774,7 @@ namespace fmp4_stream
 			// --- init tfdt
 			tfdt l_tfdt = {};
 			l_tfdt.version_ = 1u;
-			l_tfdt.base_media_decode_time_ = this->presentation_time_;
+			l_tfdt.base_media_decode_time_ = emsgs[0].presentation_time_;
 			uint64_t l_tfdt_size = l_tfdt.size(); //
 
 			// --- init trun
@@ -790,8 +792,11 @@ namespace fmp4_stream
 			l_trun.m_sentry.resize(1);
 			//l_trun.m_sentry[0].sample_size_ = 0;
 			//l_trun.m_sentry[0].sample_duration_ = 0; // presentation_time_delta_ ? this->presentation_time_delta_ : (presentation_time_ - timestamp_tfdt);
-			l_trun.m_sentry[0].sample_size_ = (uint32_t)size();
-			l_trun.m_sentry[0].sample_duration_ = this->event_duration_;
+			uint32_t t_size=0;
+			for (unsigned int i = 0; i < emsgs.size(); i++)
+				t_size += emsgs[i].size();
+			l_trun.m_sentry[0].sample_size_ = (uint32_t)t_size;
+			l_trun.m_sentry[0].sample_duration_ = emsgs[0].event_duration_;
 
 
 			//--- initialize the box sizes
@@ -823,7 +828,7 @@ namespace fmp4_stream
 			ostr.put('d');
 			fmp4_write_uint32((uint32_t)0u, int_buf);
 			ostr.write(int_buf, 4);
-			fmp4_write_uint32((uint32_t) this->id_, int_buf);
+			fmp4_write_uint32((uint32_t) emsgs[0].id_, int_buf);
 			ostr.write(int_buf, 4);
 
 			// write traf 8 bytes total 32 bytes
@@ -895,7 +900,7 @@ namespace fmp4_stream
 			//fmp4_write_uint32((uint32_t)l_trun.m_sentry[2].sample_size_, int_buf);
 			//ostr.write(int_buf, 4);
 
-			uint32_t mdat_size = (uint32_t)size() + 8; // mdat box + embe box + this event message box
+			uint32_t mdat_size = (uint32_t)t_size + 8; // mdat box + embe box + this event message box
 			fmp4_write_uint32(mdat_size, int_buf);
 			ostr.write(int_buf, 4);
 			ostr.put('m');
@@ -903,14 +908,14 @@ namespace fmp4_stream
 			ostr.put('a');
 			ostr.put('t');
 
-			//ostr.write((char *)embe, 8);
-
 			// write the emsg as an mdat box
-			this->write(ostr);
+			for(int i=0; i< emsgs.size();i++)
+			    emsgs[i].write(ostr);
 
 		}
 		return;
 	};
+
 
 	void write_embe(std::ostream &ostr, uint64_t timestamp_tfdt, uint32_t track_id, uint32_t duration_in)
 	{
@@ -1259,8 +1264,9 @@ namespace fmp4_stream
 	//
 	void media_fragment::print() const
 	{
-		if (emsg_.scheme_id_uri_.size() && !this->e_msg_is_in_mdat_)
-			emsg_.print();
+		for(int i=0;i<emsg_.size();i++)
+		    if (emsg_[i].scheme_id_uri_.size() && !this->e_msg_is_in_mdat_)
+			   emsg_[i].print();
 
 		moof_box_.print(); // moof box size
 		mfhd_.print(); // moof box header
@@ -1269,8 +1275,9 @@ namespace fmp4_stream
 		trun_.print(); // trun box
 		mdat_box_.print(); // mdat 
 
-		if (emsg_.scheme_id_uri_.size() && this->e_msg_is_in_mdat_)
-			emsg_.print();
+		for (int i = 0; i<emsg_.size(); i++)
+		    if (emsg_[i].scheme_id_uri_.size() && this->e_msg_is_in_mdat_)
+			    emsg_[i].print();
 	}
 
 	// parse an fmp4 file for media ingest
@@ -1322,7 +1329,9 @@ namespace fmp4_stream
 						// see if there is an emsg before
 						if (prev_box->box_type_.compare("emsg") == 0)
 						{
-							m.emsg_.parse((char *)& prev_box->box_data_[0], (unsigned int)prev_box->box_data_.size());
+							emsg e;
+							e.parse((char *)& prev_box->box_data_[0], (unsigned int)prev_box->box_data_.size());
+							m.emsg_.push_back(e);
 							//cout << "|emsg|";
 							std::cout << "found inband dash emsg box" << std::endl;
 						}
@@ -1357,7 +1366,9 @@ namespace fmp4_stream
 
 									if (enc_box_name.compare("emsg") == 0) // right now we can only parse a single emsg, todo update to parse multiple emsg
 									{
-										m.emsg_.parse((char *)&m.mdat_box_.box_data_[index], (unsigned int)l_size);
+										emsg e = {};
+										e.parse((char *)&m.mdat_box_.box_data_[index], (unsigned int)l_size);
+										m.emsg_.push_back(e);
 										m.e_msg_is_in_mdat_ = true;
 										index += l_size;
 										continue;
@@ -1596,7 +1607,9 @@ namespace fmp4_stream
 	{
 		std::ostringstream res(std::ios::binary);
 		sparse_frag_out.clear();
-		this->write_emsg_as_fmp4_fragment(res, tfdt, track_id, tfdt + 4 * timescale_, 0);
+		std::vector<emsg> emsgs;
+		emsgs.push_back(*this);
+		emsg::write_emsgs_as_fmp4_fragment( emsgs, res, tfdt, track_id, tfdt + 4 * timescale_, 0);
 		std::string r = res.str();
 		for (int i = 0; i < r.size(); i++)
 			sparse_frag_out.push_back(r[i]);
@@ -1634,37 +1647,38 @@ namespace fmp4_stream
 			if ( it != this->media_fragment_.end())
 			{
 				current_tfdt = pt_off_start; 
-				while (current_tfdt + 2 * timescale < it->emsg_.presentation_time_)
+				while (current_tfdt + 2 * timescale < it->emsg_[0].presentation_time_)
 				{
 					write_embe(ot, current_tfdt, track_id, timescale * 2);
 					current_tfdt += timescale * 2;
 				}
-				if (current_tfdt < it->emsg_.presentation_time_)
-					write_embe(ot, current_tfdt, track_id, (uint32_t) (it->emsg_.presentation_time_ - current_tfdt));
+				if (current_tfdt < it->emsg_[0].presentation_time_)
+					write_embe(ot, current_tfdt, track_id, (uint32_t) (it->emsg_[0].presentation_time_ - current_tfdt));
 			}
 
 			// write each of the event messages as moof mdat combinations in sparse track 
 			for (auto it = this->media_fragment_.begin(); it != this->media_fragment_.end(); ++it)
 			{
 				//it->print();
-				if (it->emsg_.scheme_id_uri_.size())
-				{
-					uint64_t next_tfdt = 0;
-					//find the next tfdt 
-					if ((it + 1) != this->media_fragment_.end())
-						next_tfdt = (it + 1)->emsg_.presentation_time_;
-					//cout << " writing emsg fragment " << endl;
-					it->emsg_.write_emsg_as_fmp4_fragment(ot, it->emsg_.presentation_time_, track_id, next_tfdt, target_emsg_version);
-
-					current_tfdt = it->emsg_.presentation_time_ + it->emsg_.event_duration_;
-					while (current_tfdt + 2 * timescale < next_tfdt)
+				if (it->emsg_.size()) 
+					if (it->emsg_[0].scheme_id_uri_.size())
 					{
-						write_embe(ot, current_tfdt, track_id, timescale * 2);
-						current_tfdt += timescale * 2;
+						uint64_t next_tfdt = 0;
+						//find the next tfdt 
+						if ((it + 1) != this->media_fragment_.end())
+							next_tfdt = (it + 1)->emsg_[0].presentation_time_;
+						//cout << " writing emsg fragment " << endl;
+						emsg::write_emsgs_as_fmp4_fragment(it->emsg_, ot, it->emsg_[0].presentation_time_, track_id, next_tfdt, target_emsg_version);
+
+						current_tfdt = it->emsg_[0].presentation_time_ + it->emsg_[0].event_duration_;
+						while (current_tfdt + 2 * timescale < next_tfdt)
+						{
+							write_embe(ot, current_tfdt, track_id, timescale * 2);
+							current_tfdt += timescale * 2;
+						}
+						if (current_tfdt < next_tfdt)
+							write_embe(ot,  current_tfdt, track_id, (uint32_t) (next_tfdt - current_tfdt));
 					}
-					if (current_tfdt < next_tfdt)
-					    write_embe(ot,  current_tfdt, track_id, (uint32_t) (next_tfdt - current_tfdt));
-				}
 			}
 			// pad embe at end
 			if (pt_off_end > 0)
@@ -1675,7 +1689,7 @@ namespace fmp4_stream
 					current_tfdt += timescale * 2;
 				}
 				if (current_tfdt < pt_off_end)
-					write_embe(ot, current_tfdt, track_id, (uint32_t) (it->emsg_.presentation_time_ - current_tfdt));
+					write_embe(ot, current_tfdt, track_id, (uint32_t) (it->emsg_[0].presentation_time_ - current_tfdt));
 			}
 			//ot.write((const char *)empty_mfra, 8);
 			ot.close();
@@ -1689,14 +1703,17 @@ namespace fmp4_stream
 	{
 		std::ofstream ot(out_file);
 
-
+		//
+		// not complete we always need to check all different emsg schemes and create event streams for them 
+		//
 		if (ot.good()) {
 
 			uint32_t time_scale = init_fragment_.get_time_scale();
 			std::string scheme_id_uri = "";
 
-			if (media_fragment_.size() > 0)
-				scheme_id_uri = media_fragment_[0].emsg_.scheme_id_uri_;
+			if(media_fragment_[0].emsg_.size())
+			    if (media_fragment_.size() > 0)
+				    scheme_id_uri = media_fragment_[0].emsg_[0].scheme_id_uri_;
 
 			ot << "<EventStream " << std::endl;
 			if (scheme_id_uri.compare("urn:scte:scte35:2013:bin") == 0) // convert binary scte 214 to xml + bin
@@ -1711,12 +1728,12 @@ namespace fmp4_stream
 			// write each of the event messages as moof mdat combinations in sparse track 
 			for (auto it = this->media_fragment_.begin(); it != this->media_fragment_.end(); ++it)
 			{
-				//it->print();
-				if (it->emsg_.scheme_id_uri_.size())
-				{
-					uint64_t l_presentation_time = it->emsg_.version_ ? it->emsg_.presentation_time_ : it->tfdt_.base_media_decode_time_ + it->emsg_.presentation_time_delta_;
-					it->emsg_.write_emsg_as_mpd_event(ot, it->tfdt_.base_media_decode_time_);
-				}
+				if(it->emsg_.size())
+					for(int i=0; i<it->emsg_.size();i++)
+					{
+						uint64_t l_presentation_time = it->emsg_[i].version_ ? it->emsg_[i].presentation_time_ : it->tfdt_.base_media_decode_time_ + it->emsg_[i].presentation_time_delta_;
+						it->emsg_[i].write_emsg_as_mpd_event(ot, it->tfdt_.base_media_decode_time_);
+					}
 			}
 
 			ot << "</EventStream> " << std::endl;

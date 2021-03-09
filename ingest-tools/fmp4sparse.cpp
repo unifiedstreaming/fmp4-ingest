@@ -2,7 +2,7 @@
 Supplementary software media ingest specification:
 https://github.com/unifiedstreaming/fmp4-ingest
 
-Copyright (C) 2009-2018 CodeShop B.V.
+Copyright (C) 2009-2021 CodeShop B.V.
 http://www.code-shop.com
 
 convert CMAF with inband emsg to sparse metatrack with emsg in samples
