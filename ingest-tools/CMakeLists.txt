@@ -40,4 +40,4 @@ add_executable(fmp4sparse fmp4sparse.cpp fmp4stream.cpp fmp4stream.h base64.cpp 
 add_executable(fmp4Init fmp4init.cpp fmp4stream.cpp fmp4stream.h base64.cpp base64.h)
 add_executable(fmp4DashEvent fmp4DashEvent.cpp fmp4stream.cpp fmp4stream.h base64.cpp base64.h)
 add_executable(dashEventfmp4 dashEventfmp4.cpp tinyxml2.cpp tinyxml2.h fmp4stream.h fmp4stream.cpp base64.cpp base64.h)
-add_executable(unittests catch.hpp unittest.cpp)
+add_executable(unittests catch.hpp unittest.cpp fmp4stream.cpp fmp4stream.h base64.h base64.cpp)
