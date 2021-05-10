@@ -63,7 +63,7 @@ dashEventfmp4 in.mpd out.cmfm
 
 ## Reference 
 
-see ingest-tools folder in this repository for source code of reference implementation of file based cmaf ingest
+see ingest-tools folder in this repository for source code of reference implementation of file based cmaf-ingest
 
 a demo of ingesting cmaf content ot Unified origin using docker containers and docker compose can be found here: 
 
