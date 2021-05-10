@@ -52,7 +52,7 @@ int main(int argc, char *argv[])
 		
 		if (argc > 3) {
 			unsigned int nfrags = atoi(argv[3]);
-			ingest_stream.write_init_to_file(out_file,nfrags);
+			ingest_stream.write_init_to_file(out_file,nfrags, true);
 		}
 		else
 			ingest_stream.write_init_to_file(out_file,0);

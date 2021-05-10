@@ -16,6 +16,7 @@ http://www.code-shop.com
 #include <iomanip> 
 #include <memory>
 #include <limits>
+#include <string> 
 
 #include "fmp4stream.h"
 #include <base64.h>
@@ -170,7 +171,7 @@ namespace fmp4_stream
 		uint64_t offset = box::size();
 		magic_conf_ = fmp4_read_uint32(ptr + offset);
 		this->version_ = *((const uint8_t *)((ptr + offset)));
-		this->flags_ = 0x00FFFFFF & fmp4_read_uint32(ptr + offset);
+		this->flags_ = ((uint32_t)(0x00FFFFFF)) & fmp4_read_uint32(ptr + offset);
 	}
 
 	void full_box::print() const
@@ -195,13 +196,13 @@ namespace fmp4_stream
 	{
 		full_box::parse(ptr);
 		track_id_ = fmp4_read_uint32(ptr + 12);
-		base_data_offset_present_ = !!(0x00000001 & flags_);
-		sample_description_index_present_ = !!(0x00000002 & flags_);
-		default_sample_duration_present_ = !!(0x00000008 & flags_);
-		default_sample_size_present_ = !!(0x00000010 & flags_);
-		default_sample_flags_present_ = !!(0x00000020 & flags_);
-		duration_is_empty_ = !!(0x00010000 & flags_);
-		default_base_is_moof_ = !!(0x00020000 & flags_);
+		base_data_offset_present_ = !! (0x1u) & flags_;
+		sample_description_index_present_ = !!(0x2u & flags_);
+		default_sample_duration_present_ = !!(0x00000008u & flags_);
+		default_sample_size_present_ = !!(0x00000010u & flags_);
+		default_sample_flags_present_ = !!(0x00000020u & flags_);
+		duration_is_empty_ = !!(0x00010000u & flags_);
+		default_base_is_moof_ = !!(0x00020000u & flags_);
 
 		unsigned int offset = 16;
 
@@ -332,16 +333,18 @@ namespace fmp4_stream
 
 		sample_count_ = fmp4_read_uint32(ptr + 12);
 
-		data_offset_present_ = !!(0x00000001 & flags_);
+		std::bitset<32> bb(flags_);
+
+		data_offset_present_ = bb[0];
 		//cout << "data_offset_present " << data_offset_present << endl;
-		first_sample_flags_present_ = !!(0x00000004 & flags_);
+		first_sample_flags_present_ = bb[2];
 		//cout << "first_sample_flags_present " << first_sample_flags_present << endl;
-		sample_duration_present_ = !!(0x00000100 & flags_);
+		sample_duration_present_ = bb[8];
 		//cout << "sample_duration_present " << sample_duration_present << endl;
-		sample_size_present_ = !!(0x00000200 & flags_);
+		sample_size_present_ = bb[9];
 		//cout << "sample_size_present " << sample_size_present << endl;
-		sample_flags_present_ = !!(0x00000400 & flags_);
-		sample_composition_time_offsets_present_ = !!(0x00000800 & flags_);
+		sample_flags_present_ = bb[10];
+		sample_composition_time_offsets_present_ = bb[11];
 
 		//sentry.resize(sample_count);
 		unsigned int offset = 16;
@@ -1418,31 +1421,53 @@ namespace fmp4_stream
 	}
 
 	// archival function, write init segment to a file
-	int ingest_stream::write_init_to_file(std::string &ofile, unsigned int nfrags)
+	int ingest_stream::write_init_to_file(std::string &ofile, unsigned int nfrags, bool write_sep_files)
 	{
 		// write the stream to an output file
-		std::ofstream out_file(ofile, std::ofstream::binary);
+		if (!write_sep_files) {
+			std::ofstream out_file(ofile, std::ofstream::binary);
 
-		if (out_file.good())
+			if (out_file.good())
+			{
+				std::vector<uint8_t> init_data;
+				get_init_segment_data(init_data);
+				out_file.write((char *)init_data.data(), init_data.size());
+				for (unsigned int k = 0; k < nfrags; k++) {
+					if (k < media_fragment_.size()) {
+						init_data.clear();
+						get_media_segment_data(k, init_data);
+						out_file.write((char *)init_data.data(), init_data.size());
+					}
+				}
+				out_file.close();
+				std::cout << " done written init segment to file: " << ofile << std::endl;
+			}
+			else
+			{
+				std::cout << " error writing stream to file " << std::endl;
+			}
+		}
+		else 
 		{
 			std::vector<uint8_t> init_data;
 			get_init_segment_data(init_data);
-			out_file.write((char *)init_data.data(), init_data.size());
-			for (unsigned int k = 0; k < nfrags; k++) {
-				if (k < media_fragment_.size()) {
-					init_data.clear();
-					get_media_segment_data(k, init_data);
+			const unsigned int chunk_count=4;
+			for (unsigned int k = 0; k < nfrags; k+=chunk_count) 
+			{
+				std::ofstream out_file( std::to_string(k/chunk_count) + "_" + ofile, std::ofstream::binary);
+				std::vector<uint8_t> segment_data;
+				if (out_file.good())
+				{
 					out_file.write((char *)init_data.data(), init_data.size());
+					for (unsigned int i = 0; i < chunk_count; i++) {
+						segment_data.clear();
+						get_media_segment_data(k*chunk_count + i, segment_data);
+						out_file.write((char *)segment_data.data(), segment_data.size());
+					}
+					out_file.close();
 				}
 			}
-			out_file.close();
-			std::cout << " done written init segment to file: " << ofile << std::endl;
 		}
-		else
-		{
-			std::cout << " error writing stream to file " << std::endl;
-		}
-
 		return 0;
 	}
 

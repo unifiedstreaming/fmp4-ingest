@@ -36,7 +36,7 @@ namespace fmp4_stream {
 		bool has_uuid_;
 
 		box() : size_(0), large_size_(0), box_type_(""), is_large_(false), has_uuid_(false) {  };
-		virtual uint64_t read_size() { return size_ == 1 ? large_size_ : size_; };
+		uint64_t read_size() { return (size_ == 1) ? large_size_ : (uint64_t) size_; };
 
 		virtual uint64_t size() const; // warning only beginning of box
 		virtual void print() const;
@@ -48,10 +48,9 @@ namespace fmp4_stream {
 	struct full_box : public box
 	{
 		uint8_t version_;
-		unsigned int flags_;
+		uint32_t flags_;
 		uint32_t magic_conf_;
-		
-		virtual uint64_t read_size() { return size_ == 1 ? large_size_ : size_; };
+
 		virtual void parse(char const *ptr);
 		virtual void print() const;
 		virtual uint64_t size() const { return box::size() + 4; };
@@ -408,7 +407,7 @@ namespace fmp4_stream {
 		std::vector<media_fragment> media_fragment_;
 		box sidx_box_, meta_box_, mfra_box_;
 		int load_from_file(std::istream &input_file, bool init_only=false);
-		int write_init_to_file(std::string &out_file, unsigned int nfrags=0);
+		int write_init_to_file(std::string &out_file, unsigned int nfrags=0, bool write_separate=false);
 		int write_to_sparse_emsg_file(const std::string& out_file, uint32_t track_id, uint64_t pt_off_start, uint64_t pt_off_end, const std::string& urn, uint32_t timescale=1, uint8_t target_emsg_version=2);
 		uint64_t get_init_segment_data(std::vector<uint8_t> &init_seg_dat);
 		uint64_t get_media_segment_data(std::size_t index, std::vector<uint8_t> &media_seg_dat);
