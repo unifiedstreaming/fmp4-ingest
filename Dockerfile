@@ -14,13 +14,13 @@ RUN     buildDeps="bash-completion \
         apk add --update ${buildDeps}
 
 # Pull fmp4ingest-tools repo
-RUN     cd /root && \
-        git clone https://github.com/unifiedstreaming/fmp4-ingest.git  && \
-        cd fmp4-ingest/ingest-tools && \
+COPY ingest-tools /root/ingest-tools
+
+RUN     cd /root/ingest-tools && \
         cmake CMakeLists.txt && \
         make
 
-ENV PATH="${PATH}:/root/fmp4-ingest/ingest-tools"
+ENV PATH="${PATH}:/root/ingest-tools"
 
 # Invocation examples
 # fmp4ingest: CMAF ingest

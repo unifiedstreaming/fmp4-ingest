@@ -346,7 +346,7 @@ int push_thread(ingest_stream l_ingest_stream, push_options_t opt, string post_u
 				fprintf(stderr, "---- connection with server failed  %s\n",
 					curl_easy_strerror(res));
 				curl_easy_cleanup(curl);
-				return 0; // nothing todo when connection fails
+				return 0; // nothing to do
 			}
 			else
 			{
@@ -589,7 +589,7 @@ int push_thread_meta(ingest_stream l_ingest_stream, push_options_t opt, std::str
 			fprintf(stderr, "---- connection with server failed  %s\n",
 				curl_easy_strerror(res));
 			curl_easy_cleanup(curl);
-			return 0; // nothing todo when connection fails
+			return (0); // Exit with error when connection fails
 		}
 		else
 		{
@@ -749,7 +749,7 @@ int push_thread_emsg(push_options_t opt, std::string post_url_string, std::strin
 			fprintf(stderr, "---- connection with server failed  %s\n",
 				curl_easy_strerror(res));
 			curl_easy_cleanup(curl);
-			return 0; // nothing todo when connection fails
+			exit(1); // Exit status 1
 		}
 		else
 		{
