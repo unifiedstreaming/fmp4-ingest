@@ -296,11 +296,11 @@ namespace fmp4_stream {
 		virtual void print() const;
 		uint32_t write(std::ostream &ostr) const;
 
-		static void write_emsgs_as_fmp4_fragment(std::vector<emsg> emsgs, std::ostream &ostr, uint64_t timestamp_tfdt, uint32_t track_id,
-			uint64_t next_tfdt, uint8_t target_version); // warning may change the version
-		void write_emsg_as_mpd_event(std::ostream &ostr, uint64_t base_time) const;
-		void convert_emsg_to_sparse_fragment(std::vector<uint8_t> &sparse_frag_out, 
-		          uint64_t tfdt, uint32_t track_id, uint32_t timescale, uint8_t target_emsg_version = 0);
+		//static void write_emsgs_as_fmp4_fragment(std::vector<emsg> emsgs, std::ostream &ostr, uint64_t timestamp_tfdt, uint32_t track_id,
+		//	uint64_t next_tfdt, uint8_t target_version); // warning may change the version
+		// void write_emsg_as_mpd_event(std::ostream &ostr, uint64_t base_time) const;
+		//void convert_emsg_to_sparse_fragment(std::vector<uint8_t> &sparse_frag_out, 
+		//          uint64_t tfdt, uint32_t track_id, uint32_t timescale, uint8_t target_emsg_version = 0);
 	};	
 
 	const uint8_t empty_mfra[8] = {

@@ -1,7 +1,7 @@
 /*******************************************************************************
 Supplementary software media ingest specification:
 https://github.com/unifiedstreaming/fmp4-ingest
-Copyright (C) 2009-2019 CodeShop B.V.
+Copyright (C) 2009-2021 CodeShop B.V.
 http://www.code-shop.com
 CMAF ingest from stored CMAF files, emulates a live encoder posting CMAF content
 ******************************************************************************/
@@ -202,106 +202,6 @@ struct ingest_post_state_t
 	push_options_t *opt_;
 };
 
-//static size_t read_callback(void *dest, size_t size, size_t nmemb, void *userp)
-//{
-//	ingest_post_state_t *st = (ingest_post_state_t *)userp;
-//	size_t buffer_size = size * nmemb;
-//	size_t nr_bytes_written = 0;
-//
-//	if (st->is_done_ || stop_all) 
-//		return 0;
-//
-//	// resending the init segment
-//	if (!(st->init_done_) || st->error_state_)
-//	{
-//		vector<uint8_t> init_data;
-//		st->str_ptr_->get_init_segment_data(init_data);
-//
-//		if (st->error_state_) {
-//			st->offset_in_fragment_ = 0;
-//			st->init_done_ = false;
-//			st->error_state_ = false;
-//		}
-//
-//		if ((init_data.size() - st->offset_in_fragment_) <= buffer_size)
-//		{
-//			memcpy(dest, init_data.data() + st->offset_in_fragment_, init_data.size() - st->offset_in_fragment_);
-//			nr_bytes_written = init_data.size() - st->offset_in_fragment_;
-//			st->init_done_ = true;
-//			st->offset_in_fragment_ = 0;
-//			return nr_bytes_written;
-//		}
-//		else
-//		{
-//			memcpy(dest, init_data.data(), buffer_size);
-//			st->offset_in_fragment_ += (uint32_t)buffer_size;
-//			return buffer_size;
-//		}
-//	}
-//	else // read the next fragment or send pause
-//	{
-//		bool frags_finished = st->str_ptr_->media_fragment_.size() <= st->fnumber_;
-//		uint64_t c_tfdt = 0;
-//
-//		if ((frags_finished ))
-//		{
-//			uint64_t patch_shift = (uint64_t) (st->opt_->cmaf_presentation_duration_ * st->str_ptr_->init_fragment_.get_time_scale());
-//			if (patch_shift > 0) 
-//			{
-//				cout << "patching using cmaf presentation duration" << endl;
-//				st->str_ptr_->patch_tfdt(patch_shift, false);
-//			}
-//			else 
-//			{
-//				cout << "patching using cmaf presentation duration" << endl;
-//				st->str_ptr_->patch_tfdt(st->str_ptr_->get_duration(), false);
-//			}
-//
-//			*(st->start_time_) = chrono::system_clock::now();
-//			st->fnumber_ = 0;
-//		}
-//
-//		if (st->opt_->realtime_) // if it is to early sleep until tfdt - frag_dur
-//		{
-//			c_tfdt = st->str_ptr_->media_fragment_[st->fnumber_].tfdt_.base_media_decode_time_;
-//			const double media_time = ((double)c_tfdt - st->str_ptr_->get_start_time()) / st->timescale_;
-//			chrono::duration<double> diff = chrono::system_clock::now() - *(st->start_time_);
-//			double f_del = (double)st->frag_duration_ / (double)st->timescale_;
-//
-//			if ((diff.count() ) < (media_time - f_del)) // if it is to early sleep until tfdt - frag_dur
-//			{
-//				this_thread::sleep_for(chrono::duration<double>((media_time - f_del) - diff.count()));
-//			}
-//		}
-//
-//		vector<uint8_t> frag_data;
-//		st->str_ptr_->get_media_segment_data((long)st->fnumber_, frag_data);
-//
-//		// we can finish the fragment
-//		if (frag_data.size() - st->offset_in_fragment_ <= buffer_size)
-//		{
-//			memcpy(dest, frag_data.data() + st->offset_in_fragment_, frag_data.size() - st->offset_in_fragment_);
-//			nr_bytes_written = frag_data.size() - st->offset_in_fragment_;
-//			st->offset_in_fragment_ = 0;
-//
-//			std::cout << " pushed media fragment: " << st->fnumber_ << " file_name: " << st->file_name_ << " fragment duration: " << \
-//				((double)st->str_ptr_->media_fragment_[st->fnumber_].get_duration()) / ((double)st->timescale_) << " seconds " << endl;
-//
-//			st->fnumber_++;
-//
-//			return nr_bytes_written;
-//		}
-//		else 
-//		{
-//			memcpy(dest, frag_data.data() + st->offset_in_fragment_, buffer_size);
-//			(st->offset_in_fragment_) += (uint32_t)buffer_size;
-//			
-//			return buffer_size;
-//		}
-//	}
-//}
-
-// removed chunked option
 int push_thread(ingest_stream l_ingest_stream, push_options_t opt, string post_url_string, std::string file_name)
 {
 	try
@@ -374,68 +274,11 @@ int push_thread(ingest_stream l_ingest_stream, push_options_t opt, string post_u
 		chrono::time_point<chrono::system_clock> tp = chrono::system_clock::now();
 		post_state.start_time_ = &tp; // start time
 
-		//if (opt.chunked_)
-		//	curl_easy_reset(curl);
-
 		curl_easy_setopt(curl, CURLOPT_URL, post_url_string.data());
 		curl_easy_setopt(curl, CURLOPT_POST, 1);
 		curl_easy_setopt(curl, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_1);
 
-		//if (opt.chunked_)
-		//{
-		//	curl_easy_setopt(curl, CURLOPT_READFUNCTION, read_callback);
-		//	curl_easy_setopt(curl, CURLOPT_READDATA, (void *)&post_state);
-		//}
-
 		struct curl_slist *chunk = NULL;
-		//if (opt.chunked_)
-		//{
-		//	chunk = curl_slist_append(chunk, "Transfer-Encoding: chunked");
-		//	chunk = curl_slist_append(chunk, "Expect:");
-		//	res = curl_easy_setopt(curl, CURLOPT_HTTPHEADER, chunk);
-
-		//	curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
-		//	curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L);
-
-		//	if (opt.basic_auth_.size())
-		//	{
-		//		curl_easy_setopt(curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
-		//		curl_easy_setopt(curl, CURLOPT_USERNAME, opt.basic_auth_name_.c_str());
-		//		curl_easy_setopt(curl, CURLOPT_USERPWD, opt.basic_auth_.c_str());
-		//	}
-
-		//	if (opt.ssl_cert_.size())
-		//		curl_easy_setopt(curl, CURLOPT_SSLCERT, opt.ssl_cert_.c_str());
-		//	if (opt.ssl_key_.size())
-		//		curl_easy_setopt(curl, CURLOPT_SSLKEY, opt.ssl_key_.c_str());
-		//	if (opt.ssl_key_pass_.size())
-		//		curl_easy_setopt(curl, CURLOPT_KEYPASSWD, opt.ssl_key_pass_.c_str());
-		//}
-		//// long running post with chunked transfer
-		//if (opt.chunked_)
-		//{
-		//	while (!stop_all) 
-		//	{
-		//		res = curl_easy_perform(curl);
-
-		//		if (res != CURLE_OK)
-		//		{
-		//			fprintf(stderr, "---- long running post failed: %s\n",
-		//					curl_easy_strerror(res));
-		//			// wait two seconds before trying again
-		//			post_state.offset_in_fragment_ = 0; // start again from beginning of fragment
-		//			double f_del = (double)post_state.frag_duration_ / (double)post_state.timescale_;
-		//			this_thread::sleep_for(chrono::duration<double>(f_del));
-		//			post_state.error_state_ = true;
-		//		}
-		//		else
-		//			//fprintf(stderr, "---- long running post ok: %s\n",
-		//			curl_easy_strerror(res);
-		//	}
-		//}
-		//else  // short running post 
-		//{
-		//cout << "************* short running post mode ************" << endl;
 		chrono::time_point<chrono::system_clock> start_time = chrono::system_clock::now();
 		while (!stop_all)
 		{
@@ -452,8 +295,6 @@ int push_thread(ingest_stream l_ingest_stream, push_options_t opt, string post_u
 
 					if (res != CURLE_OK)
 					{
-
-
 						// media segment post failed resend the init segment and the segment
 						int retry_count = 0;
 						while (res != CURLE_OK)
@@ -484,17 +325,17 @@ int push_thread(ingest_stream l_ingest_stream, push_options_t opt, string post_u
 						outf.write((char *)&media_seg_dat[0], media_seg_dat.size());
 				}
 
-				uint64_t t_diff = l_ingest_stream.media_fragment_[i].tfdt_.base_media_decode_time_ - l_ingest_stream.media_fragment_[0].tfdt_.base_media_decode_time_;
+				uint64_t c_tfdt = l_ingest_stream.media_fragment_[i].tfdt_.base_media_decode_time_;
+				uint64_t t_diff = c_tfdt - l_ingest_stream.media_fragment_[0].tfdt_.base_media_decode_time_;
 
 				cout << " pushed media fragment: " << i << " file_name: " << post_state.file_name_ << " fragment duration: " << \
 					(l_ingest_stream.media_fragment_[i].get_duration()) / ((double)post_state.timescale_) << " seconds ";
+
 				if (post_state.timescale_ > 0)
 					cout << " media time elapsed: " << (t_diff + l_ingest_stream.media_fragment_[i].get_duration()) / post_state.timescale_ << endl;
 
 				if (opt.realtime_)
 				{
-					// calculate elapsed media time
-					const uint64_t c_tfdt = l_ingest_stream.media_fragment_[i].tfdt_.base_media_decode_time_;
 					chrono::duration<double> diff = chrono::system_clock::now() - start_time;
 					const double media_time = ((double)(c_tfdt - l_ingest_stream.get_start_time())) / l_ingest_stream.init_fragment_.get_time_scale();
 
@@ -560,175 +401,6 @@ int push_thread(ingest_stream l_ingest_stream, push_options_t opt, string post_u
 	return 0;
 }
 
-int push_thread_emsg(push_options_t opt, std::string post_url_string, std::string file_name, uint32_t track_id, uint32_t timescale)
-{
-	try
-	{
-		vector<uint8_t> init_seg_dat;
-		vector<uint8_t> moov_sparse;
-		string urn = "urn:mpeg:dash:event:2012";
-		sparse_ftyp;
-		get_sparse_moov(urn, timescale, track_id, moov_sparse);
-		std::copy(std::begin(sparse_ftyp), std::end(sparse_ftyp), std::back_inserter(init_seg_dat));
-		std::copy(std::begin(moov_sparse), std::end(moov_sparse), std::back_inserter(init_seg_dat));
-		//write the output
-		ofstream outf = std::ofstream("avail_emsg.cmfm", std::ios::binary);
-
-		// setup curl
-		CURL * curl;
-		CURLcode res;
-		curl = curl_easy_init();
-
-		curl_easy_setopt(curl, CURLOPT_URL, post_url_string.c_str());
-		curl_easy_setopt(curl, CURLOPT_POSTFIELDS, (char *)&init_seg_dat[0]);
-		curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, (long)init_seg_dat.size());
-		
-		if (outf.good())
-			outf.write((char *)&init_seg_dat[0], init_seg_dat.size());
-
-		curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
-		curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L);
-
-		if (opt.basic_auth_.size())
-		{
-			curl_easy_setopt(curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
-			curl_easy_setopt(curl, CURLOPT_USERNAME, opt.basic_auth_name_.c_str());
-			curl_easy_setopt(curl, CURLOPT_USERPWD, opt.basic_auth_.c_str());
-		}
-
-		if (opt.ssl_cert_.size())
-			curl_easy_setopt(curl, CURLOPT_SSLCERT, opt.ssl_cert_.c_str());
-		if (opt.ssl_key_.size())
-			curl_easy_setopt(curl, CURLOPT_SSLKEY, opt.ssl_key_.c_str());
-		if (opt.ssl_key_pass_.size())
-			curl_easy_setopt(curl, CURLOPT_KEYPASSWD, opt.ssl_key_pass_.c_str());
-
-		if (!opt.dry_run_) {
-			res = curl_easy_perform(curl);
-
-			/* Check for errors */
-			if (res != CURLE_OK)
-			{
-				fprintf(stderr, "---- connection with server failed  %s\n",
-					curl_easy_strerror(res));
-				curl_easy_cleanup(curl);
-				return 0; // nothing todo when connection fails
-			}
-			else
-			{
-				fprintf(stderr, "---- connection with server sucessfull %s\n",
-					curl_easy_strerror(res));
-			}
-		}
-		chrono::time_point<chrono::system_clock> start_time = chrono::system_clock::now();
-
-		double cmaf_loop_offset = 0;
-
-		while (!stop_all)
-		{
-			
-			for (uint64_t i = 1, j = 1;; i++,j++)
-			{
-				double media_time = ((double)j * opt.avail_) / timescale;
-
-				if (opt.realtime_)
-				{    
-					if(opt.cmaf_presentation_duration_)
-					   if (media_time > opt.cmaf_presentation_duration_) 
-					   {
-						   j = 1;
-						   cmaf_loop_offset += opt.cmaf_presentation_duration_;
-						   media_time = ((double)j * opt.avail_) / timescale;
-					   }
-
-					// calculate elapsed media time
-					chrono::duration<double> diff = chrono::system_clock::now() - start_time;
-					double wait_time = media_time + cmaf_loop_offset - 5.0 - opt.announce_- diff.count();
-
-					if (wait_time > 0) // if it is to early sleep until tfdt - frag_dur
-					{
-						this_thread::sleep_for(chrono::duration<double>(wait_time));
-					}
-
-				}
-				else
-				{ 
-					std::this_thread::sleep_for(std::chrono::milliseconds(500));
-				}
-
-				// create emsg
-				emsg e = {};
-				e.timescale_ = timescale; // 1000
-				e.presentation_time_ = uint64_t  ((media_time + cmaf_loop_offset + opt.wc_time_start_) * timescale);
-				e.id_ = (uint32_t) i;
-				e.version_ = 0;
-				e.presentation_time_delta_ = 0;
-				e.event_duration_ = (uint32_t) opt.avail_dur_;
-				fmp4_stream::gen_splice_insert(e.message_data_, e.id_, e.event_duration_ * 90);
-				e.scheme_id_uri_ = "urn:scte:scte35:2013:bin";
-				e.value_ = "";
-				
-				vector<uint8_t> sparse_seg_dat;
-				e.convert_emsg_to_sparse_fragment(sparse_seg_dat, \
-					(uint64_t) ((media_time + cmaf_loop_offset + opt.wc_time_start_) * timescale), track_id, timescale, 0);
-				
-				if (outf.good())
-					outf.write((const char *)&sparse_seg_dat[0], sparse_seg_dat.size());
-
-				if (!opt.dry_run_) 
-				{
-					curl_easy_setopt(curl, CURLOPT_POSTFIELDS, (char *)&sparse_seg_dat[0]);
-					curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, (long)sparse_seg_dat.size());
-					res = curl_easy_perform(curl);
-
-					if (res != CURLE_OK)
-					{
-						// media segment post failed resend the init segment and the segment
-						int retry_count = 0;
-						while (res != CURLE_OK)
-						{
-							curl_easy_setopt(curl, CURLOPT_POSTFIELDS, (char *)&init_seg_dat[0]);
-							curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, (long)init_seg_dat.size());
-							res = curl_easy_perform(curl);
-							std::this_thread::sleep_for(std::chrono::milliseconds(200));
-							retry_count++;
-							if (retry_count == 3)
-								break;
-						}
-					}
-
-					if(res == CURLE_OK)
-					{
-						fprintf(stderr, "post of emsg segment with scte-35 ok: %s\n",
-							curl_easy_strerror(res));
-						//std::cout << "payload: " << base64_encode((unsigned char *) &e.message_data_[0], e.message_data_.size()) << std::endl;
-
-					}
-					else 
-					{
-						fprintf(stderr, "post of media segment failed: %s\n",
-							curl_easy_strerror(res));
-					}
-				}
-
-				if (stop_all) 
-				{
-					break;
-				}
-			}
-		}
-
-		/* always cleanup */
-		curl_easy_cleanup(curl);
-		outf.close();
-	}
-	catch (...)
-	{
-		cout << "Unknown Error" << endl;
-	}
-	return 0; 
-}
-
 int main(int argc, char * argv[])
 {
 	push_options_t opts;
@@ -775,7 +447,8 @@ int main(int argc, char * argv[])
 	{
 		string post_url_string = opts.url_ + "/Streams(" + "emsg.cmfm" + ")";
 		string file_name = "emsg.cmfm";
-		thread_ptr thread_n(new thread(push_thread_emsg, opts, post_url_string, file_name, 99, 1000));
+		// create the file
+		thread_ptr thread_n(new thread(push_thread, opts, post_url_string, file_name, 99, 1000));
 		threads.push_back(thread_n);
 	}
 
