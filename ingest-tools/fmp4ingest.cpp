@@ -332,7 +332,7 @@ int push_thread(ingest_stream l_ingest_stream, push_options_t opt, string post_u
 					(l_ingest_stream.media_fragment_[i].get_duration()) / ((double)post_state.timescale_) << " seconds ";
 
 				if (post_state.timescale_ > 0)
-					cout << " media time elapsed: " << (t_diff + l_ingest_stream.media_fragment_[i].get_duration()) / post_state.timescale_ << endl;
+					cout << " media time elapsed: " << (double) (t_diff + l_ingest_stream.media_fragment_[i].get_duration()) / (double) post_state.timescale_ << endl;
 
 				if (opt.realtime_)
 				{
@@ -354,7 +354,7 @@ int push_thread(ingest_stream l_ingest_stream, push_options_t opt, string post_u
 				}
 				else
 				{ // non real time just sleep for 500 seconds
-					std::this_thread::sleep_for(std::chrono::milliseconds(500));
+					std::this_thread::sleep_for(std::chrono::milliseconds(50));
 				}
 
 				//std::cout << " --- posting next segment ---- " << i << std::endl;
@@ -431,11 +431,11 @@ int main(int argc, char * argv[])
 			l_ingest_stream.patch_tfdt(opts.wc_time_start_);
 		}
 
-		double l_duration = (double) l_ingest_stream.get_duration() / l_ingest_stream.init_fragment_.get_time_scale();
+		double l_duration = (double) l_ingest_stream.get_duration() / (double) l_ingest_stream.init_fragment_.get_time_scale();
 
 		if (l_duration > opts.cmaf_presentation_duration_) {
 			opts.cmaf_presentation_duration_ = l_duration;
-			std::cout << "cmaf presentation duration updated to: " << l_duration << " seconds " << std::endl;
+			std::cout << "CMAF presentation duration updated to: " << l_duration << " seconds " << std::endl;
 		}
 
 		l_index++;
@@ -443,14 +443,14 @@ int main(int argc, char * argv[])
 	}
 	l_index = 0;
 
-	if (opts.avail_)
-	{
-		string post_url_string = opts.url_ + "/Streams(" + "emsg.cmfm" + ")";
-		string file_name = "emsg.cmfm";
-		// create the file
-		thread_ptr thread_n(new thread(push_thread, opts, post_url_string, file_name, 99, 1000));
-		threads.push_back(thread_n);
-	}
+	//if (opts.avail_)
+	//{
+	//	string post_url_string = opts.url_ + "/Streams(" + "emsg.cmfm" + ")";
+	//	string file_name = "emsg.cmfm";
+	//	// create the file
+	//	thread_ptr thread_n(new thread(push_thread, opts, post_url_string, file_name, 99, 1000));
+	//	threads.push_back(thread_n);
+	//}
 
 	for (auto it = opts.input_files_.begin(); it != opts.input_files_.end(); ++it)
 	{

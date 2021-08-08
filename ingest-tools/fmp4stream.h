@@ -22,6 +22,75 @@ http://www.code-shop.com
 #include <bitset>
 #include <iomanip>
 
+namespace /* anonymous */ {
+
+	inline bool is_big_endian()
+	{
+		return  (*(uint16_t *)"\0\xff" < 0x100);
+	}
+
+	//------------------ helpers for processing the bitstream ------------------------
+	uint16_t fmp4_endian_swap16(uint16_t in)
+	{
+		return ((in & 0x00FF) << 8) | ((in & 0xFF00) >> 8);
+	};
+
+	uint32_t fmp4_endian_swap32(uint32_t in) {
+		return  ((in & 0x000000FF) << 24) | \
+			((in & 0x0000FF00) << 8) | \
+			((in & 0x00FF0000) >> 8) | \
+			((in & 0xFF000000) >> 24);
+	}
+
+	uint64_t fmp4_endian_swap64(uint64_t in) {
+		return  ((in & 0x00000000000000FF) << 56) | \
+			((in & 0x000000000000FF00) << 40) | \
+			((in & 0x0000000000FF0000) << 24) | \
+			((in & 0x00000000FF000000) << 8) | \
+			((in & 0x000000FF00000000) >> 8) | \
+			((in & 0x0000FF0000000000) >> 24) | \
+			((in & 0x00FF000000000000) >> 40) | \
+			((in & 0xFF00000000000000) >> 56);
+	};
+
+	uint16_t fmp4_read_uint16(char const*pt)
+	{
+		return is_big_endian() ? *((uint16_t *)pt) : fmp4_endian_swap16(*((uint16_t *)pt));
+	}
+
+	uint32_t fmp4_read_uint32(char const *pt)
+	{
+		return is_big_endian() ? *((uint32_t *)pt) : fmp4_endian_swap32(*((uint32_t *)pt));
+	}
+
+	uint64_t fmp4_read_uint64(char const *pt)
+	{
+		return is_big_endian() ? *((uint64_t *)pt) : fmp4_endian_swap64(*((uint64_t *)pt));
+	}
+
+	uint32_t fmp4_write_uint32(uint32_t in, char const *pt)
+	{
+		return is_big_endian() ? ((uint32_t *)pt)[0] = in : ((uint32_t *)pt)[0] = fmp4_endian_swap32(in);
+	}
+
+	int32_t fmp4_write_int32(int32_t in, char const *pt)
+	{
+		return is_big_endian() ? ((int32_t *)pt)[0] = in : ((int32_t *)pt)[0] = fmp4_endian_swap32(in);
+	}
+
+	uint64_t fmp4_write_uint64(uint64_t in, char const *pt)
+	{
+		return is_big_endian() ? ((uint64_t *)pt)[0] = in : ((uint64_t *)pt)[0] = fmp4_endian_swap64(in);
+	}
+
+	int64_t fmp4_write_int64(int64_t in, char const *pt)
+	{
+		return is_big_endian() ? ((int64_t *)pt)[0] = in : ((int64_t *)pt)[0] = fmp4_endian_swap64(in);
+	}
+
+} // anonymous
+
+
 namespace fmp4_stream {
 
 	//----------------- structures for storing an fmp4 stream defined in ISOBMMF fMP4 ----------------------
@@ -296,25 +365,11 @@ namespace fmp4_stream {
 		virtual void print() const;
 		uint32_t write(std::ostream &ostr) const;
 
-		//static void write_emsgs_as_fmp4_fragment(std::vector<emsg> emsgs, std::ostream &ostr, uint64_t timestamp_tfdt, uint32_t track_id,
-		//	uint64_t next_tfdt, uint8_t target_version); // warning may change the version
-		// void write_emsg_as_mpd_event(std::ostream &ostr, uint64_t base_time) const;
-		//void convert_emsg_to_sparse_fragment(std::vector<uint8_t> &sparse_frag_out, 
-		//          uint64_t tfdt, uint32_t track_id, uint32_t timescale, uint8_t target_emsg_version = 0);
+		void write_emsg_as_mpd_event(std::ostream &ostr, uint64_t base_time) const;
 	};	
 
 	const uint8_t empty_mfra[8] = {
 		0x00, 0x00, 0x00, 0x08, 'm', 'f', 'r', 'a'
-	};
-
-	// empty message cue
-	const uint8_t embe[8] = {
-		0x00, 0x00, 0x00, 0x08, 'e', 'm', 'b', 'e'
-	};
-
-	// empty message cue
-	const uint8_t emeb[8] = {
-		0x00, 0x00, 0x00, 0x08, 'e', 'm', 'e', 'b'
 	};
 
 	const uint8_t sparse_ftyp[20] =
@@ -408,9 +463,10 @@ namespace fmp4_stream {
 		box sidx_box_, meta_box_, mfra_box_;
 		int load_from_file(std::istream &input_file, bool init_only=false);
 		int write_init_to_file(std::string &out_file, unsigned int nfrags=0, bool write_separate=false);
-		int write_to_sparse_emsg_file(const std::string& out_file, uint32_t track_id, uint64_t pt_off_start, uint64_t pt_off_end, const std::string& urn, uint32_t timescale=1, uint8_t target_emsg_version=2);
+		
 		uint64_t get_init_segment_data(std::vector<uint8_t> &init_seg_dat);
 		uint64_t get_media_segment_data(std::size_t index, std::vector<uint8_t> &media_seg_dat);
+
 		void write_to_dash_event_stream(std::string &out_file);
 		void print() const;
 
@@ -420,8 +476,9 @@ namespace fmp4_stream {
 		uint64_t get_start_time();
 	};
 
-	bool get_sparse_moov(const std::string& urn, uint32_t timescale, uint32_t track_id, std::vector<uint8_t> &sparse_moov);
 	void gen_splice_insert(std::vector<uint8_t> &out_splice_insert, uint32_t event_id, uint32_t duration);
-	static void write_embe(std::ostream &ostr, uint64_t timestamp_tfdt, uint32_t track_id, uint32_t duration_in);
+	bool set_track_id(std::vector<uint8_t> &moov_in, uint32_t track_id);
+	void set_scheme_id_uri(std::vector<uint8_t> &moov_in, const std::string& urn);
+
 }
 #endif
