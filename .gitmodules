@@ -1,0 +1,3 @@
+[submodule "ingest-tools/event"]
+	path = ingest-tools/event
+	url = https://github.com/RufaelDev/EventMessageTrackSamples.git
