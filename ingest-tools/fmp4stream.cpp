@@ -3,88 +3,23 @@ Supplementary software media ingest specification:
 
 https://github.com/unifiedstreaming/fmp4-ingest
 
-Copyright (C) 2009-2018 CodeShop B.V.
+Copyright (C) 2009-2021 CodeShop B.V.
 http://www.code-shop.com
 
 ******************************************************************************/
 
 #include <stdint.h>
-
-
 #include <iostream>
 #include <sstream>
 #include <iomanip> 
 #include <memory>
 #include <limits>
-
+#include <string> 
 #include "fmp4stream.h"
 #include <base64.h>
 
-namespace /* anonymous */ {
-
-	inline bool is_big_endian() 
-	{
-		return  (*(uint16_t *)"\0\xff" < 0x100);
-	}
-
-	//------------------ helpers for processing the bitstream ------------------------
-	uint16_t fmp4_endian_swap16(uint16_t in) 
-	{
-		return ((in & 0x00FF) << 8) | ((in & 0xFF00) >> 8);
-	};
-
-	uint32_t fmp4_endian_swap32(uint32_t in) {
-		return  ((in & 0x000000FF) << 24) | \
-			((in & 0x0000FF00) << 8) | \
-			((in & 0x00FF0000) >> 8) | \
-			((in & 0xFF000000) >> 24);
-	}
-
-	uint64_t fmp4_endian_swap64(uint64_t in) {
-		return  ((in & 0x00000000000000FF) << 56) | \
-			((in & 0x000000000000FF00) << 40) | \
-			((in & 0x0000000000FF0000) << 24) | \
-			((in & 0x00000000FF000000) << 8) | \
-			((in & 0x000000FF00000000) >> 8) | \
-			((in & 0x0000FF0000000000) >> 24) | \
-			((in & 0x00FF000000000000) >> 40) | \
-			((in & 0xFF00000000000000) >> 56);
-	};
-
-	uint16_t fmp4_read_uint16(char const*pt)
-	{
-		return is_big_endian() ? *((uint16_t *)pt) : fmp4_endian_swap16(*((uint16_t *)pt));
-	}
-
-	uint32_t fmp4_read_uint32(char const *pt)
-	{
-		return is_big_endian() ? *((uint32_t *)pt) : fmp4_endian_swap32(*((uint32_t *)pt));
-	}
-
-	uint64_t fmp4_read_uint64(char const *pt)
-	{
-		return is_big_endian() ? *((uint64_t *)pt) : fmp4_endian_swap64(*((uint64_t *)pt));
-	}
-
-	uint32_t fmp4_write_uint32(uint32_t in, char const *pt)
-	{
-		return is_big_endian() ? ((uint32_t *)pt)[0] = in : ((uint32_t *)pt)[0] = fmp4_endian_swap32(in);
-	}
-
-	uint64_t fmp4_write_uint64(uint64_t in, char const *pt)
-	{
-		return is_big_endian() ? ((uint64_t *)pt)[0] = in : ((uint64_t *)pt)[0] = fmp4_endian_swap64(in);
-	}
-
-} // anonymous
-
-
 namespace fmp4_stream
 {
-
-	// base 64 sparse movie header
-	std::string moov_64_enc("AAACNG1vb3YAAABsbXZoZAAAAAAAAAAAAAAAAAAAAAEAAAAAAAEAAAEAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAAAGYdHJhawAAAFx0a2hkAAAABwAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAABNG1kaWEAAAAgbWRoZAAAAAAAAAAAAAAAAAAAAAEAAAAAVcQAAAAAADFoZGxyAAAAAAAAAABtZXRhAAAAAAAAAAAAAAAAVVNQIE1ldGEgSGFuZGxlcgAAAADbbWluZgAAAAxubWhkAAAAAAAAACRkaW5mAAAAHGRyZWYAAAAAAAAAAQAAAAx1cmwgAAAAAQAAAKNzdGJsAAAAV3N0c2QAAAAAAAAAAQAAAEd1cmltAAAAAAAAAAEAAAA3dXJpIAAAAABodHRwOi8vd3d3LnVuaWZpZWQtc3RyZWFtaW5nLmNvbS9kYXNoL2Vtc2cAAAAAEHN0dHMAAAAAAAAAAAAAABBzdHNjAAAAAAAAAAAAAAAUc3RzegAAAAAAAAAAAAAAAAAAABBzdGNvAAAAAAAAAAAAAAAobXZleAAAACB0cmV4AAAAAAAAAAEAAAABAAAAAAAAAAAAAAAA");
-
 
 	void box::parse(char const* ptr)
 	{
@@ -170,7 +105,7 @@ namespace fmp4_stream
 		uint64_t offset = box::size();
 		magic_conf_ = fmp4_read_uint32(ptr + offset);
 		this->version_ = *((const uint8_t *)((ptr + offset)));
-		this->flags_ = 0x00FFFFFF & fmp4_read_uint32(ptr + offset);
+		this->flags_ = ((uint32_t)(0x00FFFFFF)) & fmp4_read_uint32(ptr + offset);
 	}
 
 	void full_box::print() const
@@ -195,13 +130,13 @@ namespace fmp4_stream
 	{
 		full_box::parse(ptr);
 		track_id_ = fmp4_read_uint32(ptr + 12);
-		base_data_offset_present_ = !!(0x00000001 & flags_);
-		sample_description_index_present_ = !!(0x00000002 & flags_);
-		default_sample_duration_present_ = !!(0x00000008 & flags_);
-		default_sample_size_present_ = !!(0x00000010 & flags_);
-		default_sample_flags_present_ = !!(0x00000020 & flags_);
-		duration_is_empty_ = !!(0x00010000 & flags_);
-		default_base_is_moof_ = !!(0x00020000 & flags_);
+		base_data_offset_present_ = !! (0x1u) & flags_;
+		sample_description_index_present_ = !!(0x2u & flags_);
+		default_sample_duration_present_ = !!(0x00000008u & flags_);
+		default_sample_size_present_ = !!(0x00000010u & flags_);
+		default_sample_flags_present_ = !!(0x00000020u & flags_);
+		duration_is_empty_ = !!(0x00010000u & flags_);
+		default_base_is_moof_ = !!(0x00020000u & flags_);
 
 		unsigned int offset = 16;
 
@@ -259,7 +194,7 @@ namespace fmp4_stream
 		if (sample_description_index_present_)
 			std::cout << std::setw(33) << std::left << " sample description: " << sample_description_index_ << std::endl;
 		if (default_sample_duration_present_)
-			std::cout << std::setw(33) << std::left << " sample duration: " << default_sample_duration_ << std::endl;
+			std::cout << std::setw(33) << std::left << " default sample duration: " << default_sample_duration_ << std::endl;
 		if (default_sample_size_present_)
 			std::cout << std::setw(33) << std::left << " default sample size: " << default_sample_size_ << std::endl;
 		if (default_sample_flags_present_)
@@ -332,16 +267,18 @@ namespace fmp4_stream
 
 		sample_count_ = fmp4_read_uint32(ptr + 12);
 
-		data_offset_present_ = !!(0x00000001 & flags_);
+		std::bitset<32> bb(flags_);
+
+		data_offset_present_ = bb[0];
 		//cout << "data_offset_present " << data_offset_present << endl;
-		first_sample_flags_present_ = !!(0x00000004 & flags_);
+		first_sample_flags_present_ = bb[2];
 		//cout << "first_sample_flags_present " << first_sample_flags_present << endl;
-		sample_duration_present_ = !!(0x00000100 & flags_);
+		sample_duration_present_ = bb[8];
 		//cout << "sample_duration_present " << sample_duration_present << endl;
-		sample_size_present_ = !!(0x00000200 & flags_);
+		sample_size_present_ = bb[9];
 		//cout << "sample_size_present " << sample_size_present << endl;
-		sample_flags_present_ = !!(0x00000400 & flags_);
-		sample_composition_time_offsets_present_ = !!(0x00000800 & flags_);
+		sample_flags_present_ = bb[10];
+		sample_composition_time_offsets_present_ = bb[11];
 
 		//sentry.resize(sample_count);
 		unsigned int offset = 16;
@@ -618,21 +555,21 @@ namespace fmp4_stream
 	//! emsg to mpd event, always to base64 encoding
 	void emsg::write_emsg_as_mpd_event(std::ostream &ostr, uint64_t base_time) const
 	{
-		ostr << "<Event "
-			<< "presentationTime=" << '"' << (this->version_ ? presentation_time_ : base_time + presentation_time_delta_) << '"' << " "  \
+		ostr << "<event "
+			<< "presentationtime=" << '"' << (this->version_ ? presentation_time_ : base_time + presentation_time_delta_) << '"' << " "  \
 			<< "duration=" << '"' << event_duration_ << '"' << " "  \
 			<< "id=" << '"' << id_ << '"';
 		if (this->scheme_id_uri_.compare("urn:scte:scte35:2013:bin") == 0) // write binary scte as xml + bin as defined by scte-35
 		{
-			ostr << '>' << std::endl << "  <Signal xmlns=" << '"' << "http://www.scte.org/schemas/35/2016" << '"' << '>' << std::endl \
-				<< "    <Binary>" << base64_encode(this->message_data_.data(), (unsigned int)this->message_data_.size()) << "</Binary>" << std::endl
-				<< "  </Signal>" << std::endl;
+			ostr << '>' << std::endl << "  <signal xmlns=" << '"' << "http://www.scte.org/schemas/35/2016" << '"' << '>' << std::endl \
+				<< "    <binary>" << base64_encode(this->message_data_.data(), (unsigned int)this->message_data_.size()) << "</binary>" << std::endl
+				<< "  </signal>" << std::endl;
 		}
 		else {
-			ostr << " " << "contentEncoding=" << '"' << "base64" << '"' << '>' << std::endl
+			ostr << " " << "contentencoding=" << '"' << "base64" << '"' << '>' << std::endl
 				<< base64_encode(this->message_data_.data(), (unsigned int)this->message_data_.size()) << std::endl;
 		}
-		ostr << "</Event>" << std::endl;
+		ostr << "</event>" << std::endl;
 	}
 
 	//!
@@ -729,348 +666,6 @@ namespace fmp4_stream
 			ostr.write((char *)&message_data_[0], message_data_.size());
 		bytes_written += (uint32_t)message_data_.size();
 		return bytes_written;
-	}
-
-	void emsg::write_emsg_as_fmp4_fragment(std::ostream &ostr, uint64_t timestamp_tfdt, uint32_t track_id,
-		uint64_t next_tfdt, uint8_t target_version)
-	{
-		if (scheme_id_uri_.size())
-		{
-			if ((version_ == 1) && (target_version == 0)) {
-				this->presentation_time_delta_ = 0; /* should be: presentation_time_ - timestamp_tfdt; */
-				this->version_ = target_version;
-			}
-			else if ((version_ == 0) && (target_version == 1))
-			{
-				this->presentation_time_ = timestamp_tfdt + presentation_time_delta_;
-				this->version_ = target_version;
-			}
-
-			// --- init mfhd
-			mfhd l_mfhd = {};
-			l_mfhd.seq_nr_ = 0;
-			uint64_t l_mfhd_size = l_mfhd.size();
-
-			//uint32_t l_announce = 8 * this->timescale_; // following the method of push input stream (i do not think this is correct)
-
-			// --- init tfhd
-			tfhd l_tfhd = {};
-			l_tfhd.magic_conf_ = 131106u;
-			l_tfhd.track_id_ = track_id;
-			l_tfhd.sample_description_index_ = 1u;
-			l_tfhd.default_sample_flags_ = 37748800u;
-			l_tfhd.default_sample_flags_ = 37748800u;
-			l_tfhd.base_data_offset_present_ = false;
-			l_tfhd.default_base_is_moof_ = true;
-			l_tfhd.duration_is_empty_ = false;
-			l_tfhd.sample_description_index_present_ = true;
-			l_tfhd.default_sample_duration_present_ = false;
-			l_tfhd.default_sample_flags_present_ = true;
-			l_tfhd.default_sample_size_present_ = false;
-			uint64_t l_tfhd_size = l_tfhd.size();
-
-			// --- init tfdt
-			tfdt l_tfdt = {};
-			l_tfdt.version_ = 1u;
-			l_tfdt.base_media_decode_time_ = this->presentation_time_;
-			uint64_t l_tfdt_size = l_tfdt.size(); //
-
-			// --- init trun
-			trun l_trun = {};
-			l_trun.magic_conf_ = 769u;
-			l_trun.sample_count_ = 1;
-			l_trun.data_offset_present_ = true;
-			l_trun.first_sample_flags_present_ = false;
-			l_trun.sample_duration_present_ = true;
-			l_trun.sample_size_present_ = true;
-			l_trun.sample_flags_present_ = false;
-			l_trun.sample_composition_time_offsets_present_ = false;
-
-			//-- init sentry in trun write 2 samples
-			l_trun.m_sentry.resize(1);
-			//l_trun.m_sentry[0].sample_size_ = 0;
-			//l_trun.m_sentry[0].sample_duration_ = 0; // presentation_time_delta_ ? this->presentation_time_delta_ : (presentation_time_ - timestamp_tfdt);
-			l_trun.m_sentry[0].sample_size_ = (uint32_t)size();
-			l_trun.m_sentry[0].sample_duration_ = this->event_duration_;
-
-
-			//--- initialize the box sizes
-			uint64_t l_trun_size = l_trun.size();
-			uint64_t l_traf_size = 8 + l_trun_size + l_tfdt_size + l_tfhd_size;
-			uint64_t l_moof_size = 8 + l_traf_size + l_mfhd_size; // l_traf_size + 8 + l_mfhd_size;
-			l_trun.data_offset_ = (int32_t)l_moof_size + 8;
-
-			// write the fragment 
-			char int_buf[4];
-			char long_buf[8];
-
-			//--- write the sparse fragment to a file stream
-			// write 4 bytes
-			fmp4_write_uint32((uint32_t)l_moof_size, int_buf);
-			ostr.write(int_buf, 4);
-			// write 4 bytes, total 8 bytes
-			ostr.put('m');
-			ostr.put('o');
-			ostr.put('o');
-			ostr.put('f');
-			// write 16 bytes total 24 bytes
-			fmp4_write_uint32((uint32_t)l_mfhd_size, int_buf);
-			ostr.write(int_buf, 4);
-			//ostr->write("mfhd", 4);
-			ostr.put('m');
-			ostr.put('f');
-			ostr.put('h');
-			ostr.put('d');
-			fmp4_write_uint32((uint32_t)0u, int_buf);
-			ostr.write(int_buf, 4);
-			fmp4_write_uint32((uint32_t) this->id_, int_buf);
-			ostr.write(int_buf, 4);
-
-			// write traf 8 bytes total 32 bytes
-			fmp4_write_uint32((uint32_t)l_traf_size, int_buf);
-			ostr.write(int_buf, 4);
-			//ostr->write("traf", 4);
-			ostr.put('t');
-			ostr.put('r');
-			ostr.put('a');
-			ostr.put('f');
-
-			// write tfhd 24 bytes total 56 bytes
-			fmp4_write_uint32((uint32_t)l_tfhd_size, int_buf);
-			ostr.write(int_buf, 4);
-			//ostr->write("tfhd", 4);
-			ostr.put('t');
-			ostr.put('f');
-			ostr.put('h');
-			ostr.put('d');
-
-			fmp4_write_uint32((uint32_t)l_tfhd.magic_conf_, int_buf);
-			ostr.write(int_buf, 4);
-			fmp4_write_uint32((uint32_t)l_tfhd.track_id_, int_buf);
-			ostr.write(int_buf, 4);
-			fmp4_write_uint32((uint32_t)l_tfhd.sample_description_index_, int_buf);
-			ostr.write(int_buf, 4);
-			fmp4_write_uint32((uint32_t)l_tfhd.default_sample_flags_, int_buf);
-			ostr.write(int_buf, 4);
-
-			// write tfdt 20 bytes total 76 bytes
-			fmp4_write_uint32((uint32_t)l_tfdt_size, int_buf);
-			ostr.write(int_buf, 4);
-			ostr.put('t');
-			ostr.put('f');
-			ostr.put('d');
-			ostr.put('t');
-			ostr.put(1u); // version
-			ostr.put(0u);
-			ostr.put(0u);
-			ostr.put(0u);
-			fmp4_write_uint64((uint64_t)l_tfdt.base_media_decode_time_, long_buf);
-			ostr.write(long_buf, 8);
-
-			fmp4_write_uint32((uint32_t)l_trun_size, int_buf);
-			ostr.write(int_buf, 4);
-			//ostr->write("trun", 4);
-			ostr.put('t');
-			ostr.put('r');
-			ostr.put('u');
-			ostr.put('n');
-			fmp4_write_uint32((uint32_t)l_trun.magic_conf_, int_buf);
-			ostr.write(int_buf, 4);
-			fmp4_write_uint32((uint32_t)l_trun.sample_count_, int_buf);
-			ostr.write(int_buf, 4);
-			fmp4_write_uint32((uint32_t)l_trun.data_offset_, int_buf);
-			ostr.write(int_buf, 4);
-
-			// write the duration and the sample size
-			fmp4_write_uint32((uint32_t)l_trun.m_sentry[0].sample_duration_, int_buf);
-			ostr.write(int_buf, 4);
-			fmp4_write_uint32((uint32_t)l_trun.m_sentry[0].sample_size_, int_buf);
-			ostr.write(int_buf, 4);
-			//fmp4_write_uint32((uint32_t)l_trun.m_sentry[1].sample_duration_, int_buf);
-			//ostr.write(int_buf, 4);
-			//fmp4_write_uint32((uint32_t)l_trun.m_sentry[1].sample_size_, int_buf);
-			//ostr.write(int_buf, 4);
-			//fmp4_write_uint32((uint32_t)l_trun.m_sentry[2].sample_duration_, int_buf);
-			//ostr.write(int_buf, 4);
-			//fmp4_write_uint32((uint32_t)l_trun.m_sentry[2].sample_size_, int_buf);
-			//ostr.write(int_buf, 4);
-
-			uint32_t mdat_size = (uint32_t)size() + 8; // mdat box + embe box + this event message box
-			fmp4_write_uint32(mdat_size, int_buf);
-			ostr.write(int_buf, 4);
-			ostr.put('m');
-			ostr.put('d');
-			ostr.put('a');
-			ostr.put('t');
-
-			//ostr.write((char *)embe, 8);
-
-			// write the emsg as an mdat box
-			this->write(ostr);
-
-		}
-		return;
-	};
-
-	void write_embe(std::ostream &ostr, uint64_t timestamp_tfdt, uint32_t track_id, uint32_t duration_in)
-	{
-			// --- init mfhd
-			mfhd l_mfhd = {};
-			l_mfhd.seq_nr_ = 0;
-			uint64_t l_mfhd_size = l_mfhd.size();
-
-			//uint32_t l_announce = 8 * this->timescale_; // following the method of push input stream (i do not think this is correct)
-
-			// --- init tfhd
-			tfhd l_tfhd = {};
-			l_tfhd.magic_conf_ = 131106u;
-			l_tfhd.track_id_ = track_id;
-			l_tfhd.sample_description_index_ = 1u;
-			l_tfhd.default_sample_flags_ = 37748800u;
-			l_tfhd.default_sample_flags_ = 37748800u;
-			l_tfhd.base_data_offset_present_ = false;
-			l_tfhd.default_base_is_moof_ = true;
-			l_tfhd.duration_is_empty_ = false;
-			l_tfhd.sample_description_index_present_ = true;
-			l_tfhd.default_sample_duration_present_ = false;
-			l_tfhd.default_sample_flags_present_ = true;
-			l_tfhd.default_sample_size_present_ = false;
-			uint64_t l_tfhd_size = l_tfhd.size();
-
-			// --- init tfdt
-			tfdt l_tfdt = {};
-			l_tfdt.version_ = 1u;
-			l_tfdt.base_media_decode_time_ = timestamp_tfdt;
-			uint64_t l_tfdt_size = l_tfdt.size(); //
-
-												  // --- init trun
-			trun l_trun = {};
-			l_trun.magic_conf_ = 769u;
-			l_trun.sample_count_ = 1;
-			l_trun.data_offset_present_ = true;
-			l_trun.first_sample_flags_present_ = false;
-			l_trun.sample_duration_present_ = true;
-			l_trun.sample_size_present_ = true;
-			l_trun.sample_flags_present_ = false;
-			l_trun.sample_composition_time_offsets_present_ = false;
-
-			//-- init sentry in trun write 2 samples
-			l_trun.m_sentry.resize(1);
-			//l_trun.m_sentry[0].sample_size_ = 0;
-			//l_trun.m_sentry[0].sample_duration_ = 0; // presentation_time_delta_ ? this->presentation_time_delta_ : (presentation_time_ - timestamp_tfdt);
-			l_trun.m_sentry[0].sample_size_ = (uint32_t)8u;
-			l_trun.m_sentry[0].sample_duration_ = duration_in;
-
-
-			//--- initialize the box sizes
-			uint64_t l_trun_size = l_trun.size();
-			uint64_t l_traf_size = 8 + l_trun_size + l_tfdt_size + l_tfhd_size;
-			uint64_t l_moof_size = 8 + l_traf_size + l_mfhd_size; // l_traf_size + 8 + l_mfhd_size;
-			l_trun.data_offset_ = (int32_t)l_moof_size + 8;
-
-			// write the fragment 
-			char int_buf[4];
-			char long_buf[8];
-
-			//--- write the sparse fragment to a file stream
-			// write 4 bytes
-			fmp4_write_uint32((uint32_t)l_moof_size, int_buf);
-			ostr.write(int_buf, 4);
-			// write 4 bytes, total 8 bytes
-			ostr.put('m');
-			ostr.put('o');
-			ostr.put('o');
-			ostr.put('f');
-			// write 16 bytes total 24 bytes
-			fmp4_write_uint32((uint32_t)l_mfhd_size, int_buf);
-			ostr.write(int_buf, 4);
-			//ostr->write("mfhd", 4);
-			ostr.put('m');
-			ostr.put('f');
-			ostr.put('h');
-			ostr.put('d');
-			fmp4_write_uint32((uint32_t)0u, int_buf);
-			ostr.write(int_buf, 4);
-			fmp4_write_uint32((uint32_t)track_id, int_buf);
-			ostr.write(int_buf, 4);
-
-			// write traf 8 bytes total 32 bytes
-			fmp4_write_uint32((uint32_t)l_traf_size, int_buf);
-			ostr.write(int_buf, 4);
-			//ostr->write("traf", 4);
-			ostr.put('t');
-			ostr.put('r');
-			ostr.put('a');
-			ostr.put('f');
-
-			// write tfhd 24 bytes total 56 bytes
-			fmp4_write_uint32((uint32_t)l_tfhd_size, int_buf);
-			ostr.write(int_buf, 4);
-			//ostr->write("tfhd", 4);
-			ostr.put('t');
-			ostr.put('f');
-			ostr.put('h');
-			ostr.put('d');
-
-			fmp4_write_uint32((uint32_t)l_tfhd.magic_conf_, int_buf);
-			ostr.write(int_buf, 4);
-			fmp4_write_uint32((uint32_t)l_tfhd.track_id_, int_buf);
-			ostr.write(int_buf, 4);
-			fmp4_write_uint32((uint32_t)l_tfhd.sample_description_index_, int_buf);
-			ostr.write(int_buf, 4);
-			fmp4_write_uint32((uint32_t)l_tfhd.default_sample_flags_, int_buf);
-			ostr.write(int_buf, 4);
-
-			// write tfdt 20 bytes total 76 bytes
-			fmp4_write_uint32((uint32_t)l_tfdt_size, int_buf);
-			ostr.write(int_buf, 4);
-			ostr.put('t');
-			ostr.put('f');
-			ostr.put('d');
-			ostr.put('t');
-			ostr.put(1u); // version
-			ostr.put(0u);
-			ostr.put(0u);
-			ostr.put(0u);
-			fmp4_write_uint64((uint64_t)l_tfdt.base_media_decode_time_, long_buf);
-			ostr.write(long_buf, 8);
-
-			fmp4_write_uint32((uint32_t)l_trun_size, int_buf);
-			ostr.write(int_buf, 4);
-			//ostr->write("trun", 4);
-			ostr.put('t');
-			ostr.put('r');
-			ostr.put('u');
-			ostr.put('n');
-			fmp4_write_uint32((uint32_t)l_trun.magic_conf_, int_buf);
-			ostr.write(int_buf, 4);
-			fmp4_write_uint32((uint32_t)l_trun.sample_count_, int_buf);
-			ostr.write(int_buf, 4);
-			fmp4_write_uint32((uint32_t)l_trun.data_offset_, int_buf);
-			ostr.write(int_buf, 4);
-
-			// write the duration and the sample size
-			fmp4_write_uint32((uint32_t)l_trun.m_sentry[0].sample_duration_, int_buf);
-			ostr.write(int_buf, 4);
-			fmp4_write_uint32((uint32_t)l_trun.m_sentry[0].sample_size_, int_buf);
-			ostr.write(int_buf, 4);
-
-			uint32_t mdat_size = 16; // mdat box + embe box + this event message box
-			fmp4_write_uint32(mdat_size, int_buf);
-			ostr.write(int_buf, 4);
-			ostr.put('m');
-			ostr.put('d');
-			ostr.put('a');
-			ostr.put('t');
-
-			ostr.write((char *)embe, 8);
-
-		return;
-	};
-
-	void write_multiple_emsg_as_fmp4_fragment(std::ostream &out, std::vector<emsg> in_emsg, uint64_t tfdt, uint32_t track_id, uint64_t next_tfdt, uint8_t target_version)
-	{
-
 	}
 
 	// todo fix this code to be more generic
@@ -1259,8 +854,9 @@ namespace fmp4_stream
 	//
 	void media_fragment::print() const
 	{
-		if (emsg_.scheme_id_uri_.size() && !this->e_msg_is_in_mdat_)
-			emsg_.print();
+		for(int i=0;i<emsg_.size();i++)
+		    if (emsg_[i].scheme_id_uri_.size() && !this->e_msg_is_in_mdat_)
+			   emsg_[i].print();
 
 		moof_box_.print(); // moof box size
 		mfhd_.print(); // moof box header
@@ -1269,8 +865,9 @@ namespace fmp4_stream
 		trun_.print(); // trun box
 		mdat_box_.print(); // mdat 
 
-		if (emsg_.scheme_id_uri_.size() && this->e_msg_is_in_mdat_)
-			emsg_.print();
+		for (int i = 0; i<emsg_.size(); i++)
+		    if (emsg_[i].scheme_id_uri_.size() && this->e_msg_is_in_mdat_)
+			    emsg_[i].print();
 	}
 
 	// parse an fmp4 file for media ingest
@@ -1289,10 +886,7 @@ namespace fmp4_stream
 						ingest_boxes.push_back(b);
 					else  // break when we have boxes of size zero
 						break;
-					//if (b.m_btype.compare("moov") == 0)
-					//	for (long k = 0; k < b.m_box_data.size; k++)
-					//		putchar(b.m_box_data[0]);
-					// we use the mfra to quit, hence we assume mfra box at the end of the file
+
 					if (b.box_type_.compare("mfra") == 0)
 						break;
 				}
@@ -1322,7 +916,9 @@ namespace fmp4_stream
 						// see if there is an emsg before
 						if (prev_box->box_type_.compare("emsg") == 0)
 						{
-							m.emsg_.parse((char *)& prev_box->box_data_[0], (unsigned int)prev_box->box_data_.size());
+							emsg e;
+							e.parse((char *)& prev_box->box_data_[0], (unsigned int)prev_box->box_data_.size());
+							m.emsg_.push_back(e);
 							//cout << "|emsg|";
 							std::cout << "found inband dash emsg box" << std::endl;
 						}
@@ -1357,7 +953,9 @@ namespace fmp4_stream
 
 									if (enc_box_name.compare("emsg") == 0) // right now we can only parse a single emsg, todo update to parse multiple emsg
 									{
-										m.emsg_.parse((char *)&m.mdat_box_.box_data_[index], (unsigned int)l_size);
+										emsg e = {};
+										e.parse((char *)&m.mdat_box_.box_data_[index], (unsigned int)l_size);
+										m.emsg_.push_back(e);
 										m.e_msg_is_in_mdat_ = true;
 										index += l_size;
 										continue;
@@ -1407,31 +1005,53 @@ namespace fmp4_stream
 	}
 
 	// archival function, write init segment to a file
-	int ingest_stream::write_init_to_file(std::string &ofile, unsigned int nfrags)
+	int ingest_stream::write_init_to_file(std::string &ofile, unsigned int nfrags, bool write_sep_files)
 	{
 		// write the stream to an output file
-		std::ofstream out_file(ofile, std::ofstream::binary);
+		if (!write_sep_files) {
+			std::ofstream out_file(ofile, std::ofstream::binary);
 
-		if (out_file.good())
+			if (out_file.good())
+			{
+				std::vector<uint8_t> init_data;
+				get_init_segment_data(init_data);
+				out_file.write((char *)init_data.data(), init_data.size());
+				for (unsigned int k = 0; k < nfrags; k++) {
+					if (k < media_fragment_.size()) {
+						init_data.clear();
+						get_media_segment_data(k, init_data);
+						out_file.write((char *)init_data.data(), init_data.size());
+					}
+				}
+				out_file.close();
+				std::cout << " done written init segment to file: " << ofile << std::endl;
+			}
+			else
+			{
+				std::cout << " error writing stream to file " << std::endl;
+			}
+		}
+		else 
 		{
 			std::vector<uint8_t> init_data;
 			get_init_segment_data(init_data);
-			out_file.write((char *)init_data.data(), init_data.size());
-			for (unsigned int k = 0; k < nfrags; k++) {
-				if (k < media_fragment_.size()) {
-					init_data.clear();
-					get_media_segment_data(k, init_data);
+			const unsigned int chunk_count=4;
+			for (unsigned int k = 0; k < nfrags; k+=chunk_count) 
+			{
+				std::ofstream out_file( std::to_string(k/chunk_count) + "_" + ofile, std::ofstream::binary);
+				std::vector<uint8_t> segment_data;
+				if (out_file.good())
+				{
 					out_file.write((char *)init_data.data(), init_data.size());
+					for (unsigned int i = 0; i < chunk_count; i++) {
+						segment_data.clear();
+						get_media_segment_data(k*chunk_count + i, segment_data);
+						out_file.write((char *)segment_data.data(), segment_data.size());
+					}
+					out_file.close();
 				}
 			}
-			out_file.close();
-			std::cout << " done written init segment to file: " << ofile << std::endl;
 		}
-		else
-		{
-			std::cout << " error writing stream to file " << std::endl;
-		}
-
 		return 0;
 	}
 
@@ -1439,6 +1059,7 @@ namespace fmp4_stream
 	bool set_track_id(std::vector<uint8_t> &moov_in, uint32_t track_id)
 	{
 		bool set_tkhd = false;
+
 		for (std::size_t k = 0; k < moov_in.size() - 16; k++)
 		{
 			if (std::string((char *)&moov_in[k]).compare("tkhd") == 0)
@@ -1475,256 +1096,11 @@ namespace fmp4_stream
 		return true;
 	}
 
-	// carefull only use with the tested pre-encoded moov boxes to write streams and update the urn in them
-	void set_scheme_id_uri(std::vector<uint8_t> &moov_in, const std::string& urn)
-	{
-		int32_t size_diff = 0;
-
-		std::vector<uint8_t> l_first;
-		std::vector<uint8_t> l_last;
-
-		// find the uri box containing the description of the urn, caerfull only use for the enclosed mdat box in the source code
-		for (std::size_t k = 0; k < moov_in.size() - 16; k++)
-		{
-			if (std::string((char *)&moov_in[k]).compare("urim") == 0)
-			{
-				//cout << "urim box found" << endl;
-				std::string or_urn = std::string((char *)&moov_in[k + 24]);
-				size_diff = (int32_t)(or_urn.size() - urn.size());
-
-				if (size_diff == 0)
-				{
-					for (std::size_t l = 0; l < urn.size(); l++)
-						moov_in[k + 24 + l] = urn[l];
-				}
-				else
-				{
-					// first part of the string
-					l_first = std::vector<uint8_t>(moov_in.begin(), moov_in.begin() + k + 24);
-					// last part of the string
-					l_last = std::vector<uint8_t>(moov_in.begin() + k + 24 + or_urn.size() + 1, moov_in.end());
-				}
-				break;
-			}
-		}
-
-		// new string representing the moov_box 
-		if (size_diff != 0)
-		{
-			// cout << "scheme size difference is: " << size_diff << endl;
-
-			moov_in.resize(l_first.size());
-			moov_in.reserve(moov_in.size() + urn.size() + l_last.size() + 1);
-
-			for (std::size_t i = 0; i < urn.size(); i++)
-				moov_in.push_back(urn[i]);
-			moov_in.push_back('\0');
-			for (std::size_t i = 0; i < l_last.size(); i++)
-				moov_in.push_back(l_last[i]);
-
-			for (std::size_t i = 0; i < moov_in.size(); i++)
-			{
-				if (std::string((char *)&moov_in[i]).compare("stsd") == 0)
-				{
-					uint32_t or_size = fmp4_read_uint32((char *)&moov_in[i - 4]);
-					or_size = (uint32_t)(or_size - size_diff);
-					fmp4_write_uint32(or_size, (char *)&moov_in[i - 4]);
-				}
-				if (std::string((char *)&moov_in[i]).compare("stbl") == 0)
-				{
-					uint32_t or_size = fmp4_read_uint32((char *)&moov_in[i - 4]);
-					or_size = (uint32_t)(or_size - size_diff);
-					fmp4_write_uint32(or_size, (char *)&moov_in[i - 4]);
-				}
-				if (std::string((char *)&moov_in[i]).compare("uri ") == 0)
-				{
-					uint32_t or_size = fmp4_read_uint32((char *)&moov_in[i - 4]);
-					or_size = (uint32_t)(or_size - size_diff);
-					fmp4_write_uint32(or_size, (char *)&moov_in[i - 4]);
-				}
-				if (std::string((char *)&moov_in[i]).compare("urim") == 0)
-				{
-					uint32_t or_size = fmp4_read_uint32((char *)&moov_in[i - 4]);
-					or_size = (uint32_t)(or_size - size_diff);
-					fmp4_write_uint32(or_size, (char *)&moov_in[i - 4]);
-				}
-				if (std::string((char *)&moov_in[i]).compare("minf") == 0)
-				{
-					uint32_t or_size = fmp4_read_uint32((char *)&moov_in[i - 4]);
-					or_size = (uint32_t)(or_size - size_diff);
-					fmp4_write_uint32(or_size, (char *)&moov_in[i - 4]);
-				}
-				if (std::string((char *)&moov_in[i]).compare("mdia") == 0)
-				{
-					uint32_t or_size = fmp4_read_uint32((char *)&moov_in[i - 4]);
-					or_size = (uint32_t)(or_size - size_diff);
-					fmp4_write_uint32(or_size, (char *)&moov_in[i - 4]);
-				}
-				if (std::string((char *)&moov_in[i]).compare("trak") == 0)
-				{
-					uint32_t or_size = fmp4_read_uint32((char *)&moov_in[i - 4]);
-					or_size = (uint32_t)(or_size - size_diff);
-					fmp4_write_uint32(or_size, (char *)&moov_in[i - 4]);
-				}
-				if (std::string((char *)&moov_in[i]).compare("moov") == 0)
-				{
-					uint32_t or_size = fmp4_read_uint32((char *)&moov_in[i - 4]);
-					or_size = (uint32_t)(or_size - size_diff);
-					fmp4_write_uint32(or_size, (char *)&moov_in[i - 4]);
-				}
-			}
-		}
-	};
-
-	bool get_sparse_moov(const std::string& urn, uint32_t timescale, uint32_t track_id, std::vector<uint8_t> &sparse_moov)
-	{
-		sparse_moov = base64_decode(moov_64_enc);
-		set_track_id(sparse_moov, track_id);
-		if (urn.size())
-			set_scheme_id_uri(sparse_moov, urn);
-
-		// write back the timescale mvhd
-		fmp4_write_uint32(timescale, (char *)&sparse_moov[28]);
-
-		// mdhd 
-		fmp4_write_uint32(timescale, (char *)&sparse_moov[244]);
-
-		return true;
-	};
-
-	void emsg::convert_emsg_to_sparse_fragment(std::vector<uint8_t> &sparse_frag_out, uint64_t tfdt, uint32_t track_id, uint32_t timescale,  uint8_t target_emsg_version)
-	{
-		std::ostringstream res(std::ios::binary);
-		sparse_frag_out.clear();
-		this->write_emsg_as_fmp4_fragment(res, tfdt, track_id, tfdt + 4 * timescale_, 0);
-		std::string r = res.str();
-		for (int i = 0; i < r.size(); i++)
-			sparse_frag_out.push_back(r[i]);
-		return;
-	};
-
-	// writes sparse emsg file, set the track, the scheme
-	int ingest_stream::write_to_sparse_emsg_file(const std::string& out_file,
-		uint32_t track_id, uint64_t pt_off_start, uint64_t pt_off_end, const std::string& urn, uint32_t timescale, uint8_t target_emsg_version)
-	{
-		//ifstream moov_s_in("sparse_moov.inc", ios::binary);
-
-		std::vector<uint8_t> sparse_moov = base64_decode(moov_64_enc);
-		set_track_id(sparse_moov, track_id);
-		if (urn.size())
-			set_scheme_id_uri(sparse_moov, urn);
-
-		// write back the timescale mvhd
-		fmp4_write_uint32(timescale, (char *)&sparse_moov[28]);
-
-		// mdhd 
-		fmp4_write_uint32(timescale, (char *)&sparse_moov[244]);
-
-		std::ofstream ot(out_file, std::ios::binary);
-		//cout << sparse_moov.size() << endl;
-
-		if (ot.good())
-		{
-			// write the ftyp header
-			ot.write((char *)&sparse_ftyp[0], 20);
-			ot.write((const char *)&sparse_moov[0], sparse_moov.size());
-			uint64_t current_tfdt = 0;
-			// fill the start of  the track up to first emsg with embe to account for presentation time offset
-			auto it = this->media_fragment_.begin();
-			if ( it != this->media_fragment_.end())
-			{
-				current_tfdt = pt_off_start; 
-				while (current_tfdt + 2 * timescale < it->emsg_.presentation_time_)
-				{
-					write_embe(ot, current_tfdt, track_id, timescale * 2);
-					current_tfdt += timescale * 2;
-				}
-				if (current_tfdt < it->emsg_.presentation_time_)
-					write_embe(ot, current_tfdt, track_id, (uint32_t) (it->emsg_.presentation_time_ - current_tfdt));
-			}
-
-			// write each of the event messages as moof mdat combinations in sparse track 
-			for (auto it = this->media_fragment_.begin(); it != this->media_fragment_.end(); ++it)
-			{
-				//it->print();
-				if (it->emsg_.scheme_id_uri_.size())
-				{
-					uint64_t next_tfdt = 0;
-					//find the next tfdt 
-					if ((it + 1) != this->media_fragment_.end())
-						next_tfdt = (it + 1)->emsg_.presentation_time_;
-					//cout << " writing emsg fragment " << endl;
-					it->emsg_.write_emsg_as_fmp4_fragment(ot, it->emsg_.presentation_time_, track_id, next_tfdt, target_emsg_version);
-
-					current_tfdt = it->emsg_.presentation_time_ + it->emsg_.event_duration_;
-					while (current_tfdt + 2 * timescale < next_tfdt)
-					{
-						write_embe(ot, current_tfdt, track_id, timescale * 2);
-						current_tfdt += timescale * 2;
-					}
-					if (current_tfdt < next_tfdt)
-					    write_embe(ot,  current_tfdt, track_id, (uint32_t) (next_tfdt - current_tfdt));
-				}
-			}
-			// pad embe at end
-			if (pt_off_end > 0)
-			{
-				while (current_tfdt + 2 * timescale < pt_off_end)
-				{
-					write_embe(ot, current_tfdt, track_id, timescale * 2);
-					current_tfdt += timescale * 2;
-				}
-				if (current_tfdt < pt_off_end)
-					write_embe(ot, current_tfdt, track_id, (uint32_t) (it->emsg_.presentation_time_ - current_tfdt));
-			}
-			//ot.write((const char *)empty_mfra, 8);
-			ot.close();
-			std::cout << "*** wrote sparse track file: " << out_file << "  ***" << std::endl;
-		}
-		return 0;
-	};
-
-	//  
-	void ingest_stream::write_to_dash_event_stream(std::string &out_file)
-	{
-		std::ofstream ot(out_file);
 
 
-		if (ot.good()) {
+	
 
-			uint32_t time_scale = init_fragment_.get_time_scale();
-			std::string scheme_id_uri = "";
 
-			if (media_fragment_.size() > 0)
-				scheme_id_uri = media_fragment_[0].emsg_.scheme_id_uri_;
-
-			ot << "<EventStream " << std::endl;
-			if (scheme_id_uri.compare("urn:scte:scte35:2013:bin") == 0) // convert binary scte 214 to xml + bin
-			{
-				ot << "schemeIdUri=" << '"' << "urn:scte:scte35:2014:xml+bin" << '"' << std::endl;
-			}
-			else {
-				ot << "schemeIdUri=" << '"' << scheme_id_uri << '"' << std::endl;
-			}
-			ot << " timescale=" << '"' << time_scale << '"' << ">" << std::endl;
-
-			// write each of the event messages as moof mdat combinations in sparse track 
-			for (auto it = this->media_fragment_.begin(); it != this->media_fragment_.end(); ++it)
-			{
-				//it->print();
-				if (it->emsg_.scheme_id_uri_.size())
-				{
-					uint64_t l_presentation_time = it->emsg_.version_ ? it->emsg_.presentation_time_ : it->tfdt_.base_media_decode_time_ + it->emsg_.presentation_time_delta_;
-					it->emsg_.write_emsg_as_mpd_event(ot, it->tfdt_.base_media_decode_time_);
-				}
-			}
-
-			ot << "</EventStream> " << std::endl;
-		}
-		ot.close();
-	}
-
-	// dump the contents of the sparse track to screen
 	void ingest_stream::print() const
 	{
 		for (auto it = media_fragment_.begin(); it != media_fragment_.end(); it++)
