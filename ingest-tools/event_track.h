@@ -241,10 +241,12 @@ namespace event_track {
    {
 	    typedef std::map<uint32_t,event_track::DASHEventMessageBoxv1> emsg_stream;
 		std::map<std::string, emsg_stream> events_list_;
-
+		int print_samples_from_file(std::istream &infile, bool init_only);
 		int load_from_file(std::istream &infile, bool init_only);
 		void write_to_dash_event_stream(std::string &out_file);
    };
+
+
 
 	bool get_sparse_moov(const std::string& urn, 
 		          uint32_t timescale, uint32_t track_id, 
