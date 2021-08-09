@@ -1,7 +1,7 @@
 #define CATCH_CONFIG_MAIN  // This tells Catch to provide a main() - only do this in one cpp file
 #include "catch.hpp"
-#include "fmp4stream.h"
-#include "base64.h"
+#include "event_track/EventMessageTrackSamples/fmp4stream.h"
+#include "event_track/EventMessageTrackSamples/base64.h"
 
 // box types obtained from the test files in base64 encoded from  +++ tears-of-steel-avc1-400k.cmfv
 // box types

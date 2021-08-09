@@ -9,7 +9,7 @@ retrieve init fragment or CMAF header from fmp4 file
 
 ******************************************************************************/
 
-#include "fmp4stream.h"
+#include "event_track/EventMessageTrackSamples/fmp4stream.h"
 #include <iostream>
 #include <fstream>
 #include <exception>
@@ -17,7 +17,7 @@ retrieve init fragment or CMAF header from fmp4 file
 #include <memory>
 #include <chrono>
 #include <thread>
-#include <base64.h>
+#include <event_track/EventMessageTrackSamples/base64.h>
 
 using namespace fmp4_stream;
 using namespace std;
