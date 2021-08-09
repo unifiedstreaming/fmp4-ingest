@@ -9,7 +9,7 @@ Dump the contents of CMAF metadata including emsg content to cout
 
 ******************************************************************************/
 
-#include "event_track/EventMessageTrackSamples/fmp4stream.h"
+#include "event/fmp4stream.h"
 #include <iostream>
 #include <fstream>
 #include <exception>

@@ -6,7 +6,7 @@ http://www.code-shop.com
 CMAF ingest from stored CMAF files, emulates a live encoder posting CMAF content
 ******************************************************************************/
 
-#include "event_track/EventMessageTrackSamples/fmp4stream.h"
+#include "event/fmp4stream.h"
 #include "curl/curl.h"
 #include <iostream>
 #include <fstream>
@@ -17,7 +17,7 @@ CMAF ingest from stored CMAF files, emulates a live encoder posting CMAF content
 #include <cstring>
 #include <bitset>
 #include <iomanip>
-#include <event_track/EventMessageTrackSamples/base64.h>
+#include "event/base64.h"
 
 using namespace fmp4_stream;
 using namespace std;
