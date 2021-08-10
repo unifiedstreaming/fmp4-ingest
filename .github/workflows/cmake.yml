@@ -37,8 +37,8 @@ jobs:
       # Build your program with the given configuration
       run: cmake --build ${{github.workspace}}/ingest-tools/build --config ${{env.BUILD_TYPE}}
       
-    - name: show build folder
-      working-directory: ${{github.workspace}}/ingest-tools/build
+    - name: Show build folder
+      working-directory: ${{github.workspace}}/ingest-tools/build/ingest-tools/
       # Build your program with the given configuration
       run: ls -all
       
