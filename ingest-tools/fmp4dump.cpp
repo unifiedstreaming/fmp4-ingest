@@ -45,7 +45,7 @@ int main(int argc, char *argv[])
 		{
 			cout << " unknown error reading the file " << endl;
 		}
-		return 1;
+		return 0;
 	}
 	else 
 	{
