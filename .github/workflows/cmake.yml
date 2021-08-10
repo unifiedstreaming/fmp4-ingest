@@ -46,7 +46,7 @@ jobs:
       working-directory: ${{github.workspace}}/ingest-tools/build/ingest-tools/
       # Execute tests defined by the CMake configuration.  
       # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
-      run: ./unittest  
+      run: ./unittests  
       
     - name: Copy test file tos-096-750k.cmfv
       working-directory: ${{github.workspace}}/ingest-tools/
