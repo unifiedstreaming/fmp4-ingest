@@ -25,7 +25,7 @@ ingest_receiver_node.js: simple receiver based on node.js works with short runni
 - Retransmission of init fragment in case of failures
 - posting with timestamp offset (to be improved to time accurate, currently fragment accurate)
 - HTTPS, HTTP, AUTH, Client TLS certificates
-- sample cmaf and sparse track files added in test_files
+- sample CMAF and sparse track files added in test_files
 - ingest of timed text, audio and video
 
 ## Usage 
@@ -44,7 +44,7 @@ fmp4init in.cmfv
 
 ## Reference 
 
-see ingest-tools folder in this repository for source code of reference implementation of file based cmaf-ingest
+See ingest-tools folder in this repository for source code of reference implementation of file based cmaf-ingest
 
 a demo of ingesting cmaf content ot Unified origin using docker containers and docker compose can be found here: 
 
