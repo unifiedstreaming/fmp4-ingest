@@ -17,12 +17,18 @@ jobs:
     # cross-platform coverage.
     # See: https://docs.github.com/en/free-pro-team@latest/actions/learn-github-actions/managing-complex-workflows#using-a-build-matrix
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [10.x, 12.x, 14.x, 15.x]
 
     steps:
     - uses: actions/checkout@v2
       with:
          submodules: recursive
-
+         
+    - uses: actions/setup-node@v2
+      with:
+        node-version: ${{ matrix.node-version }}
       
     - name: Install curl lib
       run: |
@@ -63,7 +69,11 @@ jobs:
     - name: run fmp4dump with init segment
       working-directory: ${{github.workspace}}/ingest-tools/build/ingest-tools/
       run: ./fmp4dump out_init.cmfv
-      
+    
+    - name: Use Node.js ${{ matrix.node-version }}
+      working-directory: ${{github.workspace}}/ingest-tools/
+      run: node ingest_receiver_node.js
+    
     - name: run fmp4ingest with no arguments
       working-directory: ${{github.workspace}}/ingest-tools/build/ingest-tools/
       run: ./fmp4ingest 
