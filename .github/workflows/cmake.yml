@@ -58,7 +58,7 @@ jobs:
       working-directory: ${{github.workspace}}/ingest-tools/
       run: | 
          cp test_files/tos-096-750k.cmfv build/ingest-tools/test.cmfv
-         cp node ingest_receiver_node.js build/ingest-tools
+         cp ingest_receiver_node.js build/ingest-tools
       
     - name: run fmp4dump
       working-directory: ${{github.workspace}}/ingest-tools/build/ingest-tools/
