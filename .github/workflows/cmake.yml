@@ -17,18 +17,18 @@ jobs:
     # cross-platform coverage.
     # See: https://docs.github.com/en/free-pro-team@latest/actions/learn-github-actions/managing-complex-workflows#using-a-build-matrix
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        node-version: [10.x, 12.x, 14.x, 15.x]
+    #strategy:
+    #  matrix:
+    #    node-version: [10.x, 12.x, 14.x, 15.x]
 
     steps:
     - uses: actions/checkout@v2
       with:
          submodules: recursive
          
-    - uses: actions/setup-node@v2
-      with:
-        node-version: ${{ matrix.node-version }}
+    #- uses: actions/setup-node@v2
+    #  with:
+    #    node-version: ${{ matrix.node-version }}
       
     - name: Install curl lib
       run: |
