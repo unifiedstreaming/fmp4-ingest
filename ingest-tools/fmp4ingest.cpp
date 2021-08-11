@@ -71,7 +71,7 @@ struct push_options_t
 		: url_("http://localhost/live/video.isml/video.ism")
 		, realtime_(false)
 		, daemon_(false)
-		, loop_(true)
+		, loop_(false)
 		, wc_off_(false)
 		, wc_uri_("http://time.akamai.com")
 		, ism_offset_(0)
@@ -364,8 +364,14 @@ int push_thread(ingest_stream l_ingest_stream, push_options_t opt, string post_u
 				}
 			}
 
-			l_ingest_stream.patch_tfdt(opt.cmaf_presentation_duration_);
-			start_time = chrono::system_clock::now();
+			if (opt.loop_) {
+				l_ingest_stream.patch_tfdt(opt.cmaf_presentation_duration_);
+				start_time = chrono::system_clock::now();
+			}
+			else 
+			{
+				stop_all = true;
+			}
 		}
 
 
@@ -471,11 +477,9 @@ int main(int argc, char * argv[])
 		l_index++;
 	}
 
-	cout << " fmp4 and CMAF ingest, press q and enter to exit " << endl;
-	char c = '0';
-	while ((c = cin.get()) != 'q');
 
-	stop_all = true;
+	while (!stop_all);
+
 
 	for (auto& th : threads)
 		th->join();
