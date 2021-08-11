@@ -70,9 +70,9 @@ jobs:
       working-directory: ${{github.workspace}}/ingest-tools/build/ingest-tools/
       run: ./fmp4dump out_init.cmfv
     
-    - name: Use Node.js ${{ matrix.node-version }}
-      working-directory: ${{github.workspace}}/ingest-tools/
-      run: node ingest_receiver_node.js
+   # - name: Use Node.js ${{ matrix.node-version }}
+   #   working-directory: ${{github.workspace}}/ingest-tools/
+   #   run: node ingest_receiver_node.js
     
     - name: run fmp4ingest with no arguments
       working-directory: ${{github.workspace}}/ingest-tools/build/ingest-tools/
