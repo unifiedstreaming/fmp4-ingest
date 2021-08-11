@@ -26,12 +26,12 @@ const server = http.createServer(function(request, response) {
   {
 	
 	var url_parts = url.parse(request.url)
-    var path  = url_parts.pathname.split("/").join("_")
+    var path  = url_parts.pathname.split("/").join('')
 	//var index = path.search("Streams(");
 	var fn = path 
-	
-	if(fn.length > 10)
-	  fn=path.substring(10, path.length -1)
+    
+	fn=path.substring(8, path.length -1)
+	fn= "out_js_".concat(fn)
 	
 	//if(index > 0)
     //   fn    = path.substring(index, path.length -2)
@@ -62,7 +62,7 @@ const server = http.createServer(function(request, response) {
 	 
 	  is_frag = new Boolean((box == boxes[2]) ||(box == boxes[3]) || (box == boxes[4]) || (box == boxes[5]) || (box == boxes[6]))
 	  is_init = new Boolean((box == boxes[0]) || (box == boxes[1]) )
-	  console.log(box)
+	  
 	}
     
 	
@@ -72,6 +72,7 @@ const server = http.createServer(function(request, response) {
 		active_streams.set(path,"initialized") 
 	    // check that the body is a valid fmp4 fragment
 		// var buf = new Buffer(body, 'base64')
+		console.log("appending init segment!")
 	    fs.appendFile(fn, binary, null, function (err) 
 	    {
            //if (err) throw err;
@@ -82,7 +83,7 @@ const server = http.createServer(function(request, response) {
 	}
 	else if(active_streams.has(path) && is_frag )
 	{
-	
+	  console.log("appending media segment!")
 	  // check that the body is a valid fmp4 fragment
 	  fs.appendFile(fn, binary, null, function (err) 
 	  {
