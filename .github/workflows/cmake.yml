@@ -17,18 +17,18 @@ jobs:
     # cross-platform coverage.
     # See: https://docs.github.com/en/free-pro-team@latest/actions/learn-github-actions/managing-complex-workflows#using-a-build-matrix
     runs-on: ubuntu-latest
-    #strategy:
-    #  matrix:
-    #    node-version: [10.x, 12.x, 14.x, 15.x]
+    strategy:
+      matrix:
+        node-version: [15.x]
 
     steps:
     - uses: actions/checkout@v2
       with:
          submodules: recursive
          
-    #- uses: actions/setup-node@v2
-    #  with:
-    #    node-version: ${{ matrix.node-version }}
+    - uses: actions/setup-node@v2
+      with:
+         node-version: ${{ matrix.node-version }}
       
     - name: Install curl lib
       run: |
@@ -56,7 +56,9 @@ jobs:
       
     - name: Copy test file tos-096-750k.cmfv
       working-directory: ${{github.workspace}}/ingest-tools/
-      run: cp test_files/tos-096-750k.cmfv build/ingest-tools/test.cmfv
+      run: | 
+         cp test_files/tos-096-750k.cmfv build/ingest-tools/test.cmfv
+         cp node ingest_receiver_node.js build/ingest-tools
       
     - name: run fmp4dump
       working-directory: ${{github.workspace}}/ingest-tools/build/ingest-tools/
@@ -70,9 +72,11 @@ jobs:
       working-directory: ${{github.workspace}}/ingest-tools/build/ingest-tools/
       run: ./fmp4dump out_init.cmfv
     
-   # - name: Use Node.js ${{ matrix.node-version }}
-   #   working-directory: ${{github.workspace}}/ingest-tools/
-   #   run: node ingest_receiver_node.js
+    - name: Use Node.js ${{ matrix.node-version }}
+      working-directory: ${{github.workspace}}/ingest-tools/build/ingest-tools/
+      run: |
+           node ingest_receiver_node.js &
+           ./fmp4ingest -u 127.0.0.1:8080 test.cmfv
     
     - name: run fmp4ingest with no arguments
       working-directory: ${{github.workspace}}/ingest-tools/build/ingest-tools/
