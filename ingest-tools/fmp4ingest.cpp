@@ -353,8 +353,8 @@ int push_thread(ingest_stream l_ingest_stream, push_options_t opt, string post_u
 
 				}
 				else
-				{ // non real time just sleep for 500 seconds
-					std::this_thread::sleep_for(std::chrono::milliseconds(50));
+				{ // non real time just sleep for 10 milli seconds
+					std::this_thread::sleep_for(std::chrono::milliseconds(10));
 				}
 
 				//std::cout << " --- posting next segment ---- " << i << std::endl;
