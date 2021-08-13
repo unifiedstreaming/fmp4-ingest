@@ -23,15 +23,14 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+      with:
+         submodules: recursive
+     
          
     - uses: actions/setup-node@v2
       with:
          node-version: ${{ matrix.node-version }}
-    
-    - name: Install curl lib
-      working-directory: ${{github.workspace}}/ingest-tools/build/ingest-tools/
-      run: |
-        git clone https://github.com/unifiedstreaming/fmp4-ingest.git event
+  
     
     - name: Install curl lib
       run: |
