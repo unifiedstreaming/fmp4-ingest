@@ -24,32 +24,29 @@ const server = http.createServer(function(request, response) {
   
   if (request.method == 'POST') 
   {
-	
-	var url_parts = url.parse(request.url)
-    var path  = url_parts.pathname.split("/").join('')
-	//var index = path.search("Streams(");
-	var fn = path 
+     var url_parts = url.parse(request.url)
+     var path  = url_parts.pathname.split("/").join('')
+     //var index = path.search("Streams(");
+     var fn = path 
     
-	fn=path.substring(8, path.length -1)
-	fn= "out_js_".concat(fn)
-	
-	//if(index > 0)
-    //   fn    = path.substring(index, path.length -2)
+     fn=path.substring(8, path.length -1)
+     fn= "out_js_".concat(fn)
+
    
-    var body  = new Buffer('');
+     var body  = new Buffer('');
     
 	// 
-    request.on('data', function(chunk) 
-	{
+     request.on('data', function(chunk) 
+	 {
 	  if(body == '')
 	  {
 		  console.log('begin of request')  
 	  }
 	  chunks.push(Buffer.from(chunk, 'binary'));
-    });
+     });
 	
 	// end the node.js javascript
-    request.on('end', function() 
+     request.on('end', function() 
 	{
 	var box = ""
 	var is_frag = new Boolean(false); 
@@ -72,7 +69,7 @@ const server = http.createServer(function(request, response) {
 		active_streams.set(path,"initialized") 
 	    // check that the body is a valid fmp4 fragment
 		// var buf = new Buffer(body, 'base64')
-		console.log("appending init segment!")
+		console.log("|| Appending CMAF Header ! ")
 	    fs.appendFile(fn, binary, null, function (err) 
 	    {
            //if (err) throw err;
@@ -99,7 +96,7 @@ const server = http.createServer(function(request, response) {
 		if(!active_streams.has(path) && is_frag ) // fragment for non initialized stream
 		{
 		   response.writeHead(412, {'Content-Type': 'text/html'})
-           response.end('need init fragment or CMAF Header')  
+           response.end(' Need init segment or CMAF Header')  
 		}
 		else if(active_streams.has(path) && is_init) // duplicate init fragment not supported yet
 		{
@@ -107,10 +104,7 @@ const server = http.createServer(function(request, response) {
             response.end('duplicate CMAF Header or init fragment received')	
 		}
 	}   
-    
-	
     });
-
    }  
     // write the error message
 	request.on('error', (err) => {
