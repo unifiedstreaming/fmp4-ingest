@@ -478,9 +478,6 @@ int main(int argc, char * argv[])
 	}
 
 
-	while (!stop_all);
-
-
 	for (auto& th : threads)
 		th->join();
 }
