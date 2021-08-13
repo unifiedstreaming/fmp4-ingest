@@ -72,13 +72,17 @@ jobs:
       working-directory: ${{github.workspace}}/ingest-tools/build/ingest-tools/
       run: ./fmp4dump out_init.cmfv
     
-    - name: Use Node.js ${{ matrix.node-version }}
+    - name: Test ingest with node.js server and with node.js server version ${{ matrix.node-version }}
       working-directory: ${{github.workspace}}/ingest-tools/build/ingest-tools/
       run: |
            node ingest_receiver_node.js &
            ./fmp4ingest -u 127.0.0.1:8080 test.cmfv > log_out.txt
            ls -all 
            cmp --silent  test.cmfv out_js_test.cmfv && echo '### SUCCESS: Files Are Identical! ###' || echo '### WARNING: Files Are Different! ###'
+           ./fmp4dump test.cmfv > in.txt
+           ./fmp4dump out_js_test.cmfv > out.txt
+           diff in.txt out.txt
+           
     
     - name: run fmp4ingest with no arguments
       working-directory: ${{github.workspace}}/ingest-tools/build/ingest-tools/
