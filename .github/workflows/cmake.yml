@@ -76,7 +76,9 @@ jobs:
       working-directory: ${{github.workspace}}/ingest-tools/build/ingest-tools/
       run: |
            node ingest_receiver_node.js &
-           ./fmp4ingest -u 127.0.0.1:8080 test.cmfv
+           ./fmp4ingest -u 127.0.0.1:8080 test.cmfv > log_out.txt
+           ls -all 
+           cmp --silent  test.cmfv out_js_test.cmfv && echo '### SUCCESS: Files Are Identical! ###' || echo '### WARNING: Files Are Different! ###'
     
     - name: run fmp4ingest with no arguments
       working-directory: ${{github.workspace}}/ingest-tools/build/ingest-tools/
