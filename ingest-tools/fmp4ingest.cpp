@@ -7,6 +7,7 @@ CMAF ingest from stored CMAF files, emulates a live encoder posting CMAF content
 ******************************************************************************/
 
 #include "event/fmp4stream.h"
+#include "event/event_track.h"
 #include "curl/curl.h"
 #include <iostream>
 #include <fstream>
@@ -449,14 +450,22 @@ int main(int argc, char * argv[])
 	}
 	l_index = 0;
 
-	//if (opts.avail_)
-	//{
-	//	string post_url_string = opts.url_ + "/Streams(" + "emsg.cmfm" + ")";
-	//	string file_name = "emsg.cmfm";
-	//	// create the file
-	//	thread_ptr thread_n(new thread(push_thread, opts, post_url_string, file_name, 99, 1000));
-	//	threads.push_back(thread_n);
-	//}
+	if (opts.avail_)
+	{
+		string avail_track = "out_avail_track.cmfm";
+		string post_url_string = opts.url_ + "/Streams(" + "out_avail_track.cmfm" + ")";
+		
+		event_track::gen_avail_files((uint32_t ) (opts.cmaf_presentation_duration_ * 1000), 2000, opts.avail_dur_, opts.avail_);
+		ingest_stream l_ingest_stream; 
+		ifstream input_file_meta(avail_track, ifstream::binary);
+		l_ingest_stream.load_from_file(input_file_meta);
+		// create the file
+		thread_ptr thread_n(new thread(push_thread, l_ingest_stream, opts, post_url_string, avail_track));
+		threads.push_back(thread_n);
+
+		// delay the media threads compared to the timed metadata tracks
+		std::this_thread::sleep_for(std::chrono::milliseconds(4000));
+	}
 
 	for (auto it = opts.input_files_.begin(); it != opts.input_files_.end(); ++it)
 	{
