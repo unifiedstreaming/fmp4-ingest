@@ -72,7 +72,7 @@ struct push_options_t
 		: url_("http://localhost/live/video.isml/video.ism")
 		, realtime_(false)
 		, daemon_(false)
-		, loop_(false)
+		, loop_(0)
 		, wc_off_(false)
 		, wc_uri_("http://time.akamai.com")
 		, ism_offset_(0)
@@ -96,6 +96,7 @@ struct push_options_t
 		printf(
 			" [-u url]                       Publishing Point URL\n"
 			" [-r, --realtime]               Enable realtime mode\n"
+			" [-l, --loop]                   Enable looping arg1 + 1 times "
 			" [--wc_offset]                  (boolean )Add a wallclock time offset for converting VoD (0) asset to Live \n"
 			" [--ism_offset]                 insert a fixed value for hte wallclock time offset instead of using a remote time source uri"
 			" [--wc_uri]                     uri for fetching wall clock time default time.akamai.com \n"
@@ -122,7 +123,7 @@ struct push_options_t
 			{
 				string t(argv[i]);
 				if (t.compare("-u") == 0) { url_ = string(argv[++i]); continue; }
-				if (t.compare("-l") == 0 || t.compare("--loop") == 0) { loop_ = true; continue; }
+				if (t.compare("-l") == 0 || t.compare("--loop") == 0) { loop_ = atoi(argv[++i]); continue; }
 				if (t.compare("-r") == 0 || t.compare("--realtime") == 0) { realtime_ = true; continue; }
 				if (t.compare("--close_pp") == 0) { dont_close_ = false; continue; }
 				if (t.compare("--daemon") == 0) { daemon_ = true; continue; }
@@ -158,7 +159,7 @@ struct push_options_t
 	string url_;
 	bool realtime_;
 	bool daemon_;
-	bool loop_;
+	int loop_;
 	bool wc_off_;
 
 	uint64_t wc_time_start_;
@@ -365,9 +366,10 @@ int push_thread(ingest_stream l_ingest_stream, push_options_t opt, string post_u
 				}
 			}
 
-			if (opt.loop_) {
+			if (opt.loop_ > 0) {
 				l_ingest_stream.patch_tfdt(opt.cmaf_presentation_duration_);
 				start_time = chrono::system_clock::now();
+				opt.loop_--;
 			}
 			else 
 			{
