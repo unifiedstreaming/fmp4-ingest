@@ -68,7 +68,7 @@ jobs:
       
     - name: run fmp4Init to create init segment
       working-directory: ${{github.workspace}}/ingest-tools/build/ingest-tools/
-      run: ./fmp4Init test.cmfv out_init.cmfv
+      run: ./fmp4_init test.cmfv out_init.cmfv
       
     - name: run fmp4dump with init segment
       working-directory: ${{github.workspace}}/ingest-tools/build/ingest-tools/
