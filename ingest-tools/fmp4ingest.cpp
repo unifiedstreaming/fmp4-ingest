@@ -419,6 +419,7 @@ int main(int argc, char * argv[])
 	typedef vector<thread_ptr> threads_t;
 	threads_t threads;
 	int l_index = 0;
+	ingest_stream meta_ingest_stream; 
 
 	for (auto it = opts.input_files_.begin(); it != opts.input_files_.end(); ++it)
 	{
@@ -458,11 +459,11 @@ int main(int argc, char * argv[])
 		string post_url_string = opts.url_ + "/Streams(" + "out_avail_track.cmfm" + ")";
 		
 		event_track::gen_avail_files((uint32_t ) (opts.cmaf_presentation_duration_ * 1000), 2000, opts.avail_dur_, opts.avail_, (uint64_t) 1000 * opts.wc_time_start_);
-		ingest_stream l_ingest_stream; 
+		
 		ifstream input_file_meta(avail_track, ifstream::binary);
-		l_ingest_stream.load_from_file(input_file_meta);
+		meta_ingest_stream.load_from_file(input_file_meta);
 		// create the file
-		thread_ptr thread_n(new thread(push_thread, l_ingest_stream, opts, post_url_string, avail_track));
+		thread_ptr thread_n(new thread(push_thread, meta_ingest_stream, opts, post_url_string, avail_track));
 		threads.push_back(thread_n);
 
 		// delay the media threads compared to the timed metadata tracks
