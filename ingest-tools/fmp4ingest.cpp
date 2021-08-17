@@ -420,7 +420,6 @@ int main(int argc, char * argv[])
 	ingest_stream meta_ingest_stream; 
 	threads_t threads;
 	int l_index = 0;
-	ingest_stream meta_ingest_stream; 
 
 	for (auto it = opts.input_files_.begin(); it != opts.input_files_.end(); ++it)
 	{
