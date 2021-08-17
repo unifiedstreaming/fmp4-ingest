@@ -417,6 +417,7 @@ int main(int argc, char * argv[])
 	vector<ingest_stream> l_istreams(opts.input_files_.size());
 	typedef shared_ptr<thread> thread_ptr;
 	typedef vector<thread_ptr> threads_t;
+	ingest_stream meta_ingest_stream; 
 	threads_t threads;
 	int l_index = 0;
 
@@ -458,7 +459,7 @@ int main(int argc, char * argv[])
 		string post_url_string = opts.url_ + "/Streams(" + "out_avail_track.cmfm" + ")";
 		
 		event_track::gen_avail_files((uint32_t ) (opts.cmaf_presentation_duration_ * 1000), 2000, opts.avail_dur_, opts.avail_);
-		ingest_stream l_ingest_stream; 
+		
 		ifstream input_file_meta(avail_track, ifstream::binary);
 		l_ingest_stream.load_from_file(input_file_meta);
 		// create the file
