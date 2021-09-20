@@ -34,6 +34,7 @@ jobs:
     
     - name: Install curl lib
       run: |
+        sudo apt-get update
         sudo apt-get install libcurl4-openssl-dev
 
     - name: Configure CMake
