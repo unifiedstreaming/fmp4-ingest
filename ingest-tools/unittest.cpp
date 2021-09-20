@@ -36,6 +36,102 @@ char t2_tfhd_b64[] = "AAAAHHRmaGQAAgAqAAAAAQAAAAEAAAIAAQEAwA==";
 
 char emsg_b64[] = "AAAAWmVtc2cAAAAAdXJuOnNjdGU6c2N0ZTM1OjIwMTM6YmluAAAAADIAAAAAAAADkAAAAAMr/DAhAAAAAAAAAP/wEAUAAAMrf+9//gAaF7DAAAAAAADkYSQC";
 
+using namespace std;
+
+string get_path_from_template(
+	string &template_string,
+	string &file_name,
+	uint64_t time,
+	uint64_t number)
+{
+	string out_string;
+
+	const string number_str = "$Number$";
+	const string time_str = "$Time$";
+	const string rep_str = "$RepresentationID$";
+
+	string rep_name;
+
+	if (file_name.size() > 0)
+	{
+		size_t poss = file_name.find_last_of(".");
+		if (poss != std::string::npos)
+			rep_name = file_name.substr(0, poss);
+	}
+
+	size_t rep_pos = template_string.find_first_of(rep_str);
+
+	if (rep_pos != std::string::npos)
+	{
+		string b, c;
+
+		if (rep_pos != 0)
+			b = template_string.substr(0, rep_pos);
+
+		if (rep_pos + rep_str.size() < template_string.size())
+			c = template_string.substr(rep_pos + rep_str.size());
+
+		out_string = b + rep_name + c;
+	}
+
+	size_t time_pos = out_string.find(time_str);
+	size_t num_pos = out_string.find(number_str);
+
+	if (time_pos != std::string::npos)
+	{
+		string b, c;
+
+		if (time_pos != 0)
+			b = out_string.substr(0, time_pos);
+
+		if (time_pos + time_str.size() < out_string.size())
+			c = out_string.substr(time_pos + time_str.size());
+
+		out_string = b + std::to_string(time) + c;
+	}
+	else if (num_pos != std::string::npos)
+	{
+		string b, c;
+
+		if (num_pos != 0)
+			b = out_string.substr(0, num_pos);
+
+		if (num_pos + number_str.size() < out_string.size())
+			c = out_string.substr(num_pos + number_str.size());
+
+		out_string = b + std::to_string(number) + c;
+	}
+
+	return out_string;
+}
+
+TEST_CASE(" test create path from segmentTemplate")
+{
+	SECTION("number based from mediakind")
+	{
+		string init = "$RepresentationID$-init.m4s";
+		string media = "$RepresentationID$-0-I-$Number$.m4s";
+		string file_name = "test.cmfv";
+		string res = get_path_from_template(init, file_name, 0, 0);
+		string res1 = get_path_from_template(media, file_name, 0, 1);
+		
+		REQUIRE(res.compare("test-init.m4s") == 0);
+		REQUIRE(res1.compare("test-0-I-1.m4s") == 0);
+	}
+
+	SECTION("number based from mediakind")
+	{
+		string init = "$RepresentationID$/init.m4s";
+		string media = "$RepresentationID$/$Number$.m4s";
+		string file_name = "test.cmfv";
+		string res = get_path_from_template(init, file_name, 0, 0);
+		string res1 = get_path_from_template(media, file_name, 0, 1);
+
+		REQUIRE(res.compare("test/init.m4s") == 0);
+		REQUIRE(res1.compare("test/1.m4s") == 0);
+	}
+}
+
 
 TEST_CASE("test fmp4 stream support for box", "[fmp4_stream_box]") {
 

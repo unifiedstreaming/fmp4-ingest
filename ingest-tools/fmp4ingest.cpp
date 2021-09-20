@@ -96,14 +96,15 @@ struct push_options_t
 		printf(
 			" [-u url]                       Publishing Point URL\n"
 			" [-r, --realtime]               Enable realtime mode\n"
-			" [-l, --loop]                   Enable looping arg1 + 1 times "
+			" [-l, --loop]                   Enable looping arg1 + 1 times \n"
 			" [--wc_offset]                  (boolean )Add a wallclock time offset for converting VoD (0) asset to Live \n"
-			" [--ism_offset]                 insert a fixed value for hte wallclock time offset instead of using a remote time source uri"
+			" [--ism_offset]                 insert a fixed value for hte wallclock time offset instead of using a remote time source uri\n"
 			" [--wc_uri]                     uri for fetching wall clock time default time.akamai.com \n"
-			" [--close_pp]                   Close the publishing point at the end of stream or termination \n"
+			" [--initialization]             SegmentTemplate@initialization sets the relative path for init segments, shall include $RepresentationID$ \n"
+			" [--media]                      SegmentTemplate@media sets the relative path for media segments, shall include $RepresentationID$ and $Time$ or $Number$ \n"
 //			" [--chunked]                    Use chunked Transfer-Encoding for POST (long running post) otherwise short running per fragment post \n"
 			" [--avail]                      signal an advertisment slot every arg1 ms with duration of arg2 ms \n"
-			" [--dry_run]                    Do a dry run and write the output files to disk directly for checking file and box integrity"
+			" [--dry_run]                    Do a dry run and write the output files to disk directly for checking file and box integrity\n"
 			" [--announce]                   specify the number of seconds in advance to presenation time to send an avail"
 			" [--auth]                       Basic Auth Password \n"
 			" [--aname]                      Basic Auth User Name \n"
@@ -140,6 +141,8 @@ struct push_options_t
 				if (t.compare("--sslkey") == 0) { ssl_key_ = string(argv[++i]); continue; }
 				if (t.compare("--keypass") == 0) { ssl_key_pass_ = string(argv[++i]); continue; }
 				if (t.compare("--keypass") == 0) { basic_auth_ = string(argv[++i]); continue; }
+				if (t.compare("--media") == 0) { segmentTemplate_media_ = string(argv[++i]); continue; }
+				if (t.compare("--initialization") == 0) { segmentTemplate_init_ = string(argv[++i]); continue; }
 				input_files_.push_back(argv[i]);
 			}
 
@@ -157,6 +160,9 @@ struct push_options_t
 	}
 
 	string url_;
+	string segmentTemplate_media_;
+	string segmentTemplate_init_;
+
 	bool realtime_;
 	bool daemon_;
 	int loop_;
@@ -204,7 +210,79 @@ struct ingest_post_state_t
 	push_options_t *opt_;
 };
 
-int push_thread(ingest_stream l_ingest_stream, push_options_t opt, string post_url_string, std::string file_name)
+// generate segment name (init or media)
+// init shall not contain $Number$ or $Time$ 
+// media shall contain $Number$ or $Time$
+
+string get_path_from_template(
+	string &template_string,
+	string &file_name,
+	uint64_t time,
+	uint64_t number)
+{
+	string out_string;
+
+	const string number_str = "$Number$";
+	const string time_str = "$Time$";
+	const string rep_str = "$RepresentationID$";
+
+	string rep_name;
+
+	if (file_name.size() > 0)
+	{
+		size_t poss = file_name.find_last_of(".");
+		if (poss != std::string::npos)
+			rep_name = file_name.substr(0, poss);
+	}
+
+	size_t rep_pos = template_string.find_first_of(rep_str);
+
+	if (rep_pos != std::string::npos)
+	{
+		string b, c;
+
+		if (rep_pos != 0)
+			b = template_string.substr(0, rep_pos);
+
+		if (rep_pos + rep_str.size() < template_string.size())
+			c = template_string.substr(rep_pos + rep_str.size());
+
+		out_string = b + rep_name + c;
+	}
+
+	size_t time_pos = out_string.find(time_str);
+	size_t num_pos = out_string.find(number_str);
+
+	if (time_pos != std::string::npos)
+	{
+		string b, c;
+
+		if (time_pos != 0)
+			b = out_string.substr(0, time_pos);
+
+		if (time_pos + time_str.size() < out_string.size())
+			c = out_string.substr(time_pos + time_str.size());
+
+		out_string = b + std::to_string(time) + c;
+	}
+	else if (num_pos != std::string::npos)
+	{
+		string b, c;
+
+		if (num_pos != 0)
+			b = out_string.substr(0, num_pos);
+
+		if (num_pos + number_str.size() < out_string.size())
+			c = out_string.substr(num_pos + number_str.size());
+
+		out_string = b + std::to_string(number) + c;
+	}
+
+	return out_string;
+}
+
+int push_thread(ingest_stream l_ingest_stream, 
+	push_options_t opt, string post_url_string, std::string file_name)
 {
 	try
 	{
@@ -220,8 +298,18 @@ int push_thread(ingest_stream l_ingest_stream, push_options_t opt, string post_u
 		CURL * curl;
 		CURLcode res;
 		curl = curl_easy_init();
+		string post_init_url_string = post_url_string;
 
-		curl_easy_setopt(curl, CURLOPT_URL, post_url_string.c_str());
+		if (opt.segmentTemplate_init_.size())
+		{
+			post_init_url_string = opt.url_  + "/" + get_path_from_template(
+				opt.segmentTemplate_init_,
+				file_name,
+				0,
+				0);
+		}
+
+		curl_easy_setopt(curl, CURLOPT_URL, post_init_url_string.c_str());
 		curl_easy_setopt(curl, CURLOPT_POSTFIELDS, (char *)&init_seg_dat[0]);
 		curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, (long)init_seg_dat.size());
 
@@ -237,8 +325,10 @@ int push_thread(ingest_stream l_ingest_stream, push_options_t opt, string post_u
 
 		if (opt.ssl_cert_.size())
 			curl_easy_setopt(curl, CURLOPT_SSLCERT, opt.ssl_cert_.c_str());
+
 		if (opt.ssl_key_.size())
 			curl_easy_setopt(curl, CURLOPT_SSLKEY, opt.ssl_key_.c_str());
+
 		if (opt.ssl_key_pass_.size())
 			curl_easy_setopt(curl, CURLOPT_KEYPASSWD, opt.ssl_key_pass_.c_str());
 
@@ -282,6 +372,7 @@ int push_thread(ingest_stream l_ingest_stream, push_options_t opt, string post_u
 
 		struct curl_slist *chunk = NULL;
 		chrono::time_point<chrono::system_clock> start_time = chrono::system_clock::now();
+		
 		while (!stop_all)
 		{
 
@@ -289,8 +380,24 @@ int push_thread(ingest_stream l_ingest_stream, push_options_t opt, string post_u
 			{
 				vector<uint8_t> media_seg_dat;
 				uint64_t media_seg_size = l_ingest_stream.get_media_segment_data(i, media_seg_dat);
-
+			
 				if (!opt.dry_run_) {
+
+					if (opt.segmentTemplate_media_.size())
+					{
+						uint64_t l_time = l_ingest_stream.media_fragment_[i].tfdt_.base_media_decode_time_;
+
+						post_url_string = opt.url_ + "/" + get_path_from_template(
+							opt.segmentTemplate_media_,
+							file_name,
+							l_time,
+							i);
+					    
+						curl_easy_setopt(curl, CURLOPT_URL, post_url_string.data());
+						curl_easy_setopt(curl, CURLOPT_POST, 1);
+						curl_easy_setopt(curl, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_1);
+					}
+					
 					curl_easy_setopt(curl, CURLOPT_POSTFIELDS, (char *)&media_seg_dat[0]);
 					curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, (long)media_seg_dat.size());
 					res = curl_easy_perform(curl);
@@ -301,6 +408,10 @@ int push_thread(ingest_stream l_ingest_stream, push_options_t opt, string post_u
 						int retry_count = 0;
 						while (res != CURLE_OK)
 						{
+							curl_easy_setopt(curl, CURLOPT_URL, post_init_url_string.data());
+							curl_easy_setopt(curl, CURLOPT_POST, 1);
+							curl_easy_setopt(curl, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_1);
+
 							curl_easy_setopt(curl, CURLOPT_POSTFIELDS, (char *)&init_seg_dat[0]);
 							curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, (long)init_seg_dat.size());
 							res = curl_easy_perform(curl);
@@ -437,9 +548,7 @@ int main(int argc, char * argv[])
 
 		// patch the tfdt values with an offset time
 		if (opts.wc_off_)
-		{
 			l_ingest_stream.patch_tfdt(opts.wc_time_start_);
-		}
 
 		double l_duration = (double) l_ingest_stream.get_duration() / (double) l_ingest_stream.init_fragment_.get_time_scale();
 
