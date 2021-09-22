@@ -48,10 +48,10 @@ fmp4init in.cmfv
 
 fmp4dump in.cmfv  
 
-## New for DASH-IF ingest v1.1 distinct segment uri path based on segmentTemplate
+## New for DASH-IF ingest v1.1 distinct segment uri path based on SegmentTemplate
 
 In DASH-IF ingest v1.1. the (relative) paths of each segment may be determined 
-by the SegmentTemplate, in this update the SegmentTemplate@initialization 
+by the SegmentTemplate, in this case the SegmentTemplate@initialization 
 and SegmentTemplate@media are required to be identical for each SegmentTemplateElement.
 Further, each @initialization and @media shall contain the (sub-)string $Representation$. 
 The @media shall contain substring $Time$ or $Number$ (not both). 
@@ -68,5 +68,5 @@ based on python to generate rewrite rules:
 
 Python get_rewrite.py in.mpd  
 
-Will print the apache rewrite rules using mod rewrite to map this to /Streams() mapping. 
+Will print the Apache rewrite rules using mod_rewrite to map this to /Streams() mapping. 
 It is expected that such features will be supported natively in later releases.
