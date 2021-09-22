@@ -46,19 +46,19 @@ fmp4init in.cmfv
 
 In DASH-IF ingest v1.1. the (relative) paths of each segment may be determined 
 by the SegmentTemplate, in this update the SegmentTemplate@initialization 
-and SegmentTemplate@media are assumed to be identical for each SegmentTemplateElement.
-Further, each @initialization and @media shall contain the string $Representation$. 
-The @media shall contain $Time$ or $Number$ (not both). 
+and SegmentTemplate@media are required to be identical for each SegmentTemplateElement.
+Further, each @initialization and @media shall contain the (sub-)string $Representation$. 
+The @media shall contain substring $Time$ or $Number$ (not both). 
 This enables easy mapping of segment url to representations and back. 
 
-The @media and @initialization can be given as commandline arguments
+The @media and @initialization can be given as commandline arguments to fmp4ingest
 
 fmp4ingest --initialization $RepresentationID$-init.m4s --media $RepresentationID$-0-I-$Number$.m4s  -r -u http://localhost/pubpoint/channel1.isml 1.cmfv 2.cmfv 3.cmft 
 
 will use the naming scheme for the segments via the string from the SegmentTemplate. 
 
 Unified Origin does not support this naming natively, thus a script is included
-based on python to generate rewrite rules
+based on python to generate rewrite rules:
 
 Python get_rewrite.py in.mpd  
 
