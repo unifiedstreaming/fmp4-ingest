@@ -1,5 +1,5 @@
 # Alpine Dockerfile for building locally / pushing to Dockerhub
-FROM    alpine:3.12
+FROM    alpine:3.14
 
 # install dependencies
 RUN     buildDeps="bash-completion \
@@ -15,7 +15,7 @@ RUN     buildDeps="bash-completion \
 
 # Pull fmp4ingest-tools repo
 RUN     cd /root && \
-        git clone https://github.com/unifiedstreaming/fmp4-ingest.git  && \
+        git clone --recurse-submodules https://github.com/unifiedstreaming/fmp4-ingest.git  && \
         cd fmp4-ingest/ingest-tools && \
         cmake CMakeLists.txt && \
         make
