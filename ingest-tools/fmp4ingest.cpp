@@ -76,6 +76,7 @@ struct push_options_t
 		, wc_off_(false)
 		, wc_uri_("http://time.akamai.com")
 		, ism_offset_(0)
+		, ism_use_ms_(0)
 		, wc_time_start_(0)
 		, dont_close_(true)
 		, chunked_(false)
@@ -87,6 +88,7 @@ struct push_options_t
 		, avail_(0)
 		, avail_dur_(0)
 		, announce_(60.0)
+		,anchor_scale_(1)
 	{
 	}
 
@@ -97,8 +99,9 @@ struct push_options_t
 			" [-u url]                       Publishing Point URL\n"
 			" [-r, --realtime]               Enable realtime mode\n"
 			" [-l, --loop]                   Enable looping arg1 + 1 times \n"
-			" [--wc_offset]                  (boolean )Add a wallclock time offset for converting VoD (0) asset to Live \n"
-			" [--ism_offset]                 insert a fixed value for hte wallclock time offset instead of using a remote time source uri\n"
+			" [--wc_offset]                  (boolean )Add a wallclock time offset from time server for converting VoD (0) asset to Live \n"
+			" [--ism_offset]                 insert a fixed value for the wallclock time offset instead of using a remote time source uri\n"
+			" [--ism_use_ms]                 indicates that the ism_offset is given in milliseconds \n"
 			" [--wc_uri]                     uri for fetching wall clock time default time.akamai.com \n"
 			" [--initialization]             SegmentTemplate@initialization sets the relative path for init segments, shall include $RepresentationID$ \n"
 			" [--media]                      SegmentTemplate@media sets the relative path for media segments, shall include $RepresentationID$ and $Time$ or $Number$ \n"
@@ -131,6 +134,7 @@ struct push_options_t
 //				if (t.compare("--chunked") == 0) { chunked_ = true; continue; }
 				if (t.compare("--wc_offset") == 0) { wc_off_ = true; continue; }
 				if (t.compare("--ism_offset") == 0) { ism_offset_ = atol(argv[++i]); continue; }
+				if (t.compare("--ism_use_ms") == 0) { ism_use_ms_ = 1; anchor_scale_ = 1000; continue; }
 				if (t.compare("--dry_run") == 0) { dry_run_ = true; continue; }
 				if (t.compare("--wc_uri") == 0) { wc_uri_ = string(argv[++i]); continue; }
 				if (t.compare("--auth") == 0) { basic_auth_ = string(argv[++i]); continue; }
@@ -192,6 +196,8 @@ struct push_options_t
 	uint64_t avail_; // insert an avail every X milli seconds
 	uint64_t avail_dur_; // of duratoin Y milli seconds
 	uint64_t ism_offset_;
+	uint32_t ism_use_ms_;
+	uint32_t anchor_scale_;
 };
 
 struct ingest_post_state_t
@@ -478,7 +484,11 @@ int push_thread(ingest_stream l_ingest_stream,
 			}
 
 			if (opt.loop_ > 0) {
-				l_ingest_stream.patch_tfdt(opt.cmaf_presentation_duration_);
+				l_ingest_stream.patch_tfdt(
+					(uint64_t)opt.cmaf_presentation_duration_ \
+					* l_ingest_stream.init_fragment_.get_time_scale(), 
+					false
+				);
 				start_time = chrono::system_clock::now();
 				opt.loop_--;
 			}
@@ -548,8 +558,9 @@ int main(int argc, char * argv[])
 
 		// patch the tfdt values with an offset time
 		if (opts.wc_off_)
-			l_ingest_stream.patch_tfdt(opts.wc_time_start_);
+			l_ingest_stream.patch_tfdt(opts.wc_time_start_, true, opts.anchor_scale_);
 
+		
 		double l_duration = (double) l_ingest_stream.get_duration() / (double) l_ingest_stream.init_fragment_.get_time_scale();
 
 		if (l_duration > opts.cmaf_presentation_duration_) {
