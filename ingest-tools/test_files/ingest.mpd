@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- this is an ingest mpd fmp4 tools cannot generate it edit it manually for a test use case -->
+<!--  RepresentationID is the filename minus the file extension (1.cmfa) will 1 etc cmaf extensions required -->
+<!-- when running fmp4ingest give SegmentTemplate@initialization and SegmentTemplate@media as options -->
+<MPD
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns="urn:mpeg:dash:schema:mpd:2011"
+  xsi:schemaLocation="urn:mpeg:dash:schema:mpd:2011 http://standards.iso.org/ittf/PubliclyAvailableStandards/MPEG-DASH_schema_files/DASH-MPD.xsd"
+  type="static"
+  mediaPresentationDuration="PT12M13.936333S"
+  maxSegmentDuration="PT1S"
+  minBufferTime="PT10S"
+  availabilityStartTime="1970-01-01T00:00:00Z"
+  profiles="urn:mpeg:dash:profile:isoff-live:2011">
+  <Period
+    id="1"
+    >
+    <AdaptationSet
+      id="1"
+      group="1"
+      contentType="audio"
+      lang="en"
+      segmentAlignment="true"
+      audioSamplingRate="48000"
+      mimeType="audio/mp4"
+      codecs="mp4a.40.2"
+      startWithSAP="1">
+      <AudioChannelConfiguration
+        schemeIdUri="urn:mpeg:dash:23003:3:audio_channel_configuration:2011"
+        value="2" />
+      <Role schemeIdUri="urn:mpeg:dash:role:2011" value="main" />
+      <SegmentTemplate
+        timescale="48000"
+        initialization="ingest-$RepresentationID$.dash"
+        media="ingest-$RepresentationID$-$Time$.dash">
+        <SegmentTimeline>
+          <S t="0" d="45056" />
+          <S d="46080" r="762" />
+          <S d="24848" />
+        </SegmentTimeline>
+      </SegmentTemplate>
+      <Representation
+        id="tos-096s-128k"
+        bandwidth="128407">
+      </Representation>
+    </AdaptationSet>
+    <AdaptationSet
+      id="2"
+      group="3"
+      contentType="text"
+      lang="de"
+      mimeType="application/mp4"
+      codecs="wvtt"
+      startWithSAP="1">
+      <Role schemeIdUri="urn:mpeg:dash:role:2011" value="subtitle" />
+      <SegmentTemplate
+        timescale="1000"
+        initialization="ingest-$RepresentationID$.dash"
+        media="ingest-$RepresentationID$-$Time$.dash">
+        <SegmentTimeline>
+          <S t="0" d="960" r="762" />
+          <S d="520" />
+        </SegmentTimeline>
+      </SegmentTemplate>
+      <Representation
+        id="tos-de-096s"
+        bandwidth="1000">
+      </Representation>
+    </AdaptationSet>
+    <AdaptationSet
+      id="3"
+      group="3"
+      contentType="text"
+      lang="en"
+      mimeType="application/mp4"
+      codecs="wvtt"
+      startWithSAP="1">
+      <Role schemeIdUri="urn:mpeg:dash:role:2011" value="subtitle" />
+      <SegmentTemplate
+        timescale="1000"
+        initialization="ingest-$RepresentationID$.dash"
+        media="ingest-$RepresentationID$-$Time$.dash">
+        <SegmentTimeline>
+          <S t="0" d="960" r="762" />
+          <S d="520" />
+        </SegmentTimeline>
+      </SegmentTemplate>
+      <Representation
+        id="tos-en-096s"
+        bandwidth="1000">
+      </Representation>
+    </AdaptationSet>
+    <AdaptationSet
+      id="4"
+      group="3"
+      contentType="text"
+      lang="fr"
+      mimeType="application/mp4"
+      codecs="wvtt"
+      startWithSAP="1">
+      <Role schemeIdUri="urn:mpeg:dash:role:2011" value="subtitle" />
+      <SegmentTemplate
+        timescale="1000"
+        initialization="ingest-$RepresentationID$.dash"
+        media="ingest-$RepresentationID$-$Time$.dash">
+        <SegmentTimeline>
+          <S t="0" d="960" r="762" />
+          <S d="520" />
+        </SegmentTimeline>
+      </SegmentTemplate>
+      <Representation
+        id="tos-fra-096s"
+        bandwidth="1000">
+      </Representation>
+    </AdaptationSet>
+    <AdaptationSet
+      id="5"
+      group="3"
+      contentType="text"
+      lang="es"
+      mimeType="application/mp4"
+      codecs="wvtt"
+      startWithSAP="1">
+      <Role schemeIdUri="urn:mpeg:dash:role:2011" value="subtitle" />
+      <SegmentTemplate
+        timescale="1000"
+        initialization="ingest-$RepresentationID$.dash"
+        media="ingest-$RepresentationID$-$Time$.dash">
+        <SegmentTimeline>
+          <S t="0" d="960" r="762" />
+          <S d="520" />
+        </SegmentTimeline>
+      </SegmentTemplate>
+      <Representation
+        id="tos-es-096s"
+        bandwidth="1000">
+      </Representation>
+    </AdaptationSet>
+    <AdaptationSet
+      id="6"
+      group="2"
+      contentType="video"
+      lang="en"
+      par="56:25"
+      minBandwidth="406000"
+      maxBandwidth="768000"
+      maxWidth="448"
+      maxHeight="200"
+      segmentAlignment="true"
+      sar="1:1"
+      mimeType="video/mp4"
+      codecs="avc1.64001F"
+      startWithSAP="1">
+      <Role schemeIdUri="urn:mpeg:dash:role:2011" value="main" />
+      <SegmentTemplate
+        timescale="12800"
+        initialization="ingest-$RepresentationID$.dash"
+        media="ingest-$RepresentationID$-$Time$.dash">
+        <SegmentTimeline>
+          <S t="0" d="12288" r="763" />
+          <S d="7168" />
+        </SegmentTimeline>
+      </SegmentTemplate>
+      <Representation
+        id="tos-096-400k"
+        bandwidth="406000"
+        width="224"
+        height="100"
+        scanType="progressive">
+      </Representation>
+      <Representation
+        id="tos-096-750k"
+        bandwidth="768000"
+        width="448"
+        height="200"
+        scanType="progressive">
+      </Representation>
+    </AdaptationSet>
+  </Period>
+</MPD>

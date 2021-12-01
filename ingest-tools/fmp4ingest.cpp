@@ -219,7 +219,7 @@ struct ingest_post_state_t
 // generate segment name (init or media)
 // init shall not contain $Number$ or $Time$ 
 // media shall contain $Number$ or $Time$
-
+// $RepresentationID$ is filename minus the file extension
 string get_path_from_template(
 	string &template_string,
 	string &file_name,
@@ -285,6 +285,109 @@ string get_path_from_template(
 	}
 
 	return out_string;
+}
+
+int push_mpd_thread(
+	push_options_t opt, 
+	string post_url_string, 
+	std::string file_name)
+{
+	try
+	{
+		/* open the mpd file and store the bytes*/
+		// mpd_bytes = ......
+		string mpdbytes;
+		try {
+			ifstream mpdfile = ifstream(file_name);
+			char c = 'i';
+
+			while (mpdfile.good() && (c != EOF))
+			{
+				mpdfile.get(c);
+				if (c != EOF)
+					mpdbytes.push_back(c);
+			}
+
+			// add optional validation step ?
+
+			mpdfile.close();
+		}
+		catch (...) 
+		{
+			std::cout << "error loading mpd, mpd thread not started" << std::endl;
+			return 1;
+		}
+
+		// todo add a validation step
+		if (mpdbytes.size() < 2) 
+		{
+			std::cout << "error loading mpd, mpd thread not started" << std::endl;
+			return 1;
+		}
+
+		while (!stop_all)
+		{
+			// setup curl
+			CURL* curl;
+			CURLcode res;
+			curl = curl_easy_init();
+
+			curl_easy_setopt(curl, CURLOPT_URL, post_url_string.c_str());
+			curl_easy_setopt(curl, CURLOPT_POSTFIELDS, (char*)&mpdbytes[0]);
+			curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, (long)mpdbytes.size());
+
+			curl_easy_setopt(curl, CURLOPT_POST, 1);
+			curl_easy_setopt(curl, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_1);
+
+			curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
+			curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L);
+
+			if (opt.basic_auth_.size())
+			{
+				curl_easy_setopt(curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+				curl_easy_setopt(curl, CURLOPT_USERNAME, opt.basic_auth_name_.c_str());
+				curl_easy_setopt(curl, CURLOPT_USERPWD, opt.basic_auth_.c_str());
+			}
+
+			if (opt.ssl_cert_.size())
+				curl_easy_setopt(curl, CURLOPT_SSLCERT, opt.ssl_cert_.c_str());
+
+			if (opt.ssl_key_.size())
+				curl_easy_setopt(curl, CURLOPT_SSLKEY, opt.ssl_key_.c_str());
+
+			if (opt.ssl_key_pass_.size())
+				curl_easy_setopt(curl, CURLOPT_KEYPASSWD, opt.ssl_key_pass_.c_str());
+
+				if (!opt.dry_run_)
+				{
+					std::cout << "======= posting mpd =====" << std::endl;
+					std::cout << mpdbytes << std::endl;
+					std::cout << "======= end mpd =====" << std::endl;
+
+					res = curl_easy_perform(curl);
+
+					/* Check for errors */
+					if (res != CURLE_OK)
+					{
+						fprintf(stderr, "---- connection with server failed in mpd push thread  %s\n",
+							curl_easy_strerror(res));
+						curl_easy_cleanup(curl);
+					}
+					else
+					{
+						fprintf(stderr, "---- connection with server sucessfull %s\n",
+							curl_easy_strerror(res));
+					}
+				}
+			// send the mpd every 5 seconds 
+			std::this_thread::sleep_for(std::chrono::milliseconds(5000));
+			if (stop_all == true)
+				return 1;
+		}
+	}
+	catch(...)
+	{}
+	return 1;
 }
 
 int push_thread(ingest_stream l_ingest_stream, 
@@ -548,7 +651,7 @@ int main(int argc, char * argv[])
 
 		if (!input.good())
 		{
-			std::cout << "failed loading input file: [cmf[tavm]]" << string(*it) << endl;
+			std::cout << "failed loading input file: [cmf[tavm]]" << *it << endl;
 			push_options_t::print_options();
 			return 0;
 		}
@@ -563,7 +666,8 @@ int main(int argc, char * argv[])
 		
 		double l_duration = (double) l_ingest_stream.get_duration() / (double) l_ingest_stream.init_fragment_.get_time_scale();
 
-		if (l_duration > opts.cmaf_presentation_duration_) {
+		if (l_duration > opts.cmaf_presentation_duration_) 
+		{
 			opts.cmaf_presentation_duration_ = l_duration;
 			std::cout << "CMAF presentation duration updated to: " << l_duration << " seconds " << std::endl;
 		}
@@ -599,13 +703,20 @@ int main(int argc, char * argv[])
 		if(it->substr(it->find_last_of(".") + 1) == "cmfm")
         {
 			cout << "push thread: " << post_url_string << endl;
-		    thread_ptr thread_n(new thread(push_thread, l_istreams[l_index], opts, post_url_string, (string) *it));
+		    thread_ptr thread_n(new thread(push_thread, l_istreams[l_index], opts, post_url_string, *it));
 		    threads.push_back(thread_n);
         }
+		else if (it->substr(it->find_last_of(".") + 1) == "mpd")
+		{
+			cout << "push thread: " << post_url_string << endl;
+			string l_url = opts.url_ + '/' + *it;
+			thread_ptr thread_n(new thread(push_mpd_thread, opts, l_url, *it));
+			threads.push_back(thread_n);
+		}
 		else 
 		{
 			cout << "push thread: " << post_url_string << endl;
-			thread_ptr thread_n(new thread(push_thread, l_istreams[l_index], opts, post_url_string, (string) *it));
+			thread_ptr thread_n(new thread(push_thread, l_istreams[l_index], opts, post_url_string,  *it));
 			threads.push_back(thread_n);
 		}	
 		l_index++;
