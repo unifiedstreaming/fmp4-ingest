@@ -87,7 +87,6 @@ struct push_options_t
 		, cmaf_presentation_duration_(0)
 		, avail_(0)
 		, avail_dur_(0)
-		, announce_(60.0)
 		, anchor_scale_(1)
 	{
 	}
@@ -108,7 +107,6 @@ struct push_options_t
 //			" [--chunked]                    Use chunked Transfer-Encoding for POST (long running post) otherwise short running per fragment post \n"
 			" [--avail]                      signal an advertisment slot every arg1 ms with duration of arg2 ms \n"
 			" [--dry_run]                    Do a dry run and write the output files to disk directly for checking file and box integrity\n"
-			" [--announce]                   specify the number of seconds in advance to presenation time to send an avail"
 			" [--auth]                       Basic Auth Password \n"
 			" [--aname]                      Basic Auth User Name \n"
 			" [--sslcert]                    TLS 1.2 client certificate \n"
@@ -139,7 +137,6 @@ struct push_options_t
 				if (t.compare("--wc_uri") == 0) { wc_uri_ = string(argv[++i]); continue; }
 				if (t.compare("--auth") == 0) { basic_auth_ = string(argv[++i]); continue; }
 				if (t.compare("--avail") == 0) { avail_ = atoi(argv[++i]); avail_dur_= atoi(argv[++i]); continue; }
-				if (t.compare("--announce") == 0) { announce_ = atof(argv[++i]); continue; }
 				if (t.compare("--aname") == 0) { basic_auth_name_ = string(argv[++i]); continue; }
 				if (t.compare("--sslcert") == 0) { ssl_cert_ = string(argv[++i]); continue; }
 				if (t.compare("--sslkey") == 0) { ssl_key_ = string(argv[++i]); continue; }
@@ -189,7 +186,6 @@ struct push_options_t
 	string basic_auth_name_; // user name with basic auth
 	string basic_auth_; // password with basic auth
 
-	double announce_; // number of seconds to send an announce in advance
 	double cmaf_presentation_duration_;
 	vector<string> input_files_;
 
