@@ -69,7 +69,7 @@ int get_remote_sync_epoch(uint64_t *res_time, string &wc_uri_)
 struct push_options_t
 {
 	push_options_t()
-		: url_("http://localhost/live/video.isml/video.ism")
+		: url_("http://localhost/live/video.isml/")
 		, realtime_(false)
 		, daemon_(false)
 		, loop_(0)
@@ -88,7 +88,7 @@ struct push_options_t
 		, avail_(0)
 		, avail_dur_(0)
 		, announce_(60.0)
-		,anchor_scale_(1)
+		, anchor_scale_(1)
 	{
 	}
 
@@ -200,6 +200,7 @@ struct push_options_t
 	uint32_t anchor_scale_;
 };
 
+// is this still used ? this was used for the long running post
 struct ingest_post_state_t
 {
 	bool init_done_; // flag if init fragment was sent
@@ -287,6 +288,7 @@ string get_path_from_template(
 	return out_string;
 }
 
+// thread to push mpd every 5 seconds, not the mpd needs to be formatted correctly!
 int push_mpd_thread(
 	push_options_t opt, 
 	string post_url_string, 
@@ -399,7 +401,7 @@ int push_thread(ingest_stream l_ingest_stream,
 		l_ingest_stream.get_init_segment_data(init_seg_dat);
 
 	    std:string out_file = "o_" + file_name;
-		ofstream outf = std::ofstream(out_file, std::ios::binary);
+		ofstream outf = ofstream(out_file, std::ios::binary);
 		if (outf.good() && opt.dry_run_)
 			outf.write((char *)&init_seg_dat[0], init_seg_dat.size());
 
@@ -646,34 +648,38 @@ int main(int argc, char * argv[])
 	int l_index = 0;
 
 	for (auto it = opts.input_files_.begin(); it != opts.input_files_.end(); ++it)
-	{
-		ifstream input(*it, ifstream::binary);
+	{ 
+		// only consider the cmaf input files
+		if (! (it->substr(it->find_last_of(".") + 1) == "mpd")) {
 
-		if (!input.good())
-		{
-			std::cout << "failed loading input file: [cmf[tavm]]" << *it << endl;
-			push_options_t::print_options();
-			return 0;
+			ifstream input(*it, ifstream::binary);
+
+			if (!input.good())
+			{
+				std::cout << "failed loading input file: [cmf[tavm]]" << *it << endl;
+				push_options_t::print_options();
+				return 0;
+			}
+
+			ingest_stream& l_ingest_stream = l_istreams[l_index];
+			l_ingest_stream.load_from_file(input);
+
+			// patch the tfdt values with an offset time
+			if (opts.wc_off_)
+				l_ingest_stream.patch_tfdt(opts.wc_time_start_, true, opts.anchor_scale_);
+
+
+			double l_duration = (double)l_ingest_stream.get_duration() / (double)l_ingest_stream.init_fragment_.get_time_scale();
+
+			if (l_duration > opts.cmaf_presentation_duration_)
+			{
+				opts.cmaf_presentation_duration_ = l_duration;
+				std::cout << "CMAF presentation duration updated to: " << l_duration << " seconds " << std::endl;
+			}
+
+			l_index++;
+			input.close();
 		}
-
-		ingest_stream &l_ingest_stream = l_istreams[l_index];
-		l_ingest_stream.load_from_file(input);
-
-		// patch the tfdt values with an offset time
-		if (opts.wc_off_)
-			l_ingest_stream.patch_tfdt(opts.wc_time_start_, true, opts.anchor_scale_);
-
-		
-		double l_duration = (double) l_ingest_stream.get_duration() / (double) l_ingest_stream.init_fragment_.get_time_scale();
-
-		if (l_duration > opts.cmaf_presentation_duration_) 
-		{
-			opts.cmaf_presentation_duration_ = l_duration;
-			std::cout << "CMAF presentation duration updated to: " << l_duration << " seconds " << std::endl;
-		}
-
-		l_index++;
-		input.close();
 	}
 	l_index = 0;
 
@@ -683,8 +689,6 @@ int main(int argc, char * argv[])
 		string post_url_string = opts.url_ + "/Streams(" + "out_avail_track.cmfm" + ")";
 		
 		event_track::gen_avail_files((uint32_t ) (opts.cmaf_presentation_duration_ * 1000), 2000, opts.avail_dur_, opts.avail_, opts.wc_time_start_);
-
-		
 		ifstream input_file_meta(avail_track, ifstream::binary);
 		meta_ingest_stream.load_from_file(input_file_meta);
 		
@@ -698,30 +702,33 @@ int main(int argc, char * argv[])
 
 	for (auto it = opts.input_files_.begin(); it != opts.input_files_.end(); ++it)
 	{
-		string post_url_string = opts.url_ + "/Streams(" + *it + ")";
-
-		if(it->substr(it->find_last_of(".") + 1) == "cmfm")
-        {
-			cout << "push thread: " << post_url_string << endl;
-		    thread_ptr thread_n(new thread(push_thread, l_istreams[l_index], opts, post_url_string, *it));
-		    threads.push_back(thread_n);
-        }
-		else if (it->substr(it->find_last_of(".") + 1) == "mpd")
+		// only consider the cmaf input files
+		if (it->substr(it->find_last_of(".") + 1) == "mpd")
 		{
-			cout << "push thread: " << post_url_string << endl;
+			cout << "push thread for mpd pushing " << endl;
 			string l_url = opts.url_ + '/' + *it;
 			thread_ptr thread_n(new thread(push_mpd_thread, opts, l_url, *it));
 			threads.push_back(thread_n);
 		}
-		else 
-		{
-			cout << "push thread: " << post_url_string << endl;
-			thread_ptr thread_n(new thread(push_thread, l_istreams[l_index], opts, post_url_string,  *it));
-			threads.push_back(thread_n);
-		}	
-		l_index++;
-	}
+		else  {
 
+			string post_url_string = opts.url_ + "/Streams(" + *it + ")";
+
+			if (it->substr(it->find_last_of(".") + 1) == "cmfm")
+			{
+				cout << "push thread: " << post_url_string << endl;
+				thread_ptr thread_n(new thread(push_thread, l_istreams[l_index], opts, post_url_string, *it));
+				threads.push_back(thread_n);
+			}
+			else
+			{
+				cout << "push thread: " << post_url_string << endl;
+				thread_ptr thread_n(new thread(push_thread, l_istreams[l_index], opts, post_url_string, *it));
+				threads.push_back(thread_n);
+			}
+			l_index++;
+		}	
+	}
 
 	for (auto& th : threads)
 		th->join();
