@@ -125,6 +125,7 @@ struct push_options_t
 		{
 			for (int i = 1; i < argc; i++)
 			{
+				char* pEnd;
 				string t(argv[i]);
 				if (t.compare("-u") == 0) { url_ = string(argv[++i]); continue; }
 				if (t.compare("-l") == 0 || t.compare("--loop") == 0) { loop_ = atoi(argv[++i]); continue; }
@@ -133,12 +134,12 @@ struct push_options_t
 				if (t.compare("--daemon") == 0) { daemon_ = true; continue; }
 //				if (t.compare("--chunked") == 0) { chunked_ = true; continue; }
 				if (t.compare("--wc_offset") == 0) { wc_off_ = true; continue; }
-				if (t.compare("--ism_offset") == 0) { ism_offset_ = atol(argv[++i]); continue; }
+				if (t.compare("--ism_offset") == 0) { ism_offset_ = strtoull(argv[++i], NULL,10); continue; }
 				if (t.compare("--ism_use_ms") == 0) { ism_use_ms_ = 1; anchor_scale_ = 1000; continue; }
 				if (t.compare("--dry_run") == 0) { dry_run_ = true; continue; }
 				if (t.compare("--wc_uri") == 0) { wc_uri_ = string(argv[++i]); continue; }
 				if (t.compare("--auth") == 0) { basic_auth_ = string(argv[++i]); continue; }
-				if (t.compare("--avail") == 0) { avail_ = atoi(argv[++i]); avail_dur_= atoi(argv[++i]); continue; }
+				if (t.compare("--avail") == 0) { avail_ = strtoull(argv[++i],NULL,10); avail_dur_= strtoull(argv[++i],NULL,10); continue; }
 				if (t.compare("--announce") == 0) { announce_ = atof(argv[++i]); continue; }
 				if (t.compare("--aname") == 0) { basic_auth_name_ = string(argv[++i]); continue; }
 				if (t.compare("--sslcert") == 0) { ssl_cert_ = string(argv[++i]); continue; }
@@ -578,18 +579,29 @@ int main(int argc, char * argv[])
 		string avail_track = "out_avail_track.cmfm";
 		string post_url_string = opts.url_ + "/Streams(" + "out_avail_track.cmfm" + ")";
 		
+		if (opts.cmaf_presentation_duration_ == 0.0)  // no media tracks exist
+		{
+			opts.cmaf_presentation_duration_ = 4000 * opts.avail_ / 1000;
+		}
+
 		event_track::gen_avail_files((uint32_t ) (opts.cmaf_presentation_duration_ * 1000), 2000, opts.avail_dur_, opts.avail_, opts.wc_time_start_);
 
 		
 		ifstream input_file_meta(avail_track, ifstream::binary);
 		meta_ingest_stream.load_from_file(input_file_meta);
+
+		if (opts.wc_off_)
+			meta_ingest_stream.patch_tfdt(opts.wc_time_start_, true, opts.anchor_scale_);
 		
 		// create the file
 		thread_ptr thread_n(new thread(push_thread, meta_ingest_stream, opts, post_url_string, avail_track));
 		threads.push_back(thread_n);
 
 		// delay the media threads compared to the timed metadata tracks
-		std::this_thread::sleep_for(std::chrono::milliseconds(4000));
+		if(opts.announce_)
+			std::this_thread::sleep_for(std::chrono::milliseconds(1000 *  (int) opts.announce_));
+		else
+		    std::this_thread::sleep_for(std::chrono::milliseconds(4000));
 	}
 
 	for (auto it = opts.input_files_.begin(); it != opts.input_files_.end(); ++it)
