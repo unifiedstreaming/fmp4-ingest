@@ -72,7 +72,7 @@ struct push_options_t
 		: url_("http://localhost/live/video.isml/video.ism")
 		, realtime_(false)
 		, daemon_(false)
-		, loop_(0)
+		, loop_(-1)
 		, wc_off_(false)
 		, wc_uri_("http://time.akamai.com")
 		, ism_offset_(0)
@@ -493,6 +493,14 @@ int push_thread(ingest_stream l_ingest_stream,
 				start_time = chrono::system_clock::now();
 				opt.loop_--;
 			}
+			else if (opt.loop_ == -1) {
+				l_ingest_stream.patch_tfdt(
+					(uint64_t)opt.cmaf_presentation_duration_ \
+					* l_ingest_stream.init_fragment_.get_time_scale(),
+					false
+				);
+				start_time = chrono::system_clock::now();
+			}
 			else 
 			{
 				stop_all = true;
@@ -581,7 +589,7 @@ int main(int argc, char * argv[])
 		
 		if (opts.cmaf_presentation_duration_ == 0.0)  // no media tracks exist
 		{
-			opts.cmaf_presentation_duration_ = 4000 * opts.avail_ / 1000;
+			opts.cmaf_presentation_duration_ = 100 * opts.avail_ / 1000;
 		}
 
 		event_track::gen_avail_files((uint32_t ) (opts.cmaf_presentation_duration_ * 1000), 2000, opts.avail_dur_, opts.avail_, opts.wc_time_start_);
