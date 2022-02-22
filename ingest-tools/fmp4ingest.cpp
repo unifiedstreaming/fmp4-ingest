@@ -598,8 +598,8 @@ int main(int argc, char * argv[])
 		ifstream input_file_meta(avail_track, ifstream::binary);
 		meta_ingest_stream.load_from_file(input_file_meta);
 
-		if (opts.wc_off_)
-			meta_ingest_stream.patch_tfdt(opts.wc_time_start_, true, opts.anchor_scale_);
+		//if (opts.wc_off_) no need to patch again
+		//	meta_ingest_stream.patch_tfdt(opts.wc_time_start_, true, opts.anchor_scale_);
 		
 		// create the file
 		thread_ptr thread_n(new thread(push_thread, meta_ingest_stream, opts, post_url_string, avail_track));
