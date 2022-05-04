@@ -101,24 +101,24 @@ pipeline {
         //        }
         //    }
         //}
-        //stage('Publish Helm chart') {
-        //    steps {
-        //        container('helm') {
-        //            sh '''
-        //                sed -i \
-        //                    -e "s|tag: latest|tag: $GIT_COMMIT|g" \
-        //                    -e "s|repository: .*$|repository: $DOCKER_REPO|g" \
-        //                    chart/values.yaml
-        //                VERSION=`grep "^version:.*$" chart/Chart.yaml | awk '{print $2}'`
-        //                helm --kubeconfig $KUBECONFIG \
-        //                    push \
-        //                    --version $VERSION \
-        //                    ./chart \
-        //                    $CHART_REPO
-        //            '''
-        //        }
-        //    }
-        //}
+        stage('Publish Helm chart') {
+            steps {
+                container('helm') {
+                    sh '''
+                        sed -i \
+                            -e "s|tag: latest|tag: $GIT_COMMIT|g" \
+                            -e "s|repository: .*$|repository: $DOCKER_REPO|g" \
+                            chart/values.yaml
+                        VERSION=`grep "^version:.*$" chart/Chart.yaml | awk '{print $2}'`
+                        helm --kubeconfig $KUBECONFIG \
+                            push \
+                            --version $VERSION \
+                            ./chart \
+                            $CHART_REPO
+                    '''
+                }
+            }
+        }
         //stage('Publish to GitHub') {
         //    when {
         //        anyOf {

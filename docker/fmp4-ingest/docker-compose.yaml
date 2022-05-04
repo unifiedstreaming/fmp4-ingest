@@ -27,7 +27,7 @@ services:
   live-fmp4ingest:
     #image: registry.internal.unified-streaming.com/operations/base-images/fmp4ingest-scte35/trunk:latest
     #image: docker.io/unifiedstreaming/fmp4ingest-scte35:latest
-    #image: registry.internal.unified-streaming.com/operations/base-images/fmp4-ingest/trunk:latest
+    image: registry.internal.unified-streaming.com/operations/base-images/fmp4-ingest/trunk:latest
     #image: fmp4-ingest-test
     environment:
       - MODE=LIVE-SCTE35
