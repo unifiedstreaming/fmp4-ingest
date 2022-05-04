@@ -74,3 +74,7 @@ See ingest-tools folder in this repository for source code of reference implemen
 a demo of ingesting cmaf content ot Unified origin using docker containers and docker compose can be found here: 
 
 https://github.com/unifiedstreaming/cmaf-ingest-demo
+
+## Notes
+
+Update readme to check internal mirror for changes
