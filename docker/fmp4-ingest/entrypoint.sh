@@ -2,6 +2,7 @@
 set -e
 
 if [ -n "$MODE" ]
+  then
     # set env vars to defaults if not already set
     if [ -z "$ANNOUNCE" ]
       then
@@ -31,6 +32,8 @@ if [ -n "$MODE" ]
       exit 1
     fi
 
+    if [ "$MODE" == "LIVE-SCTE35" ]
+    then
     # Compute offset timeing information
     ms_since_epoch=$(date +%s%3N)
     multiple_gops_since_epoch=$(expr $ms_since_epoch / $GOP_LENGTH_MS)
@@ -38,7 +41,11 @@ if [ -n "$MODE" ]
 
     # Invoke fmp4ingest using result and variables
     fmp4ingest -r --ism_offset $ism_offset --ism_use_ms -u $PUB_POINT_URI --announce $ANNOUNCE --avail $AVAIL_INTERVAL_MS $AVAIL_LENGTH_MS
-else
-  then
-  exec "$@"
+
+    else
+      echo >&2 "Error: No valid MODE set - only value LIVE-SCTE35 currently supported"
+      exit 1
+    fi
+  else 
+    exec "$@"
 fi

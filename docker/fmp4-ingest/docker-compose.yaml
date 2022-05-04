@@ -1,0 +1,43 @@
+version: "2.1"
+services:
+  live-origin:
+    image: local/origin_trunk
+    volumes:
+      - /Users/jamie:/var/www/unified-origin
+    ports:
+      - 80:80
+    environment:
+      - LOG_LEVEL=debug
+      - USP_LICENSE_KEY=$USP_LICENSE_KEY
+#      - channel=scte35
+#      - channel_options=--archiving=1 --archive_length=7200 --archive_segment_length=1800 --dvr_window_length=300 --restart_on_encoder_reconnect --time_shift=10 --mpd.availability_start_time=10 --hls.minimum_fragment_length=48/25 --hls.client_manifest_version=4 --splice_media --timed_metadata
+    healthcheck:
+      test: kill -0 1
+      interval: 2s
+      timeout: 5s
+      retries: 30
+  live-ffmpeg:
+    image: registry.internal.unified-streaming.com/operations/base-images/ffmpeg/trunk:b3eb68ce4aca853cc7f5813c14bbe1d650674257
+    environment:
+      - PUB_POINT_URI=http://live-origin/media/scte35/scte35.isml
+      - 'TRACKS={ "video": [ { "width": 1280, "height": 720, "bitrate": "500k", "codec": "libx264", "framerate": 25, "gop": 48, "timescale": 25 } ], "audio": [ { "samplerate": 48000, "bitrate": "64k", "codec": "aac", "language": "eng", "timescale": 48000, "frag_duration_micros": 1920000 } ] }'
+    depends_on:
+      live-origin:
+        condition: service_healthy
+  live-fmp4ingest:
+    #image: registry.internal.unified-streaming.com/operations/base-images/fmp4ingest-scte35/trunk:latest
+    #image: docker.io/unifiedstreaming/fmp4ingest-scte35:latest
+    #image: registry.internal.unified-streaming.com/operations/base-images/fmp4-ingest/trunk:latest
+    #image: fmp4-ingest-test
+    environment:
+      - MODE=LIVE-SCTE35
+      - PUB_POINT_URI=http://live-origin/media/scte35/scte35.isml
+      - GOP_LENGTH_MS=960
+      - AVAIL_INTERVAL_MS=59520
+      - AVAIL_LENGTH_MS=19200
+      - ANNOUNCE=10
+    #command: fmp4ingest
+    #args:
+    depends_on:
+      live-origin:
+        condition: service_healthy

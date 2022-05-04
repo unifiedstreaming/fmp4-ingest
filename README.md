@@ -42,6 +42,25 @@ node ingest_receiver_node.js
 
 fmp4init in.cmfv  
 
+## Mode: LIVE-SCTE35
+
+If MODE=LIVE-SCTE35 is passed to the container the following environment
+variables can be set to provie basic functionality to generate scte35 opportunities
+(emsg) to be ingested to a live origin alongside a live stream. 
+
+Configuration is done using environment variables:
+
+| Variable                     | Mandatory | Usage                                    |
+|------------------------------|-----------|------------------------------------------|
+| PUB_POINT_URI                | yes       | URI used to ingest to                    |
+| GOP_LENGTH_MS                | yes       | GOP Length in milliseconds, eg 960 (24 GOP @ 25fps - 040 * 24 = 960)                        |
+| AVAIL_INTERVAL_MS            | yes       | Time in which each event should occur in milliseconds. This should ideally be a multiple of the GOP, eg 59520 (59,52s) |
+| AVAIL_LENGTH_MS              | yes       | Event duration in milliseconds. Again a multiple of the gop, eg 19200  (19,2s)            |
+| ANNOUNCE                     | no        | Number of seconds ahead of the event presentation should be announced to the receiving device.(Default 10s) |
+| MODE                         | no        | eg, LIVE-SCTE35 otherwise commard/args need setting manually |
+
+
+
 ## New for DASH-IF ingest v1.1 distinct segment uri path based on segmentTemplate
 
 In DASH-IF ingest v1.1. the (relative) paths of each segment may be determined 
