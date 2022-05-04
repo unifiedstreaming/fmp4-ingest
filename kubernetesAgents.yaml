@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: Pod
+spec:
+  containers:
+  - name: kaniko
+    image: gcr.io/kaniko-project/executor:debug
+    entrypoint:
+    - ""
+    command:
+    - sleep
+    args:
+    - infinity
+  - name: helm
+    image: registry.internal.unified-streaming.com/operations/kubernetes/helm-kubectl/trunk:latest
+    command:
+    - sleep
+    args:
+    - infinity
+  imagePullSecrets:
+  - name: gitlab-registry

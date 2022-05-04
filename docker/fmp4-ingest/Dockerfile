@@ -1,5 +1,10 @@
-# Alpine Dockerfile for building locally / pushing to Dockerhub
-FROM    alpine:3.14
+ARG ALPINEVERSION=3.15
+
+FROM alpine:$ALPINEVERSION
+
+# ARGs declared before FROM are in a different scope, so need to be stated again
+# https://docs.docker.com/engine/reference/builder/#understand-how-arg-and-from-interact
+ARG ALPINEVERSION
 
 # install dependencies
 RUN     buildDeps="bash-completion \

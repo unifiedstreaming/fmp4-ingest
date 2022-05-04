@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="utf-8"?>
+<MPD
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns="urn:mpeg:dash:schema:mpd:2011"
+  xsi:schemaLocation="urn:mpeg:dash:schema:mpd:2011 http://standards.iso.org/ittf/PubliclyAvailableStandards/MPEG-DASH_schema_files/DASH-MPD.xsd"
+  type="static"
+  mediaPresentationDuration="PT12M14S"
+  minBufferTime="PT10S"
+  profiles="urn:mpeg:dash:profile:isoff-on-demand:2011">
+  <Period
+    duration="PT12M14S">
+    <AdaptationSet
+      id="1"
+      group="2"
+      contentType="video"
+      lang="en"
+      par="56:25"
+      segmentAlignment="true"
+      subsegmentAlignment="true"
+      subsegmentStartsWithSAP="1"
+      width="448"
+      height="200"
+      sar="1:1"
+      mimeType="video/mp4"
+      codecs="avc1.64001F"
+      startWithSAP="1">
+      <Role schemeIdUri="urn:mpeg:dash:role:2011" value="main" />
+      <Representation
+        id="video_eng=768000"
+        bandwidth="768000"
+        scanType="progressive">
+        <BaseURL>tos-096-750k.cmfv</BaseURL>
+        <SegmentBase
+          timescale="12800"
+          indexRangeExact="true"
+          indexRange="760-9971">
+          <Initialization
+            range="0-759" />
+        </SegmentBase>
+      </Representation>
+    </AdaptationSet>
+  <EventStream
+      schemeIdUri="urn:scte:scte35:2014:xml+bin"
+      timescale="12800"
+	  endTime="9395200">
+      <!-- splice insert, break starts at key frame warning break does not end at key frame -->
+      <Event
+        presentationTime="2949120"
+        duration="233472"
+        id="811">
+        <Signal xmlns="http://www.scte.org/schemas/35/2016">
+          <Binary>/DAhAAAAAAAAAP/wEAUAAAMrf+9//gAaF7DAAAAAAADkYSQC</Binary>
+        </Signal>
+      </Event>
+	  <Event
+        presentationTime="2949120"
+        duration="233472"
+        id="818">
+        <Signal xmlns="http://www.scte.org/schemas/35/2016">
+          <Binary>/DAhAAAAAAAAAP/wEAUAAAMrf+9//gAaF7DAAAAAAADkYSQC</Binary>
+        </Signal>
+      </Event>
+      <!-- splice insert, break starts at key frame warning break does not end at key frame -->
+      <Event
+        presentationTime="5898240‬"
+        duration="233472"
+        id="811">
+        <Signal xmlns="http://www.scte.org/schemas/35/2016">
+          <Binary>/DAhAAAAAAAAAP/wEAUAAAMsf+9//gAaF7DAAAAAAAD+zLky</Binary>
+        </Signal>
+      </Event>
+	  <Event
+        presentationTime="5898240‬"
+        duration="233472"
+        id="812">
+        <Signal xmlns="http://www.scte.org/schemas/35/2016">
+          <Binary>/DAhAAAAAAAAAP/wEAUAAAMsf+9//gAaF7DAAAAAAAD+zLky</Binary>
+        </Signal>
+      </Event>
+	  <Event
+        presentationTime="5898240‬"
+        duration="233472"
+        id="813">
+        <Signal xmlns="http://www.scte.org/schemas/35/2016">
+          <Binary>/DAhAAAAAAAAAP/wEAUAAAMsf+9//gAaF7DAAAAAAAD+zLky</Binary>
+        </Signal>
+      </Event>
+	  <Event
+        presentationTime="5898240‬"
+        duration="233472"
+        id="814">
+        <Signal xmlns="http://www.scte.org/schemas/35/2016">
+          <Binary>/DAhAAAAAAAAAP/wEAUAAAMsf+9//gAaF7DAAAAAAAD+zLky</Binary>
+        </Signal>
+      </Event>
+	   <Event
+        presentationTime="6262240‬"
+        duration="233472"
+        id="816">
+        <Signal xmlns="http://www.scte.org/schemas/35/2016">
+          <Binary>/DAhAAAAAAAAAP/wEAUAAAMsf+9//gAaF7DAAAAAAAD+zLky</Binary>
+        </Signal>
+      </Event>
+	  <Event
+        presentationTime="17694720‬"
+        duration="233472"
+        id="815">
+        <Signal xmlns="http://www.scte.org/schemas/35/2016">
+          <Binary>/DAhAAAAAAAAAP/wEAUAAAMsf+9//gAaF7DAAAAAAAD+zLky</Binary>
+        </Signal>
+      </Event>
+    </EventStream>
+  </Period>
+</MPD>
