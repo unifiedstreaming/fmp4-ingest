@@ -9,11 +9,11 @@ image:
   tag: latest
   pullPolicy: Always
 
-channel: "fmp4-ingest"
-channel_options: "--archiving=1 --archive_length=7200 --archive_segment_length=1800 --dvr_window_length=300 --restart_on_encoder_reconnect --hls.minimum_fragment_length=48/25 --hls.client_manifest_version=4 --splice_media --timed_metadata --mpd.dvb_low_latency --mpd.dvb_target_latency=10000 --mpd.dvb_maximum_latency=45000 --mpd.dvb_minimum_latency=1000 --mpd.dvb_playback_rate_max=1.5 --mpd.dvb_playback_rate_min=0.5"
-
-command: "fmp4ingest"
-args: "-r -l 10000 --wc_offset --avail 57600 9600 -u http://fmp4-ingest/fmp4-ingest.isml tos-096-750k.cmfv tos-096s-128k.cmfa tos-de-096s.cmft tos-en-096s.cmft tos-es-096s.cmft tos-fr-096s.cmft"
+#channel: "fmp4-ingest"
+#channel_options: "--archiving=1 --archive_length=7200 --archive_segment_length=1800 --dvr_window_length=300 --restart_on_encoder_reconnect --hls.minimum_fragment_length=48/25 --hls.client_manifest_version=4 --splice_media --timed_metadata --mpd.dvb_low_latency --mpd.dvb_target_latency=10000 --mpd.dvb_maximum_latency=45000 --mpd.dvb_minimum_latency=1000 --mpd.dvb_playback_rate_max=1.5 --mpd.dvb_playback_rate_min=0.5"
+#
+#command: "fmp4ingest"
+#args: "-r -l 10000 --wc_offset --avail 57600 9600 -u http://fmp4-ingest/fmp4-ingest.isml tos-096-750k.cmfv tos-096s-128k.cmfa tos-de-096s.cmft tos-en-096s.cmft tos-es-096s.cmft tos-fr-096s.cmft"
 # optionally set environment variables to configure nginx container
 #env: []
 
