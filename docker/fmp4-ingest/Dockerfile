@@ -28,7 +28,7 @@ RUN     cd /root && \
 ENV PATH="${PATH}:/root/fmp4-ingest/ingest-tools"
 
 COPY entrypoint.sh /home/entrypoint.sh
-RUN chmod +x entrypoint.sh
+RUN chmod +x /home/entrypoint.sh
 
 ENTRYPOINT [ "/home/entrypoint.sh" ]
 
