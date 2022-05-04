@@ -27,6 +27,12 @@ RUN     cd /root && \
 
 ENV PATH="${PATH}:/root/fmp4-ingest/ingest-tools"
 
+COPY entrypoint.sh /home/entrypoint.sh
+RUN chmod +x entrypoint.sh
+
+ENTRYPOINT [ "/home/entrypoint.sh" ]
+
+
 # Invocation examples
 # fmp4ingest: CMAF ingest
 # docker run --rm -it -v $(pwd):/data -w /data/ fmp4ingest:latest fmp4ingest $@
