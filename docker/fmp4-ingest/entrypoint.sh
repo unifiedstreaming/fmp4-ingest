@@ -39,5 +39,6 @@ if [ -n "$MODE" ]
     # Invoke fmp4ingest using result and variables
     fmp4ingest -r --ism_offset $ism_offset --ism_use_ms -u $PUB_POINT_URI --announce $ANNOUNCE --avail $AVAIL_INTERVAL_MS $AVAIL_LENGTH_MS
 else
-    exec "$@"
+  then
+  exec "$@"
 fi
