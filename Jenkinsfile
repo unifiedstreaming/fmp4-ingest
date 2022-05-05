@@ -21,6 +21,7 @@ pipeline {
         DOCKER_CACHE = "$DOCKER_REPO_BASE/cache"
         DOCKER_REPO = "$DOCKER_REPO_BASE/$BRANCH_NAME"
         // Publishing to GitHub and Docker Hub
+        PUBLISH = 'false'
         //GITHUB_CREDENTIALS = 'jenkins-ssh-key-github'
         //GITHUB_REPO = "github.com:unifiedstreaming/fmp4-ingest.git"
         DOCKER_HUB_REGISTRY_TOKEN = credentials('docker-hub')
@@ -58,49 +59,6 @@ pipeline {
                 }
             }
         }
-        //stage('Deploy to Kubernetes') {
-        //    steps {
-        //        container('helm') {
-        //            sh """
-        //                helm dependency update ./chart && \
-        //                sed -i \
-        //                    -e "s|tag: latest|tag: $ACTUAL_VERSION|g" \
-        //                    -e "s|repository: .*|repository: $DOCKER_REPO|g" \
-        //                    chart/values.yaml
-        //                sed -i \
-        //                    -e "s|version: 0.0.0|version: $ACTUAL_VERSION|g" \
-        //                    -e "s|appVersion: 0.0.0|appVersion: $ACTUAL_VERSION|g" \
-        //                    chart/Chart.yaml
-        //                helm --kubeconfig $KUBECONFIG \
-        //                    upgrade \
-        //                    --install \
-        //                    --wait \
-        //                    --timeout 600s \
-        //                    --namespace $NAMESPACE \
-        //                    --create-namespace \
-        //                    --set licenseKey=$UspLicenseKey \
-        //                    --set imagePullSecret.username=$REGISTRY_TOKEN_USR \
-        //                    --set imagePullSecret.password=$REGISTRY_TOKEN_PSW \
-        //                    --set imagePullSecret.secretName=gitlab-reg-secret \
-        //                    --set image.repository=$DOCKER_REPO \
-        //                    --set image.tag=$ACTUAL_VERSION \
-        //                    --set environment=$BRANCH_NAME \
-        //                    --set fmp4ingest.imagePullSecret.secretName=gitlab-reg-secret \
-        //                    $RELEASE_NAME \
-        //                    ./chart
-        //            """
-        //        }
-        //    }
-        //}
-        //stage('Test Ingest Endpoint') {
-        //    steps {
-        //        script {
-        //            def response = httpRequest "http://${RELEASE_NAME}.${NAMESPACE}.svc.k8s.unified-streaming.com/${CHANNEL}.isml/state"
-        //            echo "Status: ${response.status}"
-        //            echo "Response: ${response.content}"
-        //        }
-        //    }
-        //}
         stage('Publish Helm chart') {
             steps {
                 container('helm') {
@@ -109,6 +67,9 @@ pipeline {
                             -e "s|tag: latest|tag: $GIT_COMMIT|g" \
                             -e "s|repository: .*$|repository: $DOCKER_REPO|g" \
                             chart/values.yaml
+                        sed -i \
+                            -e "s|version: .*$ |version: 0.0.0-trunk-$(head -c 8 $GIT_COMMIT) \
+                            chart/Chart.yaml
                         VERSION=`grep "^version:.*$" chart/Chart.yaml | awk '{print $2}'`
                         helm --kubeconfig $KUBECONFIG \
                             push \
@@ -119,10 +80,20 @@ pipeline {
                 }
             }
         }
+        stage('Deploy and Test image with Live Demo') {
+            steps {
+                script {
+                if (env.RELEASE_OR_BRANCH == 'trunk') {
+                    build job: 'demo/live/trunk', parameters: [string(name: 'VERSION', value: "$VERSION"), string(name: 'SVN_COMMIT', value: "$ACTUAL_SVN_COMMIT")], wait: true
+                }
+              }
+            }
+        }
         //stage('Publish to GitHub') {
         //    when {
-        //        anyOf {
-        //            environment name: 'RELEASE_OR_BRANCH', value: 'stable'
+        //        allOf {
+        //            environment name: 'PUBLISH', value: 'true'
+        //            environment name: 'BRANCH_NAME', value: 'stable'
         //        }
         //    }
         //    steps {
