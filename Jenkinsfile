@@ -68,10 +68,6 @@ pipeline {
                             -e "s|tag: latest|tag: $GIT_COMMIT|g" \
                             -e "s|repository: .*|repository: $DOCKER_REPO|g" \
                             chart/values.yaml
-                        sed -i \
-                            -e "s|version: 0.0.0|version: 0.0.1-trunk-$GIT_COMMIT_SHORT|g" \
-                            -e "s|appVersion: 0.0.0|appVersion: 0.0.1-trunk-$GIT_COMMIT_SHORT|g" \
-                            chart/Chart.yaml
                         helm --kubeconfig $KUBECONFIG \
                             push \
                             ./chart \
