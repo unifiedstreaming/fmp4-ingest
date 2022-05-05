@@ -14,6 +14,7 @@ pipeline {
         KUBECONFIG = credentials('kubeconfig')
         REGISTRY_TOKEN = credentials('gitlab-registry-operations')
         GIT_COMMIT = sh(returnStdout: true, script: 'git rev-parse HEAD').trim()
+        GIT_COMMIT_SHORT = sh(returnStdout: true, script: 'git rev-parse --short HEAD').trim()
         CHART_CREDS = credentials('chartmuseum')
         CHART_REPO = "http://$CHART_CREDS_USR:$CHART_CREDS_PSW@$CHART_REPO_URL"
         // Docker and Helm deployment stuff
@@ -68,7 +69,7 @@ pipeline {
                             -e "s|repository: .*$|repository: $DOCKER_REPO|g" \
                             chart/values.yaml
                         sed -i \
-                            -e "s|version: .*$ |version: 0.0.0-trunk-$(head -c 8 $GIT_COMMIT)|g" \
+                            -e "s|version: .*$ |version: 0.0.0-trunk-$GIT_COMMIT_SHORT|g" \
                             chart/Chart.yaml
                         VERSION=`grep "^version:.*$" chart/Chart.yaml | awk '{print $2}'`
                         helm --kubeconfig $KUBECONFIG \
