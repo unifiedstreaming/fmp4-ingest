@@ -68,7 +68,7 @@ pipeline {
                             -e "s|repository: .*$|repository: $DOCKER_REPO|g" \
                             chart/values.yaml
                         sed -i \
-                            -e "s|version: .*$ |version: 0.0.0-trunk-$(head -c 8 $GIT_COMMIT) \
+                            -e "s|version: .*$ |version: 0.0.0-trunk-$(head -c 8 $GIT_COMMIT)|g" \
                             chart/Chart.yaml
                         VERSION=`grep "^version:.*$" chart/Chart.yaml | awk '{print $2}'`
                         helm --kubeconfig $KUBECONFIG \
