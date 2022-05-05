@@ -32,7 +32,7 @@ ingest_receiver_node.js: simple receiver based on node.js works with short runni
 
 
 # Commandline 
-
+```bash
 Usage: fmp4ingest <options> <input_files>
  -u url                       Publishing Point URL
  -r, --realtime               Enable realtime mode
@@ -52,7 +52,7 @@ Usage: fmp4ingest <options> <input_files>
  --sslkey                     TLS private Key
  --sslkeypass                 passphrase
  <input_files>                  CMAF files to ingest (.cmf atvm)
-
+```
 # Examples 
 
 - Push a stream in real time to publishing point: 
