@@ -66,15 +66,14 @@ pipeline {
                     sh '''
                         sed -i \
                             -e "s|tag: latest|tag: $GIT_COMMIT|g" \
-                            -e "s|repository: .*$|repository: $DOCKER_REPO|g" \
+                            -e "s|repository: .*|repository: $DOCKER_REPO|g" \
                             chart/values.yaml
                         sed -i \
-                            -e "s|version: .*$ |version: 0.0.0-trunk-$GIT_COMMIT_SHORT|g" \
+                            -e "s|version: 0.0.0|version: $GIT_COMMIT_SHORT|g" \
+                            -e "s|appVersion: 0.0.0|appVersion: $GIT_COMMIT_SHORT|g" \
                             chart/Chart.yaml
-                        VERSION=`grep "^version:.*$" chart/Chart.yaml | awk '{print $2}'`
                         helm --kubeconfig $KUBECONFIG \
                             push \
-                            --version $VERSION \
                             ./chart \
                             $CHART_REPO
                     '''
