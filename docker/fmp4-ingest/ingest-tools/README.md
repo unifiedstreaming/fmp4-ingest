@@ -30,6 +30,29 @@ ingest_receiver_node.js: simple receiver based on node.js works with short runni
 - sample cmaf and sparse track files added in test_files
 - ingest of timed text, audio and video
 
+
+# Commandline 
+```bash
+Usage: fmp4ingest <options> <input_files>
+ -u url                       Publishing Point URL
+ -r, --realtime               Enable realtime mode
+ -l, --loop                   Enable looping arg1 + 1 times (without this the track ingest would loop over only once)
+ --wc_offset                  (boolean )Add a wallclock time offset from time server for converting VoD (0) asset to Live
+ --ism_offset                 insert a fixed value for the wallclock time offset instead of using a remote time source uri
+ --ism_use_ms                 indicates that the ism_offset is given in milliseconds
+ --wc_uri                     uri for fetching wall clock time default time.akamai.com
+ --initialization             SegmentTemplate@initialization sets the relative path for init segments, shall include $RepresentationID$
+ --media                      SegmentTemplate@media sets the relative path for media segments, shall include $RepresentationID$ and $Time$ or $Number$
+ --avail                     signal an advertisment slot every arg1 ms with duration of arg2 ms
+ --dry_run                    Do a dry run and write the output files to disk directly for checking file and box integrity
+ --announce                   specify the number of seconds in advance to presenation time to send an avail (default is 60 seconds set to 0 to have the avails in sync with media)
+ --auth                       Basic Auth Password
+ --aname                      Basic Auth User Name
+ --sslcert                    TLS 1.2 client certificate
+ --sslkey                     TLS private Key
+ --sslkeypass                 passphrase
+ <input_files>                  CMAF files to ingest (.cmf atvm)
+```
 # Examples 
 
 - Push a stream in real time to publishing point: 
