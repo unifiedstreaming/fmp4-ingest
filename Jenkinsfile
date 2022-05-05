@@ -69,12 +69,12 @@ pipeline {
                             -e "s|repository: .*|repository: $DOCKER_REPO|g" \
                             chart/values.yaml
                         sed -i \
-                            -e "s|version: 0.0.0|version: $GIT_COMMIT_SHORT|g" \
+                            -e "s|version: 0.0.0|version: 0.0.0-trunk-$GIT_COMMIT_SHORT|g" \
                             -e "s|appVersion: 0.0.0|appVersion: $GIT_COMMIT_SHORT|g" \
                             chart/Chart.yaml
                         helm --kubeconfig $KUBECONFIG \
                             push \
-                            --version $GIT_COMMIT_SHORT \ 
+                            --version 0.0.0-trunk-$GIT_COMMIT_SHORT \ 
                             ./chart \
                             $CHART_REPO
                     '''
