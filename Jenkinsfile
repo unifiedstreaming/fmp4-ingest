@@ -69,12 +69,11 @@ pipeline {
                             -e "s|repository: .*|repository: $DOCKER_REPO|g" \
                             chart/values.yaml
                         sed -i \
-                            -e "s|version: 0.0.0|version: 0.0.0-trunk-$GIT_COMMIT_SHORT|g" \
-                            -e "s|appVersion: 0.0.0|appVersion: $GIT_COMMIT_SHORT|g" \
+                            -e "s|version: 0.0.0|version: 0.0.1-trunk-$GIT_COMMIT_SHORT|g" \
+                            -e "s|appVersion: 0.0.0|appVersion: 0.0.1-trunk-$GIT_COMMIT_SHORT|g" \
                             chart/Chart.yaml
                         helm --kubeconfig $KUBECONFIG \
                             push \
-                            --version 0.0.0-trunk-$GIT_COMMIT_SHORT \ 
                             ./chart \
                             $CHART_REPO
                     '''
@@ -85,7 +84,7 @@ pipeline {
         //    steps {
         //        script {
         //        if (env.RELEASE_OR_BRANCH == 'trunk') {
-        //            build job: 'demo/live/trunk', parameters: [string(name: 'VERSION', value: "$VERSION"), string(name: 'SVN_COMMIT', value: "$ACTUAL_SVN_COMMIT"), string(name: 'FMP4INGEST_VERSION', value: "$GIT_COMMIT_SHORT")], wait: true
+        //            build job: 'demo/live/trunk', parameters: [string(name: 'VERSION', value: "$VERSION"), string(name: 'SVN_COMMIT', value: "$ACTUAL_SVN_COMMIT"), string(name: 'FMP4INGEST_VERSION', value: "0.0.1-trunk-$GIT_COMMIT_SHORT")], wait: true
         //        }
         //      }
         //    }
