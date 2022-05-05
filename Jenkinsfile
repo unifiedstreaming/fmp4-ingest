@@ -74,21 +74,22 @@ pipeline {
                             chart/Chart.yaml
                         helm --kubeconfig $KUBECONFIG \
                             push \
+                            --version $GIT_COMMIT_SHORT \ 
                             ./chart \
                             $CHART_REPO
                     '''
                 }
             }
         }
-        stage('Deploy and Test image with Live Demo') {
-            steps {
-                script {
-                if (env.RELEASE_OR_BRANCH == 'trunk') {
-                    build job: 'demo/live/trunk', parameters: [string(name: 'VERSION', value: "$VERSION"), string(name: 'SVN_COMMIT', value: "$ACTUAL_SVN_COMMIT")], wait: true
-                }
-              }
-            }
-        }
+        //stage('Deploy and Test image with Live Demo') {
+        //    steps {
+        //        script {
+        //        if (env.RELEASE_OR_BRANCH == 'trunk') {
+        //            build job: 'demo/live/trunk', parameters: [string(name: 'VERSION', value: "$VERSION"), string(name: 'SVN_COMMIT', value: "$ACTUAL_SVN_COMMIT"), string(name: 'FMP4INGEST_VERSION', value: "$GIT_COMMIT_SHORT")], wait: true
+        //        }
+        //      }
+        //    }
+        //}
         //stage('Publish to GitHub') {
         //    when {
         //        allOf {
