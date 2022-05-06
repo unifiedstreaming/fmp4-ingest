@@ -80,15 +80,16 @@ pipeline {
                 }
             }
         }
-        //stage('Deploy and Test image with Live Demo') {
-        //    steps {
-        //        script {
-        //        if (env.BRANCH_NAME == 'trunk') {
-        //            build job: 'demo/live/trunk', parameters: [string(name: 'FMP4INGEST_VERSION', value: "0.0.0-trunk-$GIT_COMMIT_SHORT")], wait: true
-        //        }
-        //      }
-        //    }
-        //}
+        stage('Deploy and Test image with Live Demo') {
+            when {
+                allOf {
+                    environment name: 'BRANCH_NAME', value: 'trunk'
+                }
+            }
+            steps {
+                    build job: 'demo/live/trunk', parameters: [string(name: 'FMP4INGEST_VERSION', value: "0.0.0-trunk-$GIT_COMMIT_SHORT")], wait: true
+            }
+        }
         //stage('Publish to GitHub') {
         //    when {
         //        allOf {
@@ -124,42 +125,43 @@ pipeline {
         //        }
         //    }
         //}
-        stage('Publish Docker image') {
+        //stage('Publish Docker image') {
         //    when {
-        //        anyOf {
-        //            environment name: 'RELEASE_OR_BRANCH', value: 'stable'
+        //        allOf {
+        //            environment name: 'PUBLISH', value: 'true'
+        //            environment name: 'BRANCH_NAME', value: 'stable'
         //        }
         //    }
-            steps {
-                container('crane') {
-                    sh 'crane auth login -u $REGISTRY_TOKEN_USR -p $REGISTRY_TOKEN_PSW $REGISTRY_URL'
-                    sh 'crane auth login -u $DOCKER_HUB_REGISTRY_TOKEN_USR -p $DOCKER_HUB_REGISTRY_TOKEN_PSW $DOCKER_HUB_REGISTRY_URL'
-                    script {
-                        if (env.BRANCH_NAME == 'trunk') {
-                            sh 'crane copy $DOCKER_REPO:$VERSION $DOCKER_HUB_REPO:$GIT_COMMIT'
-                            //sh 'crane copy $DOCKER_REPO:$VERSION $DOCKER_HUB_REPO:latest'
-                        } else {
-                            sh 'crane copy $DOCKER_REPO:$VERSION $DOCKER_HUB_REPO:$VERSION-beta'
-                        }
-                    }
-                    
-                }
-            }
-        }
-        stage('Update Docker Hub readme') {
-        //    when {
-        //        environment name: 'RELEASE_OR_BRANCH', value: 'stable'
+        //    steps {
+        //        container('crane') {
+        //            sh 'crane auth login -u $REGISTRY_TOKEN_USR -p $REGISTRY_TOKEN_PSW $REGISTRY_URL'
+        //            sh 'crane auth login -u $DOCKER_HUB_REGISTRY_TOKEN_USR -p $DOCKER_HUB_REGISTRY_TOKEN_PSW $DOCKER_HUB_REGISTRY_URL'
+        //            script {
+        //                if (env.BRANCH_NAME == 'trunk') {
+        //                    sh 'crane copy $DOCKER_REPO:$VERSION $DOCKER_HUB_REPO:$GIT_COMMIT'
+        //                    //sh 'crane copy $DOCKER_REPO:$VERSION $DOCKER_HUB_REPO:latest'
+        //                }
+        //            }                    
+        //        }
         //    }
-            steps {
-                container('docker-pushrm') {
-                    sh '''
-                        export DOCKER_USER=$DOCKER_HUB_REGISTRY_TOKEN_USR
-                        export DOCKER_PASS=$DOCKER_HUB_REGISTRY_TOKEN_PSW
-                        /docker-pushrm --file ./README.md --debug $DOCKER_HUB_REPO
-                    '''
-                }
-            }
-        }
+        //}
+        //stage('Update Docker Hub readme') {
+        //    when {
+        //        allOf {
+        //            environment name: 'PUBLISH', value: 'true'
+        //            environment name: 'BRANCH_NAME', value: 'stable'
+        //        }
+        //    }
+        //    steps {
+        //        container('docker-pushrm') {
+        //            sh '''
+        //                export DOCKER_USER=$DOCKER_HUB_REGISTRY_TOKEN_USR
+        //                export DOCKER_PASS=$DOCKER_HUB_REGISTRY_TOKEN_PSW
+        //                /docker-pushrm --file ./README.md --debug $DOCKER_HUB_REPO
+        //            '''
+        //        }
+        //    }
+        //}
     }
     post {
         fixed {
