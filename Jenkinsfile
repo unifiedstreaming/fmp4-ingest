@@ -124,42 +124,42 @@ pipeline {
         //        }
         //    }
         //}
-        //stage('Publish Docker image') {
+        stage('Publish Docker image') {
         //    when {
         //        anyOf {
         //            environment name: 'RELEASE_OR_BRANCH', value: 'stable'
         //        }
         //    }
-        //    steps {
-        //        container('crane') {
-        //            sh 'crane auth login -u $REGISTRY_TOKEN_USR -p $REGISTRY_TOKEN_PSW $REGISTRY_URL'
-        //            sh 'crane auth login -u $DOCKER_HUB_REGISTRY_TOKEN_USR -p $DOCKER_HUB_REGISTRY_TOKEN_PSW $DOCKER_HUB_REGISTRY_URL'
-        //            script {
-        //                if (env.RELEASE_OR_BRANCH == 'stable') {
-        //                    sh 'crane copy $DOCKER_REPO:$VERSION $DOCKER_HUB_REPO:$VERSION'
-        //                    sh 'crane copy $DOCKER_REPO:$VERSION $DOCKER_HUB_REPO:latest'
-        //                } else {
-        //                    sh 'crane copy $DOCKER_REPO:$VERSION $DOCKER_HUB_REPO:$VERSION-beta'
-        //                }
-        //            }
-        //            
-        //        }
-        //    }
-        //}
-        //stage('Update Docker Hub readme') {
+            steps {
+                container('crane') {
+                    sh 'crane auth login -u $REGISTRY_TOKEN_USR -p $REGISTRY_TOKEN_PSW $REGISTRY_URL'
+                    sh 'crane auth login -u $DOCKER_HUB_REGISTRY_TOKEN_USR -p $DOCKER_HUB_REGISTRY_TOKEN_PSW $DOCKER_HUB_REGISTRY_URL'
+                    script {
+                        if (env.RELEASE_OR_BRANCH == 'trunk') {
+                            sh 'crane copy $DOCKER_REPO:$VERSION $DOCKER_HUB_REPO:$GIT_COMMIT'
+                            //sh 'crane copy $DOCKER_REPO:$VERSION $DOCKER_HUB_REPO:latest'
+                        } else {
+                            sh 'crane copy $DOCKER_REPO:$VERSION $DOCKER_HUB_REPO:$VERSION-beta'
+                        }
+                    }
+                    
+                }
+            }
+        }
+        stage('Update Docker Hub readme') {
         //    when {
         //        environment name: 'RELEASE_OR_BRANCH', value: 'stable'
         //    }
-        //    steps {
-        //        container('docker-pushrm') {
-        //            sh '''
-        //                export DOCKER_USER=$DOCKER_HUB_REGISTRY_TOKEN_USR
-        //                export DOCKER_PASS=$DOCKER_HUB_REGISTRY_TOKEN_PSW
-        //                /docker-pushrm --file ./github/README.md --debug $DOCKER_HUB_REPO
-        //            '''
-        //        }
-        //    }
-        //}
+            steps {
+                container('docker-pushrm') {
+                    sh '''
+                        export DOCKER_USER=$DOCKER_HUB_REGISTRY_TOKEN_USR
+                        export DOCKER_PASS=$DOCKER_HUB_REGISTRY_TOKEN_PSW
+                        /docker-pushrm --file ./README.md --debug $DOCKER_HUB_REPO
+                    '''
+                }
+            }
+        }
     }
     post {
         fixed {
