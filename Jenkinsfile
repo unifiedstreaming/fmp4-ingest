@@ -80,15 +80,15 @@ pipeline {
                 }
             }
         }
-        //stage('Deploy and Test image with Live Demo') {
-        //    steps {
-        //        script {
-        //        if (env.RELEASE_OR_BRANCH == 'trunk') {
-        //            build job: 'demo/live/trunk', parameters: [string(name: 'VERSION', value: "$VERSION"), string(name: 'SVN_COMMIT', value: "$ACTUAL_SVN_COMMIT"), string(name: 'FMP4INGEST_VERSION', value: "0.0.0-trunk-$GIT_COMMIT_SHORT")], wait: true
-        //        }
-        //      }
-        //    }
-        //}
+        stage('Deploy and Test image with Live Demo') {
+            steps {
+                script {
+                if (env.RELEASE_OR_BRANCH == 'trunk') {
+                    build job: 'demo/live/trunk', parameters: [string(name: 'VERSION', value: "$VERSION"), string(name: 'SVN_COMMIT', value: "$ACTUAL_SVN_COMMIT"), string(name: 'FMP4INGEST_VERSION', value: "0.0.0-trunk-$GIT_COMMIT_SHORT")], wait: true
+                }
+              }
+            }
+        }
         //stage('Publish to GitHub') {
         //    when {
         //        allOf {
