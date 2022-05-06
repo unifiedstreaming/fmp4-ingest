@@ -69,8 +69,8 @@ pipeline {
                             -e "s|repository: .*|repository: $DOCKER_REPO|g" \
                             chart/values.yaml
                         sed -i \
-                            -e "s|version: 0.0.0-trunk|version: 0.0.0-trunk-$GIT_COMMIT_SHORT|g" \
-                            -e "s|appVersion: 0.0.0-trunk|appVersion:  0.0.0-trunk-$GIT_COMMIT_SHORT|g" \
+                            -e "s|version: 0.0.0-$env.BRANCH_NAME|version: 0.0.0-$env.BRANCH_NAME-$GIT_COMMIT_SHORT|g" \
+                            -e "s|appVersion: 0.0.0-$env.BRANCH_NAME|appVersion:  0.0.0-$env.BRANCH_NAME-$GIT_COMMIT_SHORT|g" \
                             chart/Chart.yaml
                         helm --kubeconfig $KUBECONFIG \
                             push \
@@ -87,7 +87,7 @@ pipeline {
                 }
             }
             steps {
-                    build job: 'demo/live/trunk', parameters: [string(name: 'FMP4INGEST_VERSION', value: "0.0.0-trunk-$GIT_COMMIT_SHORT")], wait: true
+                    build job: 'demo/live/$env.BRANCH_NAME', parameters: [string(name: 'FMP4INGEST_VERSION', value: "0.0.0-$env.BRANCH_NAME-$GIT_COMMIT_SHORT")], wait: true
             }
         }
         //stage('Publish to GitHub') {
@@ -100,7 +100,7 @@ pipeline {
         //    steps {
         //        sh 'mkdir -p github'
         //        dir('github') {
-        //            git branch: env.RELEASE_OR_BRANCH, credentialsId: env.GITHUB_CREDENTIALS, url: env.GITHUB_REPO
+        //            git branch: env.BRANCH_NAME, credentialsId: env.GITHUB_CREDENTIALS, url: env.GITHUB_REPO
         //            sh 'rm -rf *'
         //            sh 'cp -R ../docker .'
         //            sh 'cp ../README.public.md ./README.md || cp ../README.md .'
@@ -109,17 +109,15 @@ pipeline {
         //            sh 'git add .'
         //            sh 'git config user.name "Unified Streaming"'
         //            sh 'git config user.email "ops@unified-streaming.com"'
-        //            sh 'git commit -m "Publish $VERSION" || return 0'
+        //            sh 'git commit -m "Publish $GIT_COMMIT_SHORT" || return 0'
         //            sh "git remote set-url origin git@${env.GITHUB_REPO}"
         //            sshagent (credentials: [env.GITHUB_CREDENTIALS]) {
         //                script {
-        //                    if (env.RELEASE_OR_BRANCH == 'stable') {
-        //                        sh 'git tag $VERSION || git tag --force $VERSION && git push --delete origin refs/tags/$VERSION'
-        //                    } else {
-        //                        sh 'git tag $VERSION-beta || git tag --force $VERSION-beta && git push --delete origin refs/tags/$VERSION-beta'
-        //                    }
+        //                    if (env.BRANCH_NAME == 'stable') {
+        //                        sh 'git tag $GIT_COMMIT_SHORT || git tag --force $GIT_COMMIT_SHORT && git push --delete origin refs/tags/$GIT_COMMIT_SHORT'
+        //                    } 
         //                }
-        //                sh "git push origin ${env.RELEASE_OR_BRANCH}"
+        //                sh "git push origin ${env.BRANCH_NAME}"
         //                sh 'git push origin --tags'
         //            }
         //        }
@@ -136,12 +134,8 @@ pipeline {
         //        container('crane') {
         //            sh 'crane auth login -u $REGISTRY_TOKEN_USR -p $REGISTRY_TOKEN_PSW $REGISTRY_URL'
         //            sh 'crane auth login -u $DOCKER_HUB_REGISTRY_TOKEN_USR -p $DOCKER_HUB_REGISTRY_TOKEN_PSW $DOCKER_HUB_REGISTRY_URL'
-        //            script {
-        //                if (env.BRANCH_NAME == 'trunk') {
-        //                    sh 'crane copy $DOCKER_REPO:$VERSION $DOCKER_HUB_REPO:$GIT_COMMIT'
-        //                    //sh 'crane copy $DOCKER_REPO:$VERSION $DOCKER_HUB_REPO:latest'
-        //                }
-        //            }                    
+        //            sh 'crane copy $DOCKER_REPO:$GIT_COMMIT $DOCKER_HUB_REPO:$GIT_COMMIT'
+        //            sh 'crane copy $DOCKER_REPO:$GIT_COMMIT $DOCKER_HUB_REPO:latest'               
         //        }
         //    }
         //}
@@ -170,12 +164,5 @@ pipeline {
         failure {
             slackSend (color: '#FF0000', message: "FAILED: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL})")
         }
-        //success {
-        //    script {
-        //        if (env.RELEASE_OR_BRANCH == 'trunk') {
-        //            build job: 'demo/live/trunk', parameters: [string(name: 'VERSION', value: "$VERSION"), string(name: 'SVN_COMMIT', value: "$ACTUAL_SVN_COMMIT")], wait: false
-        //        }
-        //    }
-        //}
     }
 }
