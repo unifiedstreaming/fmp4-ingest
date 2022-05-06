@@ -69,8 +69,8 @@ pipeline {
                             -e "s|repository: .*|repository: $DOCKER_REPO|g" \
                             chart/values.yaml
                         sed -i \
-                            -e "s|version: 0.0.0-$env.BRANCH_NAME|version: 0.0.0-$env.BRANCH_NAME-$GIT_COMMIT_SHORT|g" \
-                            -e "s|appVersion: 0.0.0-$env.BRANCH_NAME|appVersion:  0.0.0-$env.BRANCH_NAME-$GIT_COMMIT_SHORT|g" \
+                            -e "s|version: 0.0.0-trunk|version: 0.0.0-trunk-$GIT_COMMIT_SHORT|g" \
+                            -e "s|appVersion: 0.0.0-trunk|appVersion:  0.0.0-trunk-$GIT_COMMIT_SHORT|g" \
                             chart/Chart.yaml
                         helm --kubeconfig $KUBECONFIG \
                             push \
@@ -87,7 +87,7 @@ pipeline {
                 }
             }
             steps {
-                    build job: 'demo/live/$env.BRANCH_NAME', parameters: [string(name: 'FMP4INGEST_VERSION', value: "0.0.0-$env.BRANCH_NAME-$GIT_COMMIT_SHORT")], wait: true
+                    build job: 'demo/live/trunk', parameters: [string(name: 'FMP4INGEST_VERSION', value: "0.0.0-trunk-$GIT_COMMIT_SHORT")], wait: true
             }
         }
         //stage('Publish to GitHub') {
