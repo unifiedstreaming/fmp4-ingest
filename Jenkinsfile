@@ -84,7 +84,7 @@ pipeline {
             steps {
                 script {
                 if (env.BRANCH_NAME == 'trunk') {
-                    build job: 'demo/live/trunk', parameters: [string(name: 'VERSION', value: "$VERSION"), string(name: 'SVN_COMMIT', value: "$ACTUAL_SVN_COMMIT"), string(name: 'FMP4INGEST_VERSION', value: "0.0.0-trunk-$GIT_COMMIT_SHORT")], wait: true
+                    build job: 'demo/live/trunk', parameters: [string(name: 'FMP4INGEST_VERSION', value: "0.0.0-trunk-$GIT_COMMIT_SHORT")], wait: true
                 }
               }
             }
