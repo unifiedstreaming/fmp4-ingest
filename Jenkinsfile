@@ -135,7 +135,7 @@ pipeline {
                     sh 'crane auth login -u $REGISTRY_TOKEN_USR -p $REGISTRY_TOKEN_PSW $REGISTRY_URL'
                     sh 'crane auth login -u $DOCKER_HUB_REGISTRY_TOKEN_USR -p $DOCKER_HUB_REGISTRY_TOKEN_PSW $DOCKER_HUB_REGISTRY_URL'
                     script {
-                        if (env.RELEASE_OR_BRANCH == 'trunk') {
+                        if (env.BRANCH == 'trunk') {
                             sh 'crane copy $DOCKER_REPO:$VERSION $DOCKER_HUB_REPO:$GIT_COMMIT'
                             //sh 'crane copy $DOCKER_REPO:$VERSION $DOCKER_HUB_REPO:latest'
                         } else {
