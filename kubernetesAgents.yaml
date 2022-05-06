@@ -16,5 +16,21 @@ spec:
     - sleep
     args:
     - infinity
+  - name: crane
+    image: gcr.io/go-containerregistry/crane:debug
+    entrypoint: 
+    - ""
+    command:
+    - sleep
+    args:
+    - infinity
+  - name: docker-pushrm
+    image: registry.internal.unified-streaming.com/operations/base-images/docker-pushrm/trunk:latest
+    entrypoint: 
+    - ""
+    command:
+    - sleep
+    args:
+    - infinity 
   imagePullSecrets:
   - name: gitlab-registry
