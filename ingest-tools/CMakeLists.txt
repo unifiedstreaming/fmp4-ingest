@@ -2,7 +2,7 @@ cmake_minimum_required (VERSION 2.8)
 project (fmp4ingest)
 include_directories("${PROJECT_SOURCE_DIR}")
 link_directories("${PROJECT_SOURCE_DIR}")
-
+add_subdirectory(event)
 if(UNIX)
 find_package(CURL REQUIRED)
 find_package(Threads REQUIRED)
