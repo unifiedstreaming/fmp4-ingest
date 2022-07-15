@@ -3,7 +3,6 @@ project (fmp4ingest)
 include_directories("${PROJECT_SOURCE_DIR}")
 link_directories("${PROJECT_SOURCE_DIR}")
 add_subdirectory(event)
-
 if(UNIX)
 find_package(CURL REQUIRED)
 find_package(Threads REQUIRED)
@@ -42,9 +41,9 @@ add_executable(fmp4_init fmp4_init.cpp ${CMAKE_CURRENT_SOURCE_DIR}/event/fmp4str
 #target_include_directories(fmp4ingest ${CMAKE_CURRENT_SOURCE_DIR}/event/)
 add_executable(unittests catch.hpp unittest.cpp ${CMAKE_CURRENT_SOURCE_DIR}/event/event_track.cpp ${CMAKE_CURRENT_SOURCE_DIR}/event/fmp4stream.cpp ${CMAKE_CURRENT_SOURCE_DIR}/event/fmp4stream.h ${CMAKE_CURRENT_SOURCE_DIR}/event/base64.h ${CMAKE_CURRENT_SOURCE_DIR}/event/base64.cpp ${CMAKE_CURRENT_SOURCE_DIR}/event/event_track.h)
 #target_include_directories(fmp4ingest ${CMAKE_CURRENT_SOURCE_DIR}/event/)
+<<<<<<< HEAD
 add_executable(push_markers push_markers.cpp ${CMAKE_CURRENT_SOURCE_DIR}/event/fmp4stream.cpp ${CMAKE_CURRENT_SOURCE_DIR}/event/event_track.cpp ${CMAKE_CURRENT_SOURCE_DIR}/event/fmp4stream.h ${CMAKE_CURRENT_SOURCE_DIR}/event/base64.cpp ${CMAKE_CURRENT_SOURCE_DIR}/event/base64.h ${CMAKE_CURRENT_SOURCE_DIR}/event/event_track.h)
 if($ENV{CURL_LIBRARY_DIR})
 	link_directories(push_markers $ENV{CURL_LIBRARY_DIR})
 endif()
 target_link_libraries(push_markers ${CURL_LIBRARIES})
- 
