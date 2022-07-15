@@ -33,6 +33,8 @@ size_t write_function(void *ptr, size_t size, size_t nmemb, std::string* data)
 	return size * nmemb;
 }
 
+
+// get remote synch epoch, but only return fixed offset equal to K x D
 int get_remote_sync_epoch(uint64_t *res_time, string &wc_uri_)
 {
 	CURL *curl;
@@ -87,8 +89,10 @@ struct push_options_t
 		, cmaf_presentation_duration_(0)
 		, avail_(0)
 		, avail_dur_(0)
-		, announce_(60.0)
-		,anchor_scale_(1)
+		, seg_dur_(1000)
+		, avail_seg_dur_(2000)
+		, announce_(2.0)
+		, anchor_scale_(1)
 	{
 	}
 
@@ -107,6 +111,8 @@ struct push_options_t
 			" [--media]                      SegmentTemplate@media sets the relative path for media segments, shall include $RepresentationID$ and $Time$ or $Number$ \n"
 //			" [--chunked]                    Use chunked Transfer-Encoding for POST (long running post) otherwise short running per fragment post \n"
 			" [--avail]                      signal an advertisment slot every arg1 ms with duration of arg2 ms \n"
+			" [--avail_seg_dur]              segment duration of avail segments in the timed metadata track in ms (default=2000ms) \n"
+			" [--seg_dur]                    default segment duration for KxD since unix epoch"
 			" [--dry_run]                    Do a dry run and write the output files to disk directly for checking file and box integrity\n"
 			" [--announce]                   specify the number of seconds in advance to presenation time to send an avail"
 			" [--auth]                       Basic Auth Password \n"
@@ -125,7 +131,6 @@ struct push_options_t
 		{
 			for (int i = 1; i < argc; i++)
 			{
-				char* pEnd;
 				string t(argv[i]);
 				if (t.compare("-u") == 0) { url_ = string(argv[++i]); continue; }
 				if (t.compare("-l") == 0 || t.compare("--loop") == 0) { loop_ = atoi(argv[++i]); continue; }
@@ -138,8 +143,10 @@ struct push_options_t
 				if (t.compare("--ism_use_ms") == 0) { ism_use_ms_ = 1; anchor_scale_ = 1000; continue; }
 				if (t.compare("--dry_run") == 0) { dry_run_ = true; continue; }
 				if (t.compare("--wc_uri") == 0) { wc_uri_ = string(argv[++i]); continue; }
+				if (t.compare("--seg_dur") == 0) { seg_dur_ = strtoull(argv[++i], NULL, 10); continue; }
 				if (t.compare("--auth") == 0) { basic_auth_ = string(argv[++i]); continue; }
 				if (t.compare("--avail") == 0) { avail_ = strtoull(argv[++i],NULL,10); avail_dur_= strtoull(argv[++i],NULL,10); continue; }
+				if (t.compare("--avail_seg_dur") == 0) { avail_seg_dur_ = strtoull(argv[++i], NULL, 10);  continue; }
 				if (t.compare("--announce") == 0) { announce_ = atof(argv[++i]); continue; }
 				if (t.compare("--aname") == 0) { basic_auth_name_ = string(argv[++i]); continue; }
 				if (t.compare("--sslcert") == 0) { ssl_cert_ = string(argv[++i]); continue; }
@@ -196,9 +203,11 @@ struct push_options_t
 
 	uint64_t avail_; // insert an avail every X milli seconds
 	uint64_t avail_dur_; // of duratoin Y milli seconds
+	uint64_t avail_seg_dur_;
 	uint64_t ism_offset_;
 	uint32_t ism_use_ms_;
 	uint32_t anchor_scale_;
+	uint64_t seg_dur_;
 };
 
 struct ingest_post_state_t
@@ -288,21 +297,25 @@ string get_path_from_template(
 	return out_string;
 }
 
-int push_thread(ingest_stream l_ingest_stream, 
-	push_options_t opt, string post_url_string, std::string file_name)
+int push_thread(
+	ingest_stream l_ingest_stream, 
+	push_options_t opt, 
+	string post_url_string, 
+	std::string file_name)
 {
 	try
 	{
 		vector<uint8_t> init_seg_dat;
 		l_ingest_stream.get_init_segment_data(init_seg_dat);
 
-	    std:string out_file = "o_" + file_name;
+	    string out_file = "o_" + file_name;
 		ofstream outf = std::ofstream(out_file, std::ios::binary);
+		
 		if (outf.good() && opt.dry_run_)
 			outf.write((char *)&init_seg_dat[0], init_seg_dat.size());
 
 		// setup curl
-		CURL * curl;
+		CURL *curl;
 		CURLcode res;
 		curl = curl_easy_init();
 		string post_init_url_string = post_url_string;
@@ -402,7 +415,10 @@ int push_thread(ingest_stream l_ingest_stream,
 					    
 						curl_easy_setopt(curl, CURLOPT_URL, post_url_string.data());
 						curl_easy_setopt(curl, CURLOPT_POST, 1);
-						curl_easy_setopt(curl, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_1);
+						curl_easy_setopt(curl, 
+							CURLOPT_HTTP_VERSION, 
+							CURL_HTTP_VERSION_1_1
+						);
 					}
 					
 					curl_easy_setopt(curl, CURLOPT_POSTFIELDS, (char *)&media_seg_dat[0]);
@@ -592,7 +608,12 @@ int main(int argc, char * argv[])
 			opts.cmaf_presentation_duration_ = 100 * opts.avail_ / 1000;
 		}
 
-		event_track::gen_avail_files((uint32_t ) (opts.cmaf_presentation_duration_ * 1000), 2000, opts.avail_dur_, opts.avail_, opts.wc_time_start_);
+		event_track::gen_avail_files((uint32_t ) (
+			opts.cmaf_presentation_duration_ * 1000), 
+			(uint32_t) opts.avail_seg_dur_, 
+			(uint32_t) opts.avail_dur_, 
+			opts.avail_, 
+			opts.wc_time_start_);
 
 		
 		ifstream input_file_meta(avail_track, ifstream::binary);
