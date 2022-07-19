@@ -59,8 +59,8 @@ int main(int argc, char *argv[])
 	}
 	else
 	{
-		cout << "fmp4init: returns init fragment of fmp4 or cmaf file" << endl;
-		cout << "usage fmp4init in_file.cmfv [out_file] [number of fragments]" << endl;
+		cout << "fmp4_init: returns init fragment of fmp4 or cmaf file" << endl;
+		cout << "usage fmp4_init in_file.cmfv [out_file] [number of fragments]" << endl;
 	}
 
 	return 0;
