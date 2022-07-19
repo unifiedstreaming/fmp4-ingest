@@ -53,7 +53,7 @@ struct push_marker_options_t
         printf("Usage: push_markers [options] \n");
         printf(
             " [-u url]                       Publishing Point URL without /Streams() extension\n"
-            " [--avail]                      signal an advertisment slot every arg1 ms with duration of arg2 ms (default is 60000 and 15000) \n"
+            " [--avail]                      signal an advertisment slot every arg1 ms with duration of arg2 ms (default is 60000 and 10000) \n"
             " [--seg_dur]                    segment duration of avail segments in the timed metadata track in ms (default=2000ms) \n"
             " [--track_id]                   Track id to put in the track (default is 1)"
             " [--dry_run]                    Do a dry run and write the output files to disk directly for checking file and box integrity default is false\n"
