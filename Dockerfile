@@ -1,25 +1,28 @@
-# Alpine Dockerfile for building locally / pushing to Dockerhub
-FROM    alpine:3.16
+# syntax=docker/dockerfile:1
+FROM alpine:3.16 AS builder
 
-# install dependencies
-RUN     buildDeps="bash-completion \
-                  cmake \
-                  coreutils \
-                  gcc \
-                  g++ \
-                  gdb \
-                  git \
-                  make \
-                  curl-dev" && \
-        apk add --update ${buildDeps}
+# Install dependencies
+ARG build_deps="bash-completion cmake coreutils gcc g++ gdb git make curl-dev"
+RUN apk --no-cache add --update ${build_deps}
 
-# Pull fmp4ingest-tools repo
-RUN     cd /root && \
-        git clone --recurse-submodules https://github.com/unifiedstreaming/fmp4-ingest.git  && \
-        cd fmp4-ingest/ingest-tools && \
-        cmake CMakeLists.txt && \
-        make
+# Pull fmp4-ingest tools repo
+WORKDIR /root/
+RUN git clone --recurse-submodules https://github.com/unifiedstreaming/fmp4-ingest.git
+WORKDIR /root/fmp4-ingest/ingest-tools/event/
+RUN git pull https://github.com/unifiedstreaming/EventMessageTrack.git master
 
+# Build fmp4-ingest tools
+WORKDIR /root/fmp4-ingest/
+RUN cmake -S . -B build
+RUN cmake --build build --clean-first
+
+# Create lean fmp4-ingest container image
+FROM alpine:3.16
+
+ARG runtime_deps="gcc curl-dev"
+RUN apk --no-cache add --update ${runtime_deps}
+WORKDIR /root/fmp4-ingest/
+COPY --from=builder /root/fmp4-ingest/build ./
 ENV PATH="${PATH}:/root/fmp4-ingest/ingest-tools:/root/fmp4-ingest/ingest-tools/event"
 
 # Invocation examples
