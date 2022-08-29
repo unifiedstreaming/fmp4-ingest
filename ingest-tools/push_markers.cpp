@@ -14,7 +14,7 @@
 #include <fstream>
 
 /*
-    separate program to push timed metadata track 
+    separate program to push automatically generated timed metadata track 
 
     timed metadata track is based on iso/iec 23001-18 
 
@@ -54,7 +54,7 @@ struct push_marker_options_t
         printf(
             " [-u url]                       Publishing Point URL without /Streams() extension\n"
             " [--avail]                      signal an advertisment slot every arg1 ms with duration of arg2 ms (default is 60000 and 15000) \n"
-            " [--seg_dur]                    segment duration of avail segments in the timed metadata track in ms (default=2000ms) \n"
+            " [--seg_dur]                    segment duration of avail segments in the timed metadata track in ms (default=2000ms) \n"                 
             " [--track_id]                   Track id to put in the track (default is 1)"
             " [--dry_run]                    Do a dry run and write the output files to disk directly for checking file and box integrity default is false\n"
             " [--announce]                   specify the number of milliseconds seconds in advance to presenation time to send an avail (default is 0)"
@@ -63,7 +63,7 @@ struct push_marker_options_t
 
     void parse_options(int argc, char* argv[])
     {
-        if (argc > 2)
+        if (argc > 1)
         {
             for (int i = 1; i < argc; i++)
             {
@@ -209,7 +209,6 @@ int main(int argc, char* argv[])
             if (t_d < ad_end_last && t_d >= ad_start_last - opts.avail_dur_)
             {
                 
-
                 auto ev = generate_event_message_splice_insert(
                     (uint32_t) last_L,
                     (uint64_t) ad_start_last,
@@ -237,7 +236,15 @@ int main(int argc, char* argv[])
             }
 
             std::vector<uint8_t> segment_bytes;
-            event_track::get_meta_segment_bytes(in_emsg_list, seg_start, seg_end, opts.track_id_, opts.timescale_, segment_bytes);
+
+            event_track::get_meta_segment_bytes(
+				in_emsg_list, 
+				seg_start, 
+				seg_end, 
+				opts.track_id_, 
+				opts.timescale_, 
+				segment_bytes
+			);
             
             if (opts.dry_run_) {
                 oft.write((const char*)&segment_bytes[0], segment_bytes.size());
