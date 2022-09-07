@@ -361,7 +361,7 @@ int push_thread(
 				fprintf(stderr, "---- connection with server failed  %s\n",
 					curl_easy_strerror(res));
 				curl_easy_cleanup(curl);
-				return 0; // nothing todo when connection fails
+				return 1; // nothing todo when connection fails
 			}
 			else
 			{
@@ -553,7 +553,7 @@ int push_thread(
 		cout << "Unknown Error" << endl;
 	}
 
-	return 0;
+	return 1;
 }
 
 int main(int argc, char * argv[])
