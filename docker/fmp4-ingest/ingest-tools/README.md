@@ -65,7 +65,7 @@ node ingest_receiver_node.js
 
 - Copy the init fragment to init_in.cmfv:
 
-fmp4init in.cmfv  
+fmp4_init in.cmfv  
 
 - Print the content of a cmaf or fmp4 to cout:
 

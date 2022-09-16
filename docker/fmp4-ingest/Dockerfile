@@ -1,4 +1,4 @@
-ARG ALPINEVERSION=3.15
+ARG ALPINEVERSION=3.16
 
 FROM alpine:$ALPINEVERSION
 
@@ -25,7 +25,7 @@ RUN     cd /root && \
         cmake CMakeLists.txt && \
         make
 
-ENV PATH="${PATH}:/root/fmp4-ingest/ingest-tools"
+ENV PATH="${PATH}:/root/fmp4-ingest/ingest-tools:/root/fmp4-ingest/ingest-tools/event"
 
 COPY entrypoint.sh /home/entrypoint.sh
 RUN chmod +x /home/entrypoint.sh
@@ -37,17 +37,17 @@ ENTRYPOINT [ "/home/entrypoint.sh" ]
 # fmp4ingest: CMAF ingest
 # docker run --rm -it -v $(pwd):/data -w /data/ fmp4ingest:latest fmp4ingest $@
 #
-# fmp4Init: retrieve the init fragment or CMAF Header from a fmp4 file
-# docker run --rm -it -v $(pwd):/data -w /data/ fmp4ingest:latest fmp4Init $@
-#
-# fmp4sparse: retrieve a sparse metadata track from a CMAF file with inband emsg
-# docker run --rm -it -v $(pwd):/data -w /data/ fmp4ingest:latest fmp4sparse $@
+# fmp4_init: retrieve the init fragment or CMAF Header from a fmp4 file
+# docker run --rm -it -v $(pwd):/data -w /data/ fmp4ingest:latest fmp4_init $@
 #
 # fmp4dump: print the contents of an fmp4 file to the cout, including scte markers
 # docker run --rm -it -v $(pwd):/data -w /data/ fmp4ingest:latest fmp4dump $@
 #
-# fmp4DashEvent: convert a sparse track to an XML event stream
-# docker run --rm -it -v $(pwd):/data -w /data/ fmp4ingest:latest fmp4DashEvent $@
+# fmp4_dash_event: convert a sparse track to an XML event stream
+# docker run --rm -it -v ${PWD}:/data -w /data/ fmp4ingest:latest fmp4_dash_event $@
 #
-# dashEventfmp4: convert a DASH mpd or SMIL with events in it to a sparse metadata track
-# docker run --rm -it -v $(pwd):/data -w /data/ fmp4ingest:latest dashEventfmp4 $@
+# dash_event_fmp4: convert a DASH mpd or SMIL with events in it to a sparse metadata track
+# docker run --rm -it -v ${PWD}:/data -w /data/ fmp4ingest:latest dash_event_fmp4 $@
+#
+# gen_avail_track: tool for generating a splice insert avail track
+# docker run --rm -it -v ${PWD}:/data -w /data/ fmp4ingest:latest gen_avail_track
