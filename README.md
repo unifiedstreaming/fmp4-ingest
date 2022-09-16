@@ -66,6 +66,19 @@ Will print the apache rewrite rules using mod rewrite to map this to /Streams() 
 It is expected that such features will be supported natively in later releases.
 
 
+## New Support for pusing markers and webvtt using encoder/packager synch
+
+A new program push_markers was added that pushes markers with regular ad intervals and webvtt 
+
+push_markers --announce 1000 --seg_dur 1920 --vtt --avail 19200 9600  -u http://localhost/test/test.isml
+
+the option --webvtt allows sending webvtt segment with time code. 
+
+The segments are are of seg_duration and numbered since unix epoch 
+
+--announce allows sending the segments in advance 
+
+--avail option works interval[ms] break_duration[ms]
 
 ## Reference 
 
