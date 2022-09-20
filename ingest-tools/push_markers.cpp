@@ -310,19 +310,22 @@ int main(int argc, char* argv[])
     }
     else {
         if (opts.send_event_)
-            if (opts.init_string_.size() == 0)
+            if (opts.init_string_.size() < 2) {
                 if (PostCurlIngestConnection::send_curl_post(uri, header_bytes) != CURLcode::CURLE_OK)
                     std::exit(1);
-            else {
+            }
+            else 
+            {
                 std::string out_meta = "events";
                 uri = opts.url_ + "/" + get_path_from_template(opts.init_string_, out_meta, 0, 0);
                 if (PostCurlIngestConnection::send_curl_post(uri, header_bytes) != CURLcode::CURLE_OK)
                     std::exit(1);
             }
         if (opts.send_vtt_)
-            if (opts.init_string_.size() == 0)
+            if (opts.init_string_.size() < 2) {
                 if (PostCurlIngestConnection::send_curl_post(uri_vtt, header_bytes_vtt) != CURLcode::CURLE_OK)
                     std::exit(1);
+            }
             else {
                 std::string out_vtt = "vtt_time";
                 uri_vtt = opts.url_ + "/" + get_path_from_template(opts.init_string_, out_vtt, 0, 0);
@@ -501,5 +504,5 @@ int main(int argc, char* argv[])
             }
         }
     }
-    return 1;
+    std::exit(1);
 }
