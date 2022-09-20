@@ -288,8 +288,8 @@ int main(int argc, char* argv[])
     uint64_t last_L = 0;
     uint64_t next_L = 0;
 
-    std::string event_track = "event_track";
-    std::string vtt_track = "vtt_time_track";
+    std::string event_track = "events";
+    std::string vtt_track = "vtt_time";
 
     std::fstream oft(event_track + ".cmfm" , std::ios::binary | std::ios::out);
     std::fstream oft_vtt(vtt_track + ".cmft", std::ios::binary | std::ios::out);
@@ -311,6 +311,7 @@ int main(int argc, char* argv[])
     else {
         if (opts.send_event_)
             if (opts.init_string_.size() < 2) {
+                std::cout << "posting event segment to: " << uri << std::endl;
                 if (PostCurlIngestConnection::send_curl_post(uri, header_bytes) != CURLcode::CURLE_OK)
                     std::exit(1);
             }
@@ -318,17 +319,20 @@ int main(int argc, char* argv[])
             {
                 std::string out_meta = "events";
                 uri = opts.url_ + "/" + get_path_from_template(opts.init_string_, out_meta, 0, 0);
+                std::cout << "posting event segment to: " << uri << std::endl;
                 if (PostCurlIngestConnection::send_curl_post(uri, header_bytes) != CURLcode::CURLE_OK)
                     std::exit(1);
             }
         if (opts.send_vtt_)
             if (opts.init_string_.size() < 2) {
+                std::cout << "posting 'vttt segment to: " << uri_vtt << std::endl;
                 if (PostCurlIngestConnection::send_curl_post(uri_vtt, header_bytes_vtt) != CURLcode::CURLE_OK)
                     std::exit(1);
             }
             else {
-                std::string out_vtt = "vtt_time";
-                uri_vtt = opts.url_ + "/" + get_path_from_template(opts.init_string_, out_vtt, 0, 0);
+               
+                std::cout << "posting 'vttt segment to: " << uri_vtt << std::endl;
+                uri_vtt = opts.url_ + "/" + get_path_from_template(opts.init_string_, vtt_track, 0, 0);
 
                 if (PostCurlIngestConnection::send_curl_post(uri_vtt, header_bytes_vtt) != CURLcode::CURLE_OK)
                     std::exit(1);
@@ -454,26 +458,30 @@ int main(int argc, char* argv[])
                     
                     std::string uri_h = uri;
                     
-                    if (opts.media_string_.size() > 0) 
+                    if (opts.media_string_.size() > 2) 
                     {  
                         uri = opts.url_ + "/" + get_path_from_template(opts.media_string_, event_track, next_K * opts.seg_dur_, next_K);
                         uri_h = opts.url_ + "/" + get_path_from_template(opts.init_string_, event_track, 0, 0);
                     }
 
+                    std::cout << "posting event track segment to " << uri << std::endl;
                     if (PostCurlIngestConnection::send_curl_post(uri, segment_bytes) == CURLcode::CURLE_OK)
                         std::cout << ("posted segment with timed metadata bytes") << std::endl;
                     
                     else {
                         std::cout << ("error posting segment with webvtt bytes, retry logic not implemented yet") << std::endl;
 
-
-                        if (PostCurlIngestConnection::send_curl_post(uri_h, header_bytes) != CURLcode::CURLE_OK)
+                        std::cout << "posting event track init segment to " << uri_h << std::endl;
+                        if (PostCurlIngestConnection::send_curl_post(uri_h, header_bytes) != CURLcode::CURLE_OK) {
                             std::exit(1);
-                        else
+                        }
+                        else {
+                            std::cout << "posting event track  segment to " << uri << std::endl;
                             if (PostCurlIngestConnection::send_curl_post(uri, segment_bytes) == CURLcode::CURLE_OK)
                                 std::cout << "retry logic succeeded, segment retransmitted" << std::endl;
                             else
                                 std::exit(1);
+                        }
                     }
                 }
                 if (opts.send_vtt_) {
@@ -485,20 +493,25 @@ int main(int argc, char* argv[])
                         uri_vtt = opts.url_ + "/" + get_path_from_template(opts.media_string_, vtt_track, next_K * opts.seg_dur_, next_K);
                         uri_vtt_h = opts.url_ + "/" + get_path_from_template(opts.init_string_, vtt_track, 0, 0);
                     }
-
+                    std::cout << "posting vtt track  segment to " << uri_vtt << std::endl;
                     if (PostCurlIngestConnection::send_curl_post(uri_vtt, vtt_bytes) == CURLcode::CURLE_OK)
                         std::cout << ("posted segment with vtt bytes") << std::endl;
                     else {
                         std::cout << ("error posting segment with webvtt bytes, retry logic not implemented yet") << std::endl;
                 
-                        
-                        if (PostCurlIngestConnection::send_curl_post(uri_vtt_h, header_bytes_vtt) != CURLcode::CURLE_OK)
+                        std::cout << "posting vtt track  init segment to " << uri_vtt_h << std::endl;
+                        if (PostCurlIngestConnection::send_curl_post(uri_vtt_h, header_bytes_vtt) != CURLcode::CURLE_OK) {
                             std::exit(1);
-                        else
-                            if (PostCurlIngestConnection::send_curl_post(uri_vtt, vtt_bytes) == CURLcode::CURLE_OK)
+                        }
+                        else {
+                            std::cout << "posting vtt track  segment to " << uri_vtt << std::endl;
+                            if (PostCurlIngestConnection::send_curl_post(uri_vtt, vtt_bytes) == CURLcode::CURLE_OK) {
                                 std::cout << "retry logic succeeded, vtt segment retransmitted" << std::endl;
-                            else 
+                            }
+                            else {
                                 std::exit(1);
+                            }
+                        }
                     }
                 }
             }
