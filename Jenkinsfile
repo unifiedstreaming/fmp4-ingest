@@ -51,7 +51,7 @@ pipeline {
                         /kaniko/executor \
                             -f `pwd`/docker/fmp4-ingest/Dockerfile \
                             -c `pwd`/docker/fmp4-ingest \
-                            --cache=true \
+                            --cache=false \
                             --cache-repo=$DOCKER_CACHE \
                             --build-arg ALPINEVERSION=${params.ALPINEVERSION} \
                             --destination $DOCKER_REPO:$GIT_COMMIT \
