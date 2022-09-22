@@ -52,6 +52,7 @@ struct push_marker_options_t
         , send_event_(true)
         , media_string_("")
         , init_string_("")
+        , splice_immediate_(false)
     {
     }
 
@@ -69,6 +70,7 @@ struct push_marker_options_t
             " [--no_event]                   dont send event track MPEG-B part 18 (default = true)"
             " [--initialization]             SegmentTemplate@initialization sets the relative path for init segments, shall include $RepresentationID$ \n"
             " [--media]                      SegmentTemplate@media sets the relative path for media segments, shall include $RepresentationID$ and $Time$ or $Number$ \n"
+            " [--splice_immediate]           Toggle the splice_immediate flag in SCTE-35 markers"
             "\n");
     }
 
@@ -90,6 +92,7 @@ struct push_marker_options_t
                 if (t.compare("--dry_run") == 0) { dry_run_ = true; continue; }
                 if (t.compare("--vtt") == 0) { send_vtt_ = true; continue; }
                 if (t.compare("--no_event") == 0) { send_event_ = false; continue; }
+                if (t.compare("--splice_immediate") == 0) { splice_immediate_ = true; continue; }
             }
           
         }
@@ -107,6 +110,7 @@ struct push_marker_options_t
     uint32_t timescale_;      // timescale of the metadata track
     bool     send_vtt_;
     bool     send_event_;
+    bool     splice_immediate_; // sets the splice immediate
 
     std::string init_string_;
     std::string media_string_;
@@ -151,10 +155,11 @@ struct PostCurlIngestConnection
 
 // wrapper generates splice insert message
 event_track::DASHEventMessageBoxv1 generate_event_message_splice_insert(
-    uint32_t id, 
-    uint64_t presentation_time, 
-    uint64_t duration, 
-    uint32_t timescale)
+    uint32_t id,
+    uint64_t presentation_time,
+    uint64_t duration,
+    uint32_t timescale,
+    bool splice_immediate = false)
 {
 
     event_track::DASHEventMessageBoxv1 ev;
@@ -166,7 +171,8 @@ event_track::DASHEventMessageBoxv1 generate_event_message_splice_insert(
     ev.scheme_id_uri_ = "urn:scte:scte35:2013:bin";
     fmp4_stream::gen_splice_insert(
         ev.message_data_, ev.id_, 
-        ev.event_duration_ * 90
+        ev.event_duration_ * 90,
+        splice_immediate
     );
     return ev;
 }
@@ -391,7 +397,8 @@ int main(int argc, char* argv[])
                         (uint32_t)last_L,
                         (uint64_t)ad_start_last,
                         (uint64_t)opts.avail_dur_,
-                        (uint32_t)opts.timescale_
+                        (uint32_t)opts.timescale_,
+                        opts.splice_immediate_
                     );
                     std::cout << " === ad slot is active == " << std::endl;
 
@@ -406,7 +413,8 @@ int main(int argc, char* argv[])
                         (uint32_t)last_L + 1,
                         (uint64_t)ad_start_next,
                         (uint64_t)opts.avail_dur_,
-                        opts.timescale_
+                        opts.timescale_,
+                        opts.splice_immediate_
                     );
                     // ev.print();
 
