@@ -80,6 +80,8 @@ The segments are are of seg_duration and numbered since unix epoch
 
 --avail option works interval[ms] break_duration[ms]
 
+--splice_immediate  allows setting splice immediate flag
+
 ## Reference 
 
 See ingest-tools folder in this repository for source code of reference implementation of file based cmaf-ingest
