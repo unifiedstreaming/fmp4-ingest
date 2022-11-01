@@ -1,0 +1,3 @@
+[submodule "docker/fmp4-ingest/event"]
+	path = docker/fmp4-ingest/event
+	url = https://github.com/unifiedstreaming/EventMessageTrack.git
