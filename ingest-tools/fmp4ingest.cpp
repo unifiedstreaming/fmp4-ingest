@@ -336,6 +336,10 @@ int push_thread(
 		curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
 		curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L);
 
+		struct curl_slist* hs = NULL;
+		hs = curl_slist_append(hs, "Content-Type: application/mp4");
+		curl_easy_setopt(curl, CURLOPT_HTTPHEADER, hs);
+
 		if (opt.basic_auth_.size())
 		{
 			curl_easy_setopt(curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
@@ -351,6 +355,8 @@ int push_thread(
 
 		if (opt.ssl_key_pass_.size())
 			curl_easy_setopt(curl, CURLOPT_KEYPASSWD, opt.ssl_key_pass_.c_str());
+
+		
 
 		if (!opt.dry_run_) {
 			res = curl_easy_perform(curl);
