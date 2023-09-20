@@ -136,7 +136,7 @@ struct PostCurlIngestConnection
                 curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, (long)data.size());
                 CURLcode res = curl_easy_perform(curl);
                 curl_easy_cleanup(curl);
-
+                curl_slist_free_all(hs);
                 if (res != CURLE_OK)
                     fprintf(stderr, " CURL HTTP post of segment failed:  %s\n",
                         curl_easy_strerror(res));

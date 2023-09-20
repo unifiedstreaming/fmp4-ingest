@@ -367,10 +367,12 @@ int push_thread(
 				fprintf(stderr, "---- connection with server failed  %s\n",
 					curl_easy_strerror(res));
 				curl_easy_cleanup(curl);
+				curl_slist_free_all(hs);
 				return 1; // nothing todo when connection fails
 			}
 			else
 			{
+				curl_slist_free_all(hs);
 				fprintf(stderr, "---- connection with server sucessfull %s\n",
 					curl_easy_strerror(res));
 			}
@@ -550,6 +552,8 @@ int push_thread(
 		}
 		/* always cleanup */
 		curl_easy_cleanup(curl);
+		curl_slist_free_all(hs);
+		
 		if (opt.dry_run_)
 			if (outf.good())
 				outf.close();
