@@ -130,13 +130,13 @@ struct PostCurlIngestConnection
                 curl_easy_setopt(curl, CURLOPT_POST, 1);
                 curl_easy_setopt(curl, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_1);
                 struct curl_slist* hs = NULL;
-                hs = curl_slist_append(hs, "Content-Type: application/mp4");
-                curl_easy_setopt(curl, CURLOPT_HTTPHEADER, hs);
+                //hs = curl_slist_append(hs, "Content-Type: application/mp4");
+                //curl_easy_setopt(curl, CURLOPT_HTTPHEADER, hs);
                 curl_easy_setopt(curl, CURLOPT_POSTFIELDS, (char*)&data[0]);
                 curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, (long)data.size());
                 CURLcode res = curl_easy_perform(curl);
                 curl_easy_cleanup(curl);
-                curl_slist_free_all(hs);
+                //curl_slist_free_all(hs);
                 if (res != CURLE_OK)
                     fprintf(stderr, " CURL HTTP post of segment failed:  %s\n",
                         curl_easy_strerror(res));

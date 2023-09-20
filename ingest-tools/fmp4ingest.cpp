@@ -336,9 +336,9 @@ int push_thread(
 		curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
 		curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L);
 
-		struct curl_slist* hs = NULL;
-		hs = curl_slist_append(hs, "Content-Type: application/mp4");
-		curl_easy_setopt(curl, CURLOPT_HTTPHEADER, hs);
+		//struct curl_slist* hs = NULL;
+		//hs = curl_slist_append(hs, "Content-Type: application/mp4");
+		//curl_easy_setopt(curl, CURLOPT_HTTPHEADER, hs);
 
 		if (opt.basic_auth_.size())
 		{
@@ -367,12 +367,12 @@ int push_thread(
 				fprintf(stderr, "---- connection with server failed  %s\n",
 					curl_easy_strerror(res));
 				curl_easy_cleanup(curl);
-				curl_slist_free_all(hs);
+				//curl_slist_free_all(hs);
 				return 1; // nothing todo when connection fails
 			}
 			else
 			{
-				curl_slist_free_all(hs);
+				//curl_slist_free_all(hs);
 				fprintf(stderr, "---- connection with server sucessfull %s\n",
 					curl_easy_strerror(res));
 			}
@@ -552,7 +552,7 @@ int push_thread(
 		}
 		/* always cleanup */
 		curl_easy_cleanup(curl);
-		curl_slist_free_all(hs);
+		//curl_slist_free_all(hs);
 		
 		if (opt.dry_run_)
 			if (outf.good())
