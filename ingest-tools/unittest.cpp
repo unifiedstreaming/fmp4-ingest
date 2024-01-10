@@ -1,5 +1,5 @@
 #define CATCH_CONFIG_MAIN  // This tells Catch to provide a main() - only do this in one cpp file
-#include "catch.hpp"
+#include "event/catch.hpp"
 #include "event/fmp4stream.h"
 #include "event/base64.h"
 
